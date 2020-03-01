@@ -2,20 +2,29 @@
 "  General Settings  "
 """"""""""""""""""""""
 "" Basic Functionality
-set nocompatible
+
+" load filetype settings, plugins and maps
 filetype plugin indent on
 syntax on
-set autoindent
-set backspace=indent,eol,start
-set nostartofline
-set ttimeout ttimeoutlen=30
-set shiftwidth=4
-set softtabstop=4
-set expandtab
-set hidden
-set wildmenu
-set scrolloff=15
 
+" default indent settings
+set autoindent     " Use indent of previous line on new lines
+set expandtab      " Use spaces instead of tabs
+set shiftwidth=4   " Indent with four spaces
+set softtabstop=4  " Insert four spaces with tab key
+
+set scrolloff=15
+set backspace=indent,eol,start  "backspace over anything
+set ttimeout ttimeoutlen=30     "timeout on keycodes
+
+" allow buffers to have changes without being displayed
+set hidden                      
+set wildmenu
+
+" Delete comment leaders when joining lines, if supported
+silent! set formatoptions+=j
+
+" check OS
 if !exists("g:os")
     if has("win32") || has("win64")
         let g:os = "Windows"
@@ -28,20 +37,16 @@ endif
 
 set backup
 set undofile
+" keep swap, backup and undo files in dedicated directory
+" // expands to file's full path
 if g:os == "Linux"
-    " swap files (.swp) in /tmp
-    " // means use the file's full path
-    set directory=/tmp//
-    
-    " backup files (~) in /tmp
-    set backupdir=/tmp//
-    
-    " undo files in /tmp
-    set undodir=/tmp//
+    set directory^=~/.vim/cache/swap//
+    set backupdir^=~/.vim/cache/backup//
+    set undodir^=~/.vim/cache/undo//
 else
-    set directory=$TEMP//,$TMP//,.
-    set backupdir=$TEMP//,$TMP//,.
-    set undodir=$TEMP//,$TMP//,.
+    set directory^=~/vimfiles/cache/swap//
+    set backupdir^=~/vimfiles/cache/backup//
+    set undodir^=~/vimfiles/cache/undo//
 endif
 
 "" Completion
@@ -241,6 +246,19 @@ let mapleader = "\<space>"
 " toggle folds with <space><space>
 nnoremap <silent> <leader><Space> @=(foldlevel('.')?'za':"\<Space>")<CR>
 vnoremap <leader><space> zf
+
+" Cycle through argument list
+nnoremap [a :previous<CR>
+nnoremap ]a :next<CR>
+" Cycle through buffers
+nnoremap [b :bprevious<CR>
+nnoremap ]b :bnext<CR>
+" Cycle through quicklist/:helpgrep items
+nnoremap [c :cprevious<CR>
+nnoremap ]c :cnext<CR>
+" Cycle through location list items
+nnoremap [l :lprevious<CR>
+nnoremap ]l :lnext<CR>
 
 nnoremap <leader>vimrc :e $MYVIMRC<CR>
 nnoremap <leader>y :%y+<CR>
