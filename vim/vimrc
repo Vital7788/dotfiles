@@ -26,6 +26,24 @@ if !exists("g:os")
     endif
 endif
 
+set backup
+set undofile
+if g:os == "Linux"
+    " swap files (.swp) in /tmp
+    " // means use the file's full path
+    set directory=/tmp//
+    
+    " backup files (~) in /tmp
+    set backupdir=/tmp//
+    
+    " undo files in /tmp
+    set undodir=/tmp//
+else
+    set directory=$TEMP//,$TMP//,.
+    set backupdir=$TEMP//,$TMP//,.
+    set undodir=$TEMP//,$TMP//,.
+endif
+
 "" Completion
 set completeopt=                "control completion menu
 set completeopt+=longest        "match longest common text
