@@ -1,13 +1,9 @@
-""""""""""""""""""""""
-"  General Settings  "
-""""""""""""""""""""""
-"" Basic Functionality
-
+""" General Settings
 " load filetype settings, plugins and maps
 filetype plugin indent on
 syntax on
 
-" default indent settings
+" indent
 set autoindent     " Use indent of previous line on new lines
 set expandtab      " Use spaces instead of tabs
 set shiftwidth=4   " Indent with four spaces
@@ -20,11 +16,20 @@ set ttimeout ttimeoutlen=30     "timeout on keycodes
 " allow buffers to have changes without being displayed
 set hidden                      
 set wildmenu
+set number relativenumber
 
-" Delete comment leaders when joining lines, if supported
+set showcmd
+set cmdheight=2
+
+" delete comment leaders when joining lines, if supported
 silent! set formatoptions+=j
 
-" check OS
+" fold settings
+set foldenable
+set modeline
+set modelineexpr
+
+"""" check OS
 if !exists("g:os")
     if has("win32") || has("win64")
         let g:os = "Windows"
@@ -35,6 +40,7 @@ if !exists("g:os")
     endif
 endif
 
+"""" Special file locations
 set backup
 set undofile
 " keep swap, backup and undo files in dedicated directory
@@ -49,7 +55,7 @@ else
     set undodir^=~/vimfiles/cache/undo//
 endif
 
-"" Completion
+"""" Completion
 set completeopt=                "control completion menu
 set completeopt+=longest        "match longest common text
 set completeopt+=menuone        "show menu even if there's only 1 match
@@ -65,30 +71,11 @@ inoremap <expr> <C-n> pumvisible() ? '<C-n>' :
 inoremap <expr> <C-p> pumvisible() ? '<C-p>' :
   \ '<C-p><C-r>=pumvisible() ? "\<lt>Up>" : ""<CR>'
 
-"" Search
+
+"""" Search
 set hlsearch
 set ignorecase
 set incsearch
-
-""" auto turn off highlighting
-" https://github.com/romainl/vim-cool/issues/9
-noremap <expr> <Plug>(StopHL) execute('nohlsearch')[-1]
-noremap! <expr> <Plug>(StopHL) execute('nohlsearch')[-1]
-
-function! HlSearch()
-    let s:pos = match(getline('.'), @/, col('.') - 1) + 1
-    if s:pos != col('.')
-        call StopHL()
-    endif
-endfunction
-
-function! StopHL()
-    if !v:hlsearch || mode() isnot 'n'
-        return
-    else
-        sil call feedkeys("\<Plug>(StopHL)", 'm')
-    endif
-endfunction
 
 augroup SearchHighlight
     autocmd!
@@ -96,13 +83,8 @@ augroup SearchHighlight
     autocmd InsertEnter * call StopHL()
 augroup END
 
-"" Appearance
-""" General Settings
-set showcmd
-set cmdheight=2
-set number relativenumber
 
-""" Colorscheme
+"""" Colorscheme + Font
 colorscheme gruvbox
 set bg=dark
 if g:os == "Linux"
@@ -111,117 +93,15 @@ elseif g:os == "Windows"
     set guifont=Consolas:h11
 endif
 
-""" GUI
+"""" GUI
 set guioptions-=m "menu bar
 set guioptions-=T "toolbar
 set guioptions-=r "scrollbar
 
-""" Statusline
+
+"""" Statusline
 set laststatus=2
 
-"""" get git branch
-if g:os == "Linux"
-    function! GetGitBranch()
-    	return system(" pushd ".expand('%:p:h')." > /dev/null "
-    	\ . " && git rev-parse --abbrev-ref HEAD 2>/dev/null | tr -d '\n' "
-    	\ . " && popd > /dev/null ")
-    endfunction
-    
-    autocmd BufReadPost * let b:git_branch=GetGitBranch()
-    
-    function! StatuslineGit()
-    	let l:git_branch = exists("b:git_branch") ? b:git_branch : ''
-    	return strlen(l:git_branch) > 0 ? '  '.l:git_branch.' ' : ''
-    endfunction
-else
-    function! StatuslineGit()
-        return ""
-    endfunction
-endif
-
-"""" get modes
-" :help mode()
-let currentmode={
-    \ 'n'      : 'n',
-    \ 'no'     : 'no',
-    \ 'v'      : 'v',
-    \ 'V'      : 'vl',
-    \ ''     : 'vb',
-    \ 's'      : 's',
-    \ 'S'      : 'sl',
-    \ ''     : 'sb',
-    \ 'i'      : 'i',
-    \ 'ic'     : 'ic',
-    \ 'ix'     : 'ix',
-    \ 'R'      : 'r',
-    \ 'Rc'     : 'rc',
-    \ 'Rv'     : 'rv',
-    \ 'Rx'     : 'rx',
-    \ 'c'      : 'c',
-    \ 'cv'     : 'cv',
-    \ 'ce'     : 'ce',
-    \ 'r'      : 'r',
-    \ 'rm'     : 'rm',
-    \ 'r?'     : 'r?',
-    \ '!'      : '!',
-    \ 't'      : 't',
-    \}
-
-"""" active statusline
-function! ActiveStatus()
-    let statusline=""
-    " display all highlight groups with their color
-    " :so $VIMRUNTIME/syntax/hitest.vim
-    let statusline.="%#DiffAdd#%{(mode()=='n')?'\ \ NORMAL\ ':''}"
-    let statusline.="%#DiffChange#%{(mode()=='i')?'\ \ INSERT\ ':''}"
-    let statusline.="%#DiffDelete#%{(currentmode[mode()]=='v')?'\ \ VISUAL\ ':''}"
-    let statusline.="%#DiffDelete#%{(currentmode[mode()]=='vl')?'\ \ V-LINE\ ':''}"
-    let statusline.="%#DiffDelete#%{(currentmode[mode()]=='vb')?'\ \ V-BLOCK\ ':''}"
-    let statusline.="%#DiffDelete#%{(currentmode[mode()]=='s')?'\ \ SELECT\ ':''}"
-    let statusline.="%#DiffDelete#%{(currentmode[mode()]=='sl')?'\ \ S-LINE\ ':''}"
-    let statusline.="%#DiffDelete#%{(currentmode[mode()]=='sb')?'\ \ S-BLOCK\ ':''}"
-    let statusline.="%#DiffText#%{(currentmode[mode()]=='r')?'\ \ REPLACE\ ':''}"
-    let statusline.="%#Visual#%{(mode()=='c')?'\ \ COMMAND\ ':''}"
-    let statusline.="%#GruvboxBlueSign#"
-    let statusline.="\ %n\ "                                        " buffer number
-    let statusline.="%#GruvboxPurpleSign#"
-    let statusline.="%{StatuslineGit()}"                            " git branch
-    let statusline.="%#StatuslineNC#"                                 " colour
-    let statusline.="\ %f\ "                                        " file name
-    let statusline.="%#GruvboxRedSign#"                                 " colour
-    let statusline.="%r%m"                                          " flags
-    let statusline.="%="                                            " right align
-    let statusline.="%#StatusLineNC#"                                 " colour
-    let statusline.="\ %y"                                          " file type
-    let statusline.="\ %{&fileencoding?&fileencoding:&encoding}"    " file encoding
-    let statusline.="\[%{&fileformat}\]\ "                          " file format
-    let statusline.="%#GruvboxGreenSign#"                                   " colour
-    let statusline.="\ %l/%L"                                       " line X of Y [percent of file]
-    let statusline.="%#GruvboxAquaSign#"                                   " colour
-    let statusline.="\ %c\ "                                        " current column
-    return statusline
-endfunction
-
-"""" inactive statusline
-function! InactiveStatus()
-    let statusline=""
-    let statusline.="\ \ "                                        " buffer number
-    let statusline.="%#GruvboxBlueSign#"
-    let statusline.="\ %n\ "                                        " buffer number
-    let statusline.="%{StatuslineGit()}"                            " git branch
-    let statusline.="%#StatusLineNC#"
-    let statusline.="\ %f\ "                                        " file name
-    let statusline.="%r%m"                                          " flags
-    let statusline.="%="                                            " right align
-    let statusline.="\ %y"                                          " file type
-    let statusline.="\ %{&fileencoding?&fileencoding:&encoding}"    " file encoding
-    let statusline.="\[%{&fileformat}\]\ "                          " file format
-    let statusline.="\ %l/%L"                                       " line X of Y [percent of file]
-    let statusline.="\ %c\ "                                        " current column
-    return statusline
-endfunction
-
-"""" set statusline
 augroup status
     autocmd!
     autocmd WinEnter * setlocal statusline=%!ActiveStatus()
@@ -230,14 +110,14 @@ augroup END
 
 set statusline=%!ActiveStatus()
 
-"" netrw
+
+"""" netrw
 let g:netrw_banner = 0
 let g:netrw_liststyle = 3
 let g:netrw_winsize = 20
 
-"""""""""""""""""
-"  Keybindings  "
-"""""""""""""""""
+
+""" Keybindings
 nnoremap U <C-R>
 nnoremap Y y$
 nnoremap S hs
@@ -263,10 +143,8 @@ nnoremap ]l :lnext<CR>
 nnoremap <leader>vimrc :e $MYVIMRC<CR>
 nnoremap <leader>y :%y+<CR>
 
-"""""""""""""
-"  Plugins  "
-"""""""""""""
-"" SyntaxComplete
+""" Plugins
+" SyntaxComplete
 if has("autocmd") && exists("+omnifunc")
 autocmd Filetype *
     \ if &omnifunc == "" |
@@ -274,73 +152,5 @@ autocmd Filetype *
     \ endif
     endif
 
-"" Matchit
-runtime macros/matchit.vim
-
-""""""""""""""""""
-"  Autocommands  "
-""""""""""""""""""
-"" Autofolding .vimrc
-" see http://vimcasts.org/episodes/writing-a-custom-fold-expression/
-""" defines a foldlevel for each line of code
-function! VimFolds(lnum)
-  let s:thisline = getline(a:lnum)
-  if match(s:thisline, '^"" ') >= 0
-    return '>2'
-  endif
-  if match(s:thisline, '^""" ') >= 0
-    return '>3'
-  endif
-  if match(s:thisline, '^"""" ') >= 0
-    return '>4'
-  endif
-  let s:two_following_lines = 0
-  if line(a:lnum) + 2 <= line('$')
-    let s:line_1_after = getline(a:lnum+1)
-    let s:line_2_after = getline(a:lnum+2)
-    let s:two_following_lines = 1
-  endif
-  if !s:two_following_lines
-      return '='
-    endif
-  else
-    if (match(s:thisline, '^"""""') >= 0) &&
-       \ (match(s:line_1_after, '^"  ') >= 0) &&
-       \ (match(s:line_2_after, '^""""') >= 0)
-      return '>1'
-    else
-      return '='
-    endif
-  endif
-endfunction
-
-""" defines a foldtext
-function! VimFoldText()
-  " handle special case of normal comment first
-  let s:info = '('.string(v:foldend-v:foldstart).' l)'
-  if v:foldlevel == 1
-    let s:line = ' ◇ '.getline(v:foldstart+1)[3:-2]
-  elseif v:foldlevel == 2
-    let s:line = '   ●  '.getline(v:foldstart)[3:]
-  elseif v:foldlevel == 3
-    let s:line = '     ▪ '.getline(v:foldstart)[4:]
-  elseif v:foldlevel == 4
-    let s:line = '       - '.getline(v:foldstart)[5:]
-  endif
-  if strwidth(s:line) > 80 - len(s:info) - 3
-    return s:line[:79-len(s:info)-3+len(s:line)-strwidth(s:line)].'...'.s:info
-  else
-    return s:line.repeat(' ', 80 - strwidth(s:line) - len(s:info)).s:info
-  endif
-endfunction
-
-""" set foldsettings automatically for vim files
-augroup fold_vimrc
-  autocmd!
-  autocmd FileType vim 
-                   \ setlocal foldmethod=expr |
-                   \ setlocal foldexpr=VimFolds(v:lnum) |
-                   \ setlocal foldtext=VimFoldText() |
-     "              \ set foldcolumn=2 foldminlines=2
-augroup END
-
+"" vim:fdm=expr:fdl=0
+"" vim:fde=getline(v\:lnum)=~'^""'?'>'.(matchend(getline(v\:lnum),'""*')-2)\:'='
