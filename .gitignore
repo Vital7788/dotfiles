@@ -1,2 +1,4 @@
 .netrwhist
-vim/cache
+vim/cache/swap/
+vim/cache/undo/
+vim/cache/backup/
