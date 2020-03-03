@@ -6,6 +6,7 @@ BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ln -s ${BASEDIR}/vim/ ~/.vim
 
 # zsh
+# https://github.com/trapd00r/LS_COLORS
 ln -s ${BASEDIR}/zshrc ~/.zshrc
 
 # i3
