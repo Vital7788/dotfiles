@@ -21,7 +21,6 @@ bindkey '^P' up-history
 bindkey '^N' down-history
 bindkey '^W' backward-kill-word
 bindkey '^R' history-incremental-search-backward
-bindkey '/' history-incremental-search-backward
 
 #PROMPT="[%j] %B%F{blue}%2~%b %B%F{green}$ %f%b"
 function zle-line-init zle-keymap-select {
