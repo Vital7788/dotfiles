@@ -3,15 +3,37 @@
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # vim
-ln -s ${BASEDIR}/vim ~/.vim
+if [ -d ~/.vim ]; then
+    echo ".vim directory already exists"
+else
+    ln -s ${BASEDIR}/vim ~/.vim
+fi
 
 # zsh
 # https://github.com/trapd00r/LS_COLORS
-ln -s ${BASEDIR}/zshrc ~/.zshrc
+if [ -f  ~/.zshrc ]; then
+    echo ".zshrc already exists"
+else
+    ln -s ${BASEDIR}/zshrc ~/.zshrc
+fi
 
 # i3
-ln -s ${BASEDIR}/i3 ~/.config/i3
-ln -s ${BASEDIR}/i3blocks ~/.config/i3blocks
+if [ -d  ~/.config/i3 ]; then
+    echo "i3 directory already exists"
+else
+    ln -s ${BASEDIR}/i3 ~/.config/i3
+fi
+
+#i3blocks
+if [ -d  ~/.config/i3blocks ]; then
+    echo "i3blocks directory already exists"
+else
+    ln -s ${BASEDIR}/i3blocks ~/.config/i3blocks
+fi
 
 # git
-ln -s ${BASEDIR}/gitconfig ~/.gitconfig
+if [ -f  ~/.gitconfig ]; then
+    echo ".gitconfig already exists"
+else
+    ln -s ${BASEDIR}/gitconfig ~/.gitconfig
+fi
