@@ -39,10 +39,9 @@ interval=1
 signal=10
 
 [wifi]
-INTERFACE=wlo1
 label=wifi:
+#INTERFACE=wlan0
 interval=10
-separator=false
 
 # Battery indicator
 # The battery instance defaults to 0.
