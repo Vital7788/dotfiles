@@ -1,5 +1,3 @@
 .netrwhist
-vim/cache/swap/
-vim/cache/undo/
-vim/cache/backup/
+vim/cache
 i3/i3_startup.sh

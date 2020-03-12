@@ -145,12 +145,12 @@ nnoremap <leader>y :%y+<CR>
 
 """ Plugins
 " SyntaxComplete
-if has("autocmd") && exists("+omnifunc")
-autocmd Filetype *
-    \ if &omnifunc == "" |
-    \ setlocal omnifunc=syntaxcomplete#Complete |
-    \ endif
-    endif
+"if has("autocmd") && exists("+omnifunc")
+"autocmd Filetype *
+"    \ if &omnifunc == "" |
+"    \ setlocal omnifunc=syntaxcomplete#Complete |
+"    \ endif
+"    endif
 
 "" vim:fdm=expr:fdl=0
 "" vim:fde=getline(v\:lnum)=~'^""'?'>'.(matchend(getline(v\:lnum),'""*')-2)\:'='

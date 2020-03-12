@@ -7,6 +7,8 @@ if [ -d ~/.vim ]; then
     echo ".vim directory already exists"
 else
     ln -s ${BASEDIR}/vim ~/.vim
+    mkdir ${BASEDIR}/vim/cache
+    mkdir ${BASEDIR}/vim/cache/swap ${BASEDIR}/vim/cache/undo ${BASEDIR}/vim/cache/backup
 fi
 
 # zsh
