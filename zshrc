@@ -10,6 +10,9 @@ SAVEHIST=1000
 setopt appendhistory extendedglob
 unsetopt beep
 
+#autocomplete ignore certain extensions for vim
+zstyle ':completion:*:*:vim:*' file-patterns '^*.(class|pdf):source-files' '*:all-files'
+
 export EDITOR=vim
 export VISUAL=vim
 #vim editing mode in terminal

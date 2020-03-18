@@ -1,15 +1,21 @@
+if stridx(expand('%:p'), 'ad1') != -1
+    call java#compiler#JavaCompilerMenuHandler('', 1)
+elseif stridx(expand('%:p'), 'prog2') != -1
+    call java#compiler#JavaCompilerMenuHandler('', 2)
+endif
+
 compiler javac_XLint
 
-nnoremap <buffer> <Leader>r
-      \ :!java -cp .:/opt/hamcrest-2.2.jar:/opt/junit-4.13.jar org.junit.runner.JUnitCore SimpleTest<CR>
+nnoremap <buffer> <expr> <Leader>r
+      \ ':!java ' . b:classpath . b:modulepath . b:files . '<CR>'
 
-nnoremap <buffer> ,c
-      \ :<C-U>compiler java<CR>
+nmap <buffer> ,l
+      \ <Plug>(JavaLinterSelect)
 
-nnoremap <buffer> ,x
-      \ :<C-U>compiler javac_XLint<CR>
+nmap <buffer> ,c
+      \ <Plug>(JavaCompilerSelect)
 
 let b:undo_ftplugin .= '|setlocal makeprg< errorformat<'
       \ . '|nunmap <buffer> <Leader>r'
+      \ . '|nunmap <buffer> ,l'
       \ . '|nunmap <buffer> ,c'
-      \ . '|nunmap <buffer> ,x'
