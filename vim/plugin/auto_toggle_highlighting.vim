@@ -1,7 +1,5 @@
 " auto turn off highlighting
 " https://github.com/romainl/vim-cool/issues/9
-noremap <expr> <Plug>(StopHL) execute('nohlsearch')[-1]
-noremap! <expr> <Plug>(StopHL) execute('nohlsearch')[-1]
 
 function HlSearch()
     let s:pos = match(getline('.'), @/, col('.') - 1) + 1
@@ -17,3 +15,6 @@ function StopHL()
         sil call feedkeys("\<Plug>(StopHL)", 'm')
     endif
 endfunction
+
+noremap <expr> <Plug>(StopHL) execute('nohlsearch')[-1]
+noremap! <expr> <Plug>(StopHL) execute('nohlsearch')[-1]

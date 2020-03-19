@@ -3,33 +3,38 @@
 filetype plugin indent on
 syntax on
 
-" indent
-set autoindent     " Use indent of previous line on new lines
-set expandtab      " Use spaces instead of tabs
-set shiftwidth=4   " Indent with four spaces
-set softtabstop=4  " Insert four spaces with tab key
+" allow buffers to have changes without being displayed
+set hidden                      
+set number relativenumber
 
 set scrolloff=15
 set backspace=indent,eol,start  "backspace over anything
 set ttimeout ttimeoutlen=30     "timeout on keycodes
 
-" allow buffers to have changes without being displayed
-set hidden                      
-set wildmenu
-set number relativenumber
-
+" cmd
 set showcmd
 set cmdheight=2
 
-" delete comment leaders when joining lines, if supported
-silent! set formatoptions+=j
+" Indent wrapped lines
+set breakindent
 
-" fold settings
+""" wildmenu settings
+set wildmenu                " Use wildmenu
+set wildmode=list:longest   " Tab press completes and lists
+set wildignorecase  " Case insensitive, if supported
+
+""" indent
+set autoindent     " Use indent of previous line on new lines
+set expandtab      " Use spaces instead of tabs
+set shiftwidth=4   " Indent with four spaces
+set softtabstop=4  " Insert four spaces with tab key
+
+""" fold settings
 set foldenable
 set modeline
 set modelineexpr
 
-"""" check OS
+""" check OS
 if !exists("g:os")
     if has("win32") || has("win64")
         let g:os = "Windows"
@@ -40,7 +45,7 @@ if !exists("g:os")
     endif
 endif
 
-"""" Special file locations
+""" Special file locations
 set backup
 set undofile
 " keep swap, backup and undo files in dedicated directory
@@ -55,7 +60,7 @@ else
     set undodir^=~/vimfiles/cache/undo//
 endif
 
-"""" Completion
+""" Completion
 set completeopt=                "control completion menu
 set completeopt+=longest        "match longest common text
 set completeopt+=menuone        "show menu even if there's only 1 match
@@ -72,7 +77,7 @@ inoremap <expr> <C-p> pumvisible() ? '<C-p>' :
   \ '<C-p><C-r>=pumvisible() ? "\<lt>Up>" : ""<CR>'
 
 
-"""" Search
+""" Search
 set hlsearch
 set ignorecase
 set incsearch
@@ -84,7 +89,7 @@ augroup SearchHighlight
 augroup END
 
 
-"""" Colorscheme + Font
+""" Colorscheme + Font
 colorscheme gruvbox
 set bg=dark
 if g:os == "Linux"
@@ -93,25 +98,16 @@ elseif g:os == "Windows"
     set guifont=Consolas:h11
 endif
 
-"""" GUI
+""" GUI
 set guioptions-=m "menu bar
 set guioptions-=T "toolbar
 set guioptions-=r "scrollbar
 
 
-"""" Statusline
+""" Statusline
 set laststatus=2
 
-augroup status
-    autocmd!
-    autocmd WinEnter * setlocal statusline=%!ActiveStatus()
-    autocmd WinLeave * setlocal statusline=%!InactiveStatus()
-augroup END
-
-set statusline=%!ActiveStatus()
-
-
-"""" netrw
+""" netrw
 let g:netrw_banner = 0
 let g:netrw_liststyle = 3
 let g:netrw_winsize = 20
@@ -151,6 +147,7 @@ nnoremap <leader>y :%y+<CR>
 "    \ setlocal omnifunc=syntaxcomplete#Complete |
 "    \ endif
 "    endif
+
 
 "" vim:fdm=expr:fdl=0
 "" vim:fde=getline(v\:lnum)=~'^""'?'>'.(matchend(getline(v\:lnum),'""*')-2)\:'='

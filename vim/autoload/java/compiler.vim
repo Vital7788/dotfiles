@@ -1,10 +1,14 @@
+" handle compiler selection
 function! java#compiler#JavaCompilerMenuHandler(id, result)
+
+    " junit
     if a:result == 1
         compiler junit
         let b:classpath='-cp .:/opt/hamcrest-2.2.jar:/opt/junit-4.13.jar '
         let b:modulepath=''
         let b:files='org.junit.runner.JUnitCore SimpleTest'
 
+    " javafx
     elseif a:result == 2
         execute 'cd ' finddir('src/..', './;')
         compiler javafx
@@ -12,6 +16,7 @@ function! java#compiler#JavaCompilerMenuHandler(id, result)
         let b:modulepath='-p /opt/javafx-sdk-11.0.2/lib:out '
         let b:files='-m ' . expand('%:p:h:t') . '/' . expand('%:p:h:t') . '.Main'
 
+    " java
     elseif a:result == 3
         compiler java
         let b:classpath=''
