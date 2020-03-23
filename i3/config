@@ -192,6 +192,9 @@ floating_modifier $mod
 for_window [window_role="pop-up"] floating enable
 for_window [window_role="task_dialog"] floating enable
 
+# enable floating mode for java .Main windows
+for_window [class="[.]*.Main"] floating enable
+
 # exit with keyboard shortcuts
 mode "exit: [l]ogout, [r]eboot, [s]hutdown" {
   bindsym l exec i3-msg exit

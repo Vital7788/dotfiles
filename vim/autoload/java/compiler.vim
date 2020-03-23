@@ -13,7 +13,7 @@ function! java#compiler#JavaCompilerMenuHandler(id, result)
         execute 'cd ' finddir('src/..', './;')
         compiler javafx
         let b:classpath='-cp out '
-        let b:modulepath='-p /opt/javafx-sdk-11.0.2/lib:out '
+        let b:modulepath='-p /opt/javafx-sdk-11.0.2/lib:lib:out '
         let b:files='-m ' . expand('%:p:h:t') . '/' . expand('%:p:h:t') . '.Main'
 
     " java

@@ -1,1 +1,1 @@
-setlocal makeprg=pmd\ -d\ %\ -format\ text\ -R\ rulesets/java/quickstart.xml
+setlocal makeprg=pmd\ -d\ %\ -format\ text\ -no-cache\ -R\ rulesets/java/quickstart.xml
