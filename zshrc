@@ -10,8 +10,17 @@ SAVEHIST=1000
 setopt appendhistory extendedglob
 unsetopt beep
 
+zstyle ':completion:*' menu select
+# activate approximate completion, but only after regular completion (_complete)
+zstyle ':completion:::::' completer _complete _approximate
+# limit to 2 errors
+zstyle ':completion:*:approximate:*' max-errors 2
 #autocomplete ignore certain extensions for vim
 zstyle ':completion:*:*:vim:*' file-patterns '^*.(class|pdf):source-files' '*:all-files'
+#autocomplete case insensitive
+#partial completion before '.', '_' or '-' e.g. f.b -> foo.bar
+#completion on left side of text e.g. bar -> foobar
+zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 
 export EDITOR=vim
 export VISUAL=vim
