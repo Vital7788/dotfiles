@@ -3,14 +3,15 @@ function! java#compiler#JavaCompilerMenuHandler(id, result)
 
     " junit
     if a:result == 1
+        let b:libraries=''
         compiler junit
-        let b:classpath='-cp .:/opt/hamcrest-2.2.jar:/opt/junit-4.13.jar '
+        let b:classpath='-cp .:out:/opt/hamcrest-2.2.jar:/opt/junit-4.13.jar' . b:libraries . ' '
         let b:modulepath=''
         let b:files='org.junit.runner.JUnitCore SimpleTest'
 
     " javafx
     elseif a:result == 2
-        execute 'cd ' finddir('src/..', './;')
+        execute 'cd ' finddir('src/..', ';')
         compiler javafx
         let b:classpath='-cp out '
         let b:modulepath='-p /opt/javafx-sdk-11.0.2/lib:lib:out '

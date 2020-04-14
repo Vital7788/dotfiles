@@ -20,7 +20,7 @@ set breakindent
 
 """ wildmenu settings
 set wildmenu                " Use wildmenu
-set wildmode=list:longest   " Tab press completes and lists
+set wildmode=list:longest,full   " Tab press completes longest common match and lists, second press cycles
 set wildignorecase  " Case insensitive, if supported
 
 """ indent
@@ -114,14 +114,17 @@ let g:netrw_winsize = 20
 
 
 """ Keybindings
-nnoremap U <C-R>
-nnoremap Y y$
-nnoremap S hs
-nnoremap Q gQ
 let mapleader = "\<space>"
 " toggle folds with <space><space>
 nnoremap <silent> <leader><Space> @=(foldlevel('.')?'za':"\<Space>")<CR>
 vnoremap <leader><space> zf
+
+nnoremap U <C-R>
+nnoremap Y y$
+nnoremap Q gQ
+
+" list loaded buffers and populate prompt
+nnoremap gb :ls<CR>:b<Space>
 
 " Cycle through argument list
 nnoremap [a :previous<CR>

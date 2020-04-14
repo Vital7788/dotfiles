@@ -20,7 +20,6 @@ function! s:Wildignore() abort
         \ '*.7z'
         \,'*.bz2'
         \,'*.gz'
-        \,'*.jar'
         \,'*.rar'
         \,'*.tar'
         \,'*.xz'
