@@ -1,4 +1,4 @@
-""" General Settings
+""" General
 " load filetype settings, plugins and maps
 filetype plugin indent on
 syntax on
@@ -18,23 +18,24 @@ set cmdheight=2
 " Indent wrapped lines
 set breakindent
 
-""" wildmenu settings
-set wildmenu                " Use wildmenu
-set wildmode=list:longest,full   " Tab press completes longest common match and lists, second press cycles
-set wildignorecase  " Case insensitive, if supported
+""" Wildmenu
+set wildmenu                    " Use wildmenu
+set wildmode=list:longest,full  " Tab press completes longest common match and lists, second press cycles
+set wildignorecase              " Case insensitive, if supported
+set wildcharm=<C-z>
 
-""" indent
+""" Indent
 set autoindent     " Use indent of previous line on new lines
 set expandtab      " Use spaces instead of tabs
 set shiftwidth=4   " Indent with four spaces
 set softtabstop=4  " Insert four spaces with tab key
 
-""" fold settings
+""" Fold
 set foldenable
 set modeline
 set modelineexpr
 
-""" check OS
+""" OS
 if !exists("g:os")
     if has("win32") || has("win64")
         let g:os = "Windows"
@@ -59,6 +60,9 @@ else
     set backupdir^=~/vimfiles/cache/backup//
     set undodir^=~/vimfiles/cache/undo//
 endif
+
+""" Path
+set path-=/usr/include
 
 """ Completion
 set completeopt=                "control completion menu
@@ -103,7 +107,6 @@ set guioptions-=m "menu bar
 set guioptions-=T "toolbar
 set guioptions-=r "scrollbar
 
-
 """ Statusline
 set laststatus=2
 
@@ -111,7 +114,6 @@ set laststatus=2
 let g:netrw_banner = 0
 let g:netrw_liststyle = 3
 let g:netrw_winsize = 20
-
 
 """ Keybindings
 let mapleader = "\<space>"
@@ -122,6 +124,10 @@ vnoremap <leader><space> zf
 nnoremap U <C-R>
 nnoremap Y y$
 nnoremap Q gQ
+
+" search recursively for edit and find
+nnoremap ,e :e **/*<C-z>**/*
+nnoremap ,f :find **/*
 
 " list loaded buffers and populate prompt
 nnoremap gb :ls<CR>:b<Space>

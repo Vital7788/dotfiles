@@ -7,6 +7,9 @@ if stridx(expand('%:p'), '/src/') != -1
     let s:path=expand('%:p')[:stridx(expand('%:p'), '/src/') + 3]
     " set library directory in same folder as src/
     let s:libpath=fnamemodify(s:path, ':h') . '/lib'
+    " cd to root
+    execute 'cd ' fnamemodify(s:path, ':h')
+    set path=src
     " set destination directory for class files to out/ and
     " search recursively in src/
     let s:path='-d out ' . s:path . '/**'
