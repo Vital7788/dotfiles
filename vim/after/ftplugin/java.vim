@@ -1,12 +1,12 @@
+" default makeprg=javac -XLint
+compiler javac_XLint
+
 " Choose correct option when in school folder
 if stridx(expand('%:p'), 'ad1') != -1
     call java#compiler#JavaCompilerMenuHandler('', 1)
 elseif stridx(expand('%:p'), 'prog2') != -1
     call java#compiler#JavaCompilerMenuHandler('', 2)
 endif
-
-" default makeprg=javac -XLint
-compiler javac_XLint
 
 " mapping to run program
 nnoremap <buffer> <expr> <Leader>r

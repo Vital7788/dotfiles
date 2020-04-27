@@ -9,7 +9,7 @@ if stridx(expand('%:p'), '/src/') != -1
     let s:libpath=fnamemodify(s:path, ':h') . '/lib'
     " cd to root
     execute 'cd ' fnamemodify(s:path, ':h')
-    set path=src
+    set path=.,src
     " set destination directory for class files to out/ and
     " search recursively in src/
     let s:path='-d out ' . s:path . '/**'

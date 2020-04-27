@@ -128,6 +128,7 @@ nnoremap Q gQ
 " search recursively for edit and find
 nnoremap ,e :e **/*<C-z>**/*
 nnoremap ,f :find **/*
+nnoremap ,n :next **/*<C-z>**/*
 
 " list loaded buffers and populate prompt
 nnoremap gb :ls<CR>:b<Space>
