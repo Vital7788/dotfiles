@@ -11,12 +11,16 @@ set scrolloff=15
 set backspace=indent,eol,start  "backspace over anything
 set ttimeout ttimeoutlen=30     "timeout on keycodes
 
+set virtualedit=block,onemore   "move past end of line in v-block mode and 1 past end of line in normal mode
+
 " cmd
 set showcmd
 set cmdheight=2
 
-" Indent wrapped lines
-set breakindent
+set autoread
+
+"set exrc
+"set secure
 
 """ Wildmenu
 set wildmenu                    " Use wildmenu
@@ -29,6 +33,7 @@ set autoindent     " Use indent of previous line on new lines
 set expandtab      " Use spaces instead of tabs
 set shiftwidth=4   " Indent with four spaces
 set softtabstop=4  " Insert four spaces with tab key
+set breakindent    " Indent wrapped lines
 
 """ Fold
 set foldenable
