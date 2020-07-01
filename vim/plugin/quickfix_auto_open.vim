@@ -1,3 +1,4 @@
+finish
 " Always pop open quickfix and location lists when changed
 augroup quickfix_auto_open
   autocmd!
