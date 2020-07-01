@@ -10,6 +10,8 @@ SAVEHIST=1000
 setopt appendhistory extendedglob
 unsetopt beep
 
+alias open=xdg-open
+
 zstyle ':completion:*' menu select
 # activate approximate completion, but only after regular completion (_complete)
 zstyle ':completion:::::' completer _complete _approximate

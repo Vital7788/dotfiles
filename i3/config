@@ -199,7 +199,7 @@ for_window [class="[.]*.Main"] floating enable
 mode "exit: [l]ogout, [r]eboot, [s]hutdown" {
   bindsym l exec i3-msg exit
   bindsym r exec systemctl reboot
-  bindsym s exec systemctl shutdown
+  bindsym s exec shutdown -h now
   bindsym Escape mode "default"
   bindsym Return mode "default"
 }
@@ -207,4 +207,4 @@ mode "exit: [l]ogout, [r]eboot, [s]hutdown" {
 bindsym $mod+x mode "exit: [l]ogout, [r]eboot, [s]hutdown"
 
 # local settings
-exec --no-startup-id bash ~/.config/i3/i3_startup.sh
+exec --no-startup-id bash ~/.config/i3/startup.sh
