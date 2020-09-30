@@ -1,4 +1,3 @@
-
 function GetGitBranch()
     return system(" pushd ".expand('%:p:h')." > /dev/null "
     \ . " && git rev-parse --abbrev-ref HEAD 2>/dev/null | tr -d '\n' "
