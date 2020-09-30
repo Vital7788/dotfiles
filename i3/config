@@ -50,7 +50,7 @@ bindsym $mod+Shift+q kill
 # shipping a .desktop file. It is a wrapper around dmenu, so you need that
 # installed.
 # bindsym $mod+d exec --no-startup-id i3-dmenu-desktop
-bindsym $mod+d exec --no-startup-id rofi -show run -lines 10 -width 30
+bindsym $mod+d exec --no-startup-id rofi -show drun -modi drun -lines 10 -width 30
 
 # change focus
 bindsym $mod+h focus left
@@ -192,8 +192,10 @@ floating_modifier $mod
 for_window [window_role="pop-up"] floating enable
 for_window [window_role="task_dialog"] floating enable
 
-# enable floating mode for java .Main windows
+# enable floating mode for certain windows
 for_window [class="[.]*.Main"] floating enable
+for_window [class="Game"] floating enable
+for_window [class="PPSSPP"] floating enable resize set 960 544
 
 # exit with keyboard shortcuts
 mode "exit: [l]ogout, [r]eboot, [s]hutdown" {

@@ -59,3 +59,6 @@ zstyle ':vcs_info:*' enable git
 #set ls colors
 eval $( dircolors -b $HOME/.LS_COLORS )
 alias ls='ls --color=auto'
+
+path+=('/home/vital/.gem/ruby/2.7.0/bin')
+export PATH
