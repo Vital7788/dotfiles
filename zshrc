@@ -57,7 +57,7 @@ zstyle ':vcs_info:git:*' formats '%F{240}(%b)%r%f'
 zstyle ':vcs_info:*' enable git
 
 #set ls colors
-eval $( dircolors -b $HOME/.LS_COLORS )
+test -r "~/.dir_colors" && eval $(dircolors ~/.dir_colors)
 alias ls='ls --color=auto'
 
 path+=('/home/vital/.gem/ruby/2.7.0/bin')

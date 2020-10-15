@@ -22,6 +22,47 @@ set autoread
 "set exrc
 "set secure
 
+""" OS
+if !exists("g:os")
+    if has("win32") || has("win64")
+        let g:os = "Windows"
+    elseif has("unix")
+        let g:os = "Linux"
+    else
+        let g:os = ""
+    endif
+endif
+
+""" Plugins
+" SyntaxComplete
+"if has("autocmd") && exists("+omnifunc")
+"autocmd Filetype *
+"    \ if &omnifunc == "" |
+"    \ setlocal omnifunc=syntaxcomplete#Complete |
+"    \ endif
+"    endif
+
+if g:os == "Linux"
+    if empty(glob('~/.vim/autoload/plug.vim'))
+      silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+        \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+      autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+    endif
+endif
+
+call plug#begin('~/.vim/vim_plug')
+
+Plug 'arcticicestudio/nord-vim'
+Plug 'ludovicchabant/vim-gutentags'
+Plug 'dense-analysis/ale'
+Plug 'OmniSharp/omnisharp-vim', { 'for': 'cs' }
+
+call plug#end()
+
+let g:ale_linters = {
+\ 'cs': ['OmniSharp']
+\}
+
 """ Wildmenu
 set wildmenu                    " Use wildmenu
 set wildmode=list:longest,full  " Tab press completes longest common match and lists, second press cycles
@@ -39,17 +80,6 @@ set breakindent    " Indent wrapped lines
 set foldenable
 set modeline
 set modelineexpr
-
-""" OS
-if !exists("g:os")
-    if has("win32") || has("win64")
-        let g:os = "Windows"
-    elseif has("unix")
-        let g:os = "Linux"
-    else
-        let g:os = ""
-    endif
-endif
 
 """ Special file locations
 set backup
@@ -99,10 +129,10 @@ augroup END
 
 
 """ Colorscheme + Font
-colorscheme gruvbox
+colorscheme nord
 set bg=dark
 if g:os == "Linux"
-    set guifont=Fira_Code_Light:h11
+    set guifont=Fira_Code_Medium:h11
 elseif g:os == "Windows"
     set guifont=Consolas:h11
 endif
@@ -153,36 +183,6 @@ nnoremap ]l :lnext<CR>
 
 nnoremap <leader>vimrc :e $MYVIMRC<CR>
 nnoremap <leader>y :%y+<CR>
-
-""" Plugins
-" SyntaxComplete
-"if has("autocmd") && exists("+omnifunc")
-"autocmd Filetype *
-"    \ if &omnifunc == "" |
-"    \ setlocal omnifunc=syntaxcomplete#Complete |
-"    \ endif
-"    endif
-
-if g:os == "Linux"
-    if empty(glob('~/.vim/autoload/plug.vim'))
-      silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
-        \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-      autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
-    endif
-endif
-
-call plug#begin('~/.vim/vim_plug')
-
-Plug 'ludovicchabant/vim-gutentags'
-Plug 'dense-analysis/ale'
-Plug 'OmniSharp/omnisharp-vim', { 'for': 'cs' }
-
-call plug#end()
-
-let g:ale_linters = {
-\ 'cs': ['OmniSharp']
-\}
-
 
 "" vim:fdm=expr:fdl=0
 "" vim:fde=getline(v\:lnum)=~'^""'?'>'.(matchend(getline(v\:lnum),'""*')-2)\:'='

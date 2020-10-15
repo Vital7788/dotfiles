@@ -39,3 +39,8 @@ if [ -f  ~/.gitconfig ]; then
 else
     ln -s ${BASEDIR}/gitconfig ~/.gitconfig
 fi
+if [ -f  ~/.gitignore ]; then
+    echo ".gitignore already exists"
+else
+    ln -s ${BASEDIR}/global_gitignore ~/.gitignore
+fi

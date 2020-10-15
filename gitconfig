@@ -1,3 +1,5 @@
 [user]
 	name = Vital Wang
 	email = vital.wang@hotmail.com
+[core]
+	excludesfile = /home/vital/.gitignore
