@@ -15,9 +15,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #------------------------------------------------------------------------
-if [[ -z "$INTERFACE" ]] ; then
-    INTERFACE="${BLOCK_INSTANCE:-$(nmcli device status | grep wifi | head -n1 | cut -f1 -d' ')}"
-fi
+
+INTERFACE="${BLOCK_INSTANCE:-$(ifconfig | grep '^[a-zA-Z]' | tail -n1 | cut -f1 -d':')}"
+
 #------------------------------------------------------------------------
 
 # As per #36 -- It is transparent: e.g. if the machine has no battery or wireless

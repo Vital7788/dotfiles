@@ -25,31 +25,31 @@
 # Each block command defaults to the script name to avoid boilerplate.
 # Change $SCRIPT_DIR to the location of your scripts!
 command=~/.config/i3blocks/blocklets/$BLOCK_NAME
-separator_block_width=20
+separator_block_width=30
 markup=none
 
-# Volume indicator
-# The first parameter sets the step (and units to display)
-# The second parameter overrides the mixer selection
-# See the script for details.
+[brightness]
+label=
+interval=3
 
 [volume]
-label=♪
+#label=♪
+label=
 interval=1
 signal=10
 
 [wifi]
-label=wifi:
-#INTERFACE=wlan0
+label=
+instance=wlp3s0
 interval=10
 
-# Battery indicator
-# The battery instance defaults to 0.
 [battery]
-label=⚡
-interval=30
+#label=⚡
+#label=
+#interval=30
+interval=1
 
-# Date Time
 [time]
-command=date '+%Y-%m-%d %H:%M:%S'
-interval=5
+label=
+command=date '+%d/%m/%Y %H:%M:%S'
+interval=1

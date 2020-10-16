@@ -44,3 +44,10 @@ if [ -f  ~/.gitignore ]; then
 else
     ln -s ${BASEDIR}/global_gitignore ~/.gitignore
 fi
+
+# dircolors
+if [ -f  ~/.dir_colors ]; then
+    echo ".dir_colors already exists"
+else
+    ln -s ${BASEDIR}/nord-dircolors/src/dir_colors ~/.dir_colors
+fi

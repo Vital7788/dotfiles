@@ -41,12 +41,37 @@ elsif ($acpi !~ /: ([\w\s]+), (\d+)%/) {
 
 $status = $1;
 $percent = $2;
-$full_text = "$label$percent%";
+$full_text = "$label";
 
 if ($status eq 'Discharging') {
-	$full_text .= ' DIS';
+	if ($percent < 10) {
+            $full_text .= '';
+	} elsif ($percent < 30) {
+            $full_text .= '';
+	} elsif ($percent < 50) {
+            $full_text .= '';
+	} elsif ($percent < 70) {
+            $full_text .= '';
+	} elsif ($percent < 90) {
+            $full_text .= '';
+	} else {
+            $full_text .= '';
+        }
+
 } elsif ($status eq 'Charging') {
-	$full_text .= ' CHR';
+	if ($percent < 10) {
+            $full_text .= '';
+	} elsif ($percent < 30) {
+            $full_text .= '';
+	} elsif ($percent < 50) {
+            $full_text .= '';
+	} elsif ($percent < 70) {
+            $full_text .= '';
+	} elsif ($percent < 90) {
+            $full_text .= '';
+	} else {
+            $full_text .= '';
+        }
 } elsif ($status eq 'Unknown') {
 	open (AC_ADAPTER, "acpi -a |") or die;
 	$ac_adapt = <AC_ADAPTER>;
@@ -63,6 +88,7 @@ if ($status eq 'Discharging') {
 	}
 }
 
+$full_text .= " $percent%";
 $short_text = $full_text;
 
 if ($acpi =~ /(\d\d:\d\d):/) {
