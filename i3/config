@@ -200,10 +200,10 @@ for_window [class="PPSSPP"] floating enable resize set 960 544
 # exit with keyboard shortcuts
 mode "exit: [l]ogout, [r]eboot, [s]hutdown" {
   bindsym l exec i3-msg exit
-  #bindsym r exec loginctl reboot
-  bindsym r exec systemctl reboot
-  #bindsym s exec loginctl poweroff
-  bindsym s exec shutdown -h now
+  bindsym r exec loginctl reboot
+  #bindsym r exec systemctl reboot
+  bindsym s exec loginctl poweroff
+  #bindsym s exec shutdown -h now
   bindsym Escape mode "default"
   bindsym Return mode "default"
 }

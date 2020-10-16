@@ -33,7 +33,6 @@ label=
 interval=3
 
 [volume]
-#label=♪
 label=
 interval=1
 signal=10
@@ -44,10 +43,8 @@ instance=wlp3s0
 interval=10
 
 [battery]
-#label=⚡
 #label=
-#interval=30
-interval=1
+interval=30
 
 [time]
 label=
