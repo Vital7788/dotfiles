@@ -192,10 +192,10 @@ set $nord14  #A3BE8C
 set $nord15  #B48EAD
 
 # class                 border  backgr. text    indicator
-client.focused          $nord8  $nord8  $nord3  $nord0
-client.focused_inactive $nord3  $nord3  $nord8  $nord0
-client.unfocused        $nord3  $nord3  $nord8  $nord0
-client.urgent           $nord15 $nord15 $nord3  $nord0
+client.focused          $nord9  $nord8  $nord3  $nord10
+client.focused_inactive $nord1  $nord3  $nord8  $nord0
+client.unfocused        $nord1  $nord3  $nord8  $nord0
+client.urgent           $nord15 $nord15 $nord3  $nord10
 client.placeholder      $nord0  $nord0  $nord3  $nord0
 client.background       $nord0
 
