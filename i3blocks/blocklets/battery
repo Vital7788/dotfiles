@@ -72,6 +72,8 @@ if ($status eq 'Discharging') {
     } else {
         $full_text .= '';
     }
+} elsif ($percent == 100) {
+    $full_text .= '';
 } elsif ($status eq 'Unknown') {
     open (AC_ADAPTER, "acpi -a |") or die;
     $ac_adapt = <AC_ADAPTER>;
