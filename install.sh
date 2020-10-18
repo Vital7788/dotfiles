@@ -51,3 +51,9 @@ if [ -f  ~/.dir_colors ]; then
 else
     ln -s ${BASEDIR}/nord-dircolors/src/dir_colors ~/.dir_colors
 fi
+
+if [ -f  ~/.config/betterlockscreenrc ]; then
+    echo "betterlockscreenrc already exists"
+else
+    ln -s ${BASEDIR}/betterlockscreenrc ~/.config/betterlockscreenrc
+fi

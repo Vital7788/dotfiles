@@ -234,17 +234,20 @@ for_window [class="Game"] floating enable
 for_window [class="PPSSPP"] floating enable resize set 960 544
 
 # exit with keyboard shortcuts
-mode "exit: [l]ogout, [r]eboot, [s]hutdown" {
-  bindsym l exec i3-msg exit
-  bindsym r exec loginctl reboot
-  #bindsym r exec systemctl reboot
-  bindsym s exec loginctl poweroff
-  #bindsym s exec shutdown -h now
+set $mode_exit exit: loc[k], [l]ogout, s[u]spend, [r]eboot, [s]hutdown
+bindsym $mod+x mode "$mode_exit"
+
+mode "$mode_exit" {
+  bindsym k exec betterlockscreen -l, mode "default"
+  bindsym l exec i3-msg exit, mode "default"
+  bindsym u exec loginctl suspend, mode "default"
+  bindsym r exec loginctl reboot, mode "default"
+  #bindsym r exec systemctl reboot, mode "default"
+  bindsym s exec loginctl poweroff, mode "default"
+  #bindsym s exec shutdown -h now, mode "default"
   bindsym Escape mode "default"
   bindsym Return mode "default"
 }
-
-bindsym $mod+x mode "exit: [l]ogout, [r]eboot, [s]hutdown"
 
 # local settings
 exec --no-startup-id bash ~/.config/i3/startup.sh
