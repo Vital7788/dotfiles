@@ -15,9 +15,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #------------------------------------------------------------------------
-if [[ -z "$INTERFACE" ]] ; then
-    INTERFACE="${BLOCK_INSTANCE:-$(nmcli device status | grep wifi | head -n1 | cut -f1 -d' ')}"
-fi
+
+INTERFACE="${BLOCK_INSTANCE:-$(ifconfig | grep '^[a-zA-Z]' | tail -n1 | cut -f1 -d':')}"
+
 #------------------------------------------------------------------------
 
 # As per #36 -- It is transparent: e.g. if the machine has no battery or wireless
@@ -28,7 +28,8 @@ fi
 if [[ "$(cat /sys/class/net/$INTERFACE/operstate)" = 'down' ]]; then
     echo "down"
     echo "down"
-    echo "#FF0000"
+    #echo "#FF0000"
+    echo "#BF616A"
     exit
 fi
 
@@ -42,12 +43,17 @@ echo $QUALITY% # full text
 echo $QUALITY% # short text
 
 # color
+# nord color scheme
 if [[ $QUALITY -ge 80 ]]; then
-    echo "#00FF00"
+    #echo "#00FF00"
+    echo "#A3BE8C"
 elif [[ $QUALITY -ge 60 ]]; then
-    echo "#FFF600"
+    #echo "#FFF600"
+    echo "#EBCB8B"
 elif [[ $QUALITY -ge 40 ]]; then
-    echo "#FFAE00"
+    #echo "#FFAE00"
+    echo "#D08770"
 else
-    echo "#FF0000"
+    #echo "#FF0000"
+    echo "#BF616A"
 fi

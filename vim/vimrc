@@ -19,8 +19,9 @@ set cmdheight=2
 
 set autoread
 
-"set exrc
-"set secure
+" enable project-specific vimrc
+set exrc
+set secure
 
 """ OS
 if !exists("g:os")
@@ -60,8 +61,12 @@ Plug 'OmniSharp/omnisharp-vim', { 'for': 'cs' }
 call plug#end()
 
 let g:ale_linters = {
-\ 'cs': ['OmniSharp']
+\ 'cs': ['OmniSharp'],
+\ 'c': ['clangd', 'clangtidy'],
+\ 'cpp': ['clangd', 'clangtidy']
 \}
+
+let g:ale_echo_msg_format = '%linter%: %s'
 
 """ Wildmenu
 set wildmenu                    " Use wildmenu

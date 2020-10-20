@@ -10,3 +10,5 @@ if !empty(findfile("CMakeLists.txt", ".;"))
 endif
 
 let b:undo_ftplugin .= '|nunmap <buffer> <Leader>r'
+
+set path+=/usr/include
