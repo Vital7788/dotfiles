@@ -3,3 +3,5 @@
 	email = vital.wang@hotmail.com
 [core]
 	excludesfile = /home/vital/.gitignore
+[pull]
+	rebase = false
