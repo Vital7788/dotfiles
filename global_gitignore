@@ -1,6 +1,17 @@
+# vim
 tags
-compile_commands.json
-.idea
-project.iml
-.netrwhist
 .vimrc
+.netrwhist
+
+# intellij
+.idea/
+
+#vscode
+project.iml
+
+# C/C++
+compile_commands.json
+.clangd/
+
+# haskell
+.stack-work/
