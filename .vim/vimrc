@@ -17,6 +17,7 @@ set virtualedit=block,onemore   "move past end of line in v-block mode and 1 pas
 set showcmd
 set cmdheight=2
 
+" reload file when edited outside vim
 set autoread
 
 " enable project-specific vimrc
@@ -35,14 +36,6 @@ if !exists("g:os")
 endif
 
 """ Plugins
-" SyntaxComplete
-"if has("autocmd") && exists("+omnifunc")
-"autocmd Filetype *
-"    \ if &omnifunc == "" |
-"    \ setlocal omnifunc=syntaxcomplete#Complete |
-"    \ endif
-"    endif
-
 if g:os == "Linux"
     if empty(glob('~/.vim/autoload/plug.vim'))
       silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
@@ -81,12 +74,7 @@ set shiftwidth=4   " Indent with four spaces
 set softtabstop=4  " Insert four spaces with tab key
 set breakindent    " Indent wrapped lines
 
-""" Fold
-set foldenable
-set modeline
-set modelineexpr
-
-""" Special file locations
+""" Swap, undo, backup
 set backup
 set undofile
 " keep swap, backup and undo files in dedicated directory
@@ -102,6 +90,7 @@ else
 endif
 
 """ Path
+" set path in filetype specific settings
 set path-=/usr/include
 
 """ Completion
@@ -132,6 +121,11 @@ augroup SearchHighlight
     autocmd InsertEnter * call StopHL()
 augroup END
 
+
+""" Fold
+set foldenable
+set modeline
+set modelineexpr
 
 """ Colorscheme + Font
 colorscheme nord
