@@ -60,5 +60,7 @@ zstyle ':vcs_info:*' enable git
 test -r "~/.dir_colors" && eval $(dircolors ~/.dir_colors)
 alias ls='ls --color=auto'
 
+alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
+
 path+=('/home/vital/.gem/ruby/2.7.0/bin')
 export PATH
