@@ -1,5 +1,12 @@
 zstyle :compinstall filename '/home/vital/.zshrc'
+# load Git completion
+zstyle ':completion:*:*:git:*' script ~/.zsh/git-completion.bash
+# git-completion.zsh is a function file, not designed to be sourced
+# this command appends the ~/.zsh directory onto the shell's function lookup list
+fpath=(~/.zsh $fpath)
 
+# autoload scans each path within fpath for files starting with underscore 
+# and appends to corresponding script as a function file
 autoload -Uz compinit promptinit vcs_info
 compinit
 promptinit
