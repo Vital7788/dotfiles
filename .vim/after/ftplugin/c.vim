@@ -1,1 +1,1 @@
-set path+=/usr/include
+"set path+=/usr/include

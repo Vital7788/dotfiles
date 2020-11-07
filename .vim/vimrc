@@ -63,7 +63,8 @@ let g:ale_echo_msg_format = '%linter%: %s'
 
 """ Wildmenu
 set wildmenu                    " Use wildmenu
-set wildmode=list:longest,full  " Tab press completes longest common match and lists, second press cycles
+"set wildmode=list:longest,full  " Tab press completes longest common match and lists, second press cycles
+set wildmode=list:full
 set wildignorecase              " Case insensitive, if supported
 set wildcharm=<C-z>
 
@@ -74,14 +75,29 @@ set shiftwidth=4   " Indent with four spaces
 set softtabstop=4  " Insert four spaces with tab key
 set breakindent    " Indent wrapped lines
 
-""" Swap, undo, backup
+""" Swap, Undo, Backup
 set backup
 set undofile
 " keep swap, backup and undo files in dedicated directory
 " // expands to file's full path
 if g:os == "Linux"
+    if !isdirectory($HOME."/.vim")
+        call mkdir($HOME."/.vim", "", 0770)
+    endif
+
+    if !isdirectory($HOME."/.vim/cache/swap")
+        call mkdir($HOME."/.vim/cache/swap", "p", 0700)
+    endif
     set directory^=~/.vim/cache/swap//
+
+    if !isdirectory($HOME."/.vim/cache/backup")
+        call mkdir($HOME."/.vim/cache/backup", "p", 0700)
+    endif
     set backupdir^=~/.vim/cache/backup//
+
+    if !isdirectory($HOME."/.vim/cache/undo")
+        call mkdir($HOME."/.vim/cache/undo", "p", 0700)
+    endif
     set undodir^=~/.vim/cache/undo//
 else
     set directory^=~/vimfiles/cache/swap//
@@ -150,19 +166,27 @@ let g:netrw_liststyle = 3
 let g:netrw_winsize = 20
 
 """ Keybindings
-let mapleader = "\<space>"
+" use leader for buffer/pane operations
+let mapleader = ","
+let maplocalleader = "\<Space>"
 " toggle folds with <space><space>
-nnoremap <silent> <leader><Space> @=(foldlevel('.')?'za':"\<Space>")<CR>
-vnoremap <leader><space> zf
+nnoremap <silent> <localleader><Space> @=(foldlevel('.')?'za':"\<Space>")<CR>
+vnoremap <localleader><space> zf
 
 nnoremap U <C-R>
 nnoremap Y y$
 nnoremap Q gQ
 
+" expand %% in command mode to current file path
+cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<CR>
+
 " search recursively for edit and find
-nnoremap ,e :e **/*<C-z>**/*
-nnoremap ,f :find **/*
-nnoremap ,n :next **/*<C-z>**/*
+"nnoremap <leader>e :e **/*<C-z>**/*
+nmap <leader>e :e %%<C-z><S-Tab>
+nnoremap <leader>f :find **/*
+
+" cd to current file path for current window
+nnoremap <leader>cd :lcd %:h<CR>
 
 " list loaded buffers and populate prompt
 nnoremap gb :ls<CR>:b<Space>
@@ -180,8 +204,7 @@ nnoremap ]c :cnext<CR>
 nnoremap [l :lprevious<CR>
 nnoremap ]l :lnext<CR>
 
-nnoremap <leader>vimrc :e $MYVIMRC<CR>
-nnoremap <leader>y :%y+<CR>
+nnoremap <localleader>y :%y+<CR>
 
 "" vim:fdm=expr:fdl=0
 "" vim:fde=getline(v\:lnum)=~'^""'?'>'.(matchend(getline(v\:lnum),'""*')-2)\:'='
