@@ -49,12 +49,10 @@ call plug#begin('~/.vim/vim_plug')
 Plug 'arcticicestudio/nord-vim'
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'dense-analysis/ale'
-Plug 'OmniSharp/omnisharp-vim', { 'for': 'cs' }
 
 call plug#end()
 
 let g:ale_linters = {
-\ 'cs': ['OmniSharp'],
 \ 'c': ['clangd', 'clangtidy'],
 \ 'cpp': ['clangd', 'clangtidy']
 \}

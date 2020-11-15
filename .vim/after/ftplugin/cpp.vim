@@ -12,3 +12,8 @@ nnoremap <buffer> <Leader>r
 let b:undo_ftplugin .= '|nunmap <buffer> <Leader>r'
 
 "set path+=/usr/include
+
+let g:ale_cpp_clangd_options="-I" . getcwd()
+
+let g:termdebug_popup = 0
+packadd termdebug
