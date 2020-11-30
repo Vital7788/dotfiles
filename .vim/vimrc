@@ -142,7 +142,8 @@ set modeline
 set modelineexpr
 
 """ Colorscheme + Font
-colorscheme nord
+"colorscheme nord
+colorscheme gruvbox
 set bg=dark
 if g:os == "Linux"
     set guifont=Fira_Code_Medium:h11
