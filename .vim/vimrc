@@ -49,6 +49,7 @@ call plug#begin('~/.vim/vim_plug')
 Plug 'arcticicestudio/nord-vim'
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'dense-analysis/ale'
+Plug 'lervag/vimtex'
 
 call plug#end()
 
@@ -58,6 +59,10 @@ let g:ale_linters = {
 \}
 
 let g:ale_echo_msg_format = '%linter%: %s'
+
+let g:tex_flavor='latex'
+let g:vimtex_view_method='zathura'
+let g:vimtex_quickfix_mode=0
 
 """ Wildmenu
 set wildmenu                    " Use wildmenu
