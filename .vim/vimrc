@@ -7,7 +7,7 @@ syntax on
 set hidden                      
 set number relativenumber
 
-set scrolloff=15
+set scrolloff=10
 set backspace=indent,eol,start  "backspace over anything
 set ttimeout ttimeoutlen=30     "timeout on keycodes
 
