@@ -4,8 +4,9 @@ filetype plugin indent on
 syntax on
 
 " allow buffers to have changes without being displayed
-set hidden                      
-set number relativenumber
+set hidden
+"set number relativenumber
+set number
 
 set scrolloff=10
 set backspace=indent,eol,start  "backspace over anything
@@ -53,8 +54,9 @@ Plug 'dense-analysis/ale'
 call plug#end()
 
 let g:ale_linters = {
-\ 'c': ['clangd', 'clangtidy'],
-\ 'cpp': ['clangd', 'clangtidy']
+\ 'c': ['clangcheck', 'clangd', 'clangtidy', 'cppcheck', 'cpplint'],
+\ 'cpp': ['clangcheck', 'clangd', 'clangtidy', 'cppcheck', 'cpplint'],
+\ 'haskell': ['cabal_ghc', 'hdevtools', 'hie', 'hlint', 'stack_build', 'stack_ghc']
 \}
 
 let g:ale_echo_msg_format = '%linter%: %s'
@@ -66,12 +68,16 @@ set wildmode=list:full
 set wildignorecase              " Case insensitive, if supported
 set wildcharm=<C-z>
 
-""" Indent
+""" Indent & Whitespace
 set autoindent     " Use indent of previous line on new lines
 set expandtab      " Use spaces instead of tabs
 set shiftwidth=4   " Indent with four spaces
 set softtabstop=4  " Insert four spaces with tab key
 set breakindent    " Indent wrapped lines
+
+" show trailing spaces
+set list
+set listchars=tab:\ \ ,trail:·
 
 """ Swap, Undo, Backup
 set backup
@@ -128,13 +134,6 @@ inoremap <expr> <C-p> pumvisible() ? '<C-p>' :
 set hlsearch
 set ignorecase
 set incsearch
-
-augroup SearchHighlight
-    autocmd!
-    autocmd CursorMoved * call HlSearch()
-    autocmd InsertEnter * call StopHL()
-augroup END
-
 
 """ Fold
 set foldenable
