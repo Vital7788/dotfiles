@@ -68,6 +68,6 @@ zstyle ':vcs_info:*' enable git
 
 #set ls colors
 test -r "~/.dir_colors" && eval $(dircolors ~/.dir_colors)
-alias ls='ls --color=auto'
+alias ls='ls --color=auto -h'
 
 alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
