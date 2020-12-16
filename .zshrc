@@ -40,14 +40,17 @@ export KEYTIMEOUT=1
 
 bindkey '^P' up-history
 bindkey '^N' down-history
-bindkey '^W' backward-kill-word
 bindkey '^R' history-incremental-search-backward
+bindkey '^F' history-incremental-search-forward
+#fix backspace in vi-mode
+bindkey '^?' backward-delete-char
+bindkey '^W' backward-kill-word
 
 #show vi mode in prompt
 function zle-line-init zle-keymap-select {
     VIM_PROMPT_NORMAL="%F{green} [% NORMAL]% %f"
     VIM_PROMPT_INSERT="%F{cyan} [% INSERT]% %f"
-    PROMPT="[%j]${${KEYMAP/vicmd/$VIM_PROMPT_NORMAL}/(main|viins)/$VIM_PROMPT_INSERT} %B%F{blue}%2~%b %B%F{green}$ %f%b"
+    PROMPT="[%j]${${KEYMAP/vicmd/$VIM_PROMPT_NORMAL}/(main|viins)/$VIM_PROMPT_INSERT} %B%F{blue}%3~%b %B%F{green}$ %f%b"
     
     zle reset-prompt
 }
@@ -68,6 +71,3 @@ test -r "~/.dir_colors" && eval $(dircolors ~/.dir_colors)
 alias ls='ls --color=auto'
 
 alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
-
-path+=('/home/vital/.gem/ruby/2.7.0/bin')
-export PATH
