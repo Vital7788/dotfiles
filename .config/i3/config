@@ -254,4 +254,4 @@ mode "$mode_exit" {
 }
 
 # local settings
-exec --no-startup-id bash ~/.config/i3/startup.sh
+#exec --no-startup-id bash ~/.config/i3/startup.sh
