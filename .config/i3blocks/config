@@ -29,24 +29,42 @@ separator_block_width=30
 markup=none
 
 [brightness]
-label=
+label= 
 interval=3
 
 [volume]
-label=
+label= 
 interval=1
-signal=10
+card=Generic
+
+[cpu_usage]
+LABEL=CPU 
+interval=10
+#T_WARN=50
+#T_CRIT=80
+#DECIMALS=2
+
+[gpu-load]
+label=GPU 
+interval=10
+GPU_BRAND=NVIDIA
+#T_WARN=60
+#T_CRIT=80
+
+[memory]
+label=MEM 
+interval=10
 
 [wifi]
-label=
-instance=wlp3s0
+label= 
+instance=wlo1
 interval=10
 
 [battery]
-#label=
+#label= 
 interval=30
 
 [time]
-label=
+label= 
 command=date '+%d/%m/%Y %H:%M:%S'
 interval=1

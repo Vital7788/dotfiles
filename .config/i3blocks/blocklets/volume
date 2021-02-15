@@ -1,11 +1,15 @@
 #!/bin/bash
 
-statusline=$(amixer get Master | tail -n 1)
+if [[ -n "$card" ]]; then
+    card="-c "$card
+fi
+
+statusline=$(amixer $card get Master | tail -n 1)
 status=$(echo "${statusline}" | grep -wo "on")
-volume=$(echo "${statusline}" | awk -F ' ' '{print $5}' | tr -d '[]%')
+volume=$(echo "${statusline}" | awk -F "[][]" '{ print $2 }')
 
 if [[ "${status}" == "on" ]]; then
-    echo "${volume}%"
+    echo "${volume}"
 else
     echo "MUTE"
 fi

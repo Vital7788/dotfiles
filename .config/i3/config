@@ -25,11 +25,16 @@ font pango:FiraCode Nerd Font 12px
 #exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
 
 # Use pactl to adjust volume in PulseAudio.
-set $refresh_i3status killall -SIGUSR1 i3status
-bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +5%
-bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -5%
-bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle
-bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle
+#set $refresh_i3status killall -SIGUSR1 i3status
+#bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +5%
+#bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -5%
+#bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle
+#bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle
+
+# Use amixer to adjust volume in ALSA.
+bindsym XF86AudioRaiseVolume exec --no-startup-id amixer -c Generic -q sset Master 5%+
+bindsym XF86AudioLowerVolume exec --no-startup-id amixer -c Generic -q sset Master 5%-
+bindsym XF86AudioMute exec --no-startup-id amixer -c Generic -q sset Master toggle
 
 # Use flameshot to make screenshots
 bindsym Print exec flameshot gui -p ~/media/pictures/screenshot
@@ -218,7 +223,7 @@ bar {
       focused_workspace  $nord3  $nord8
       active_workspace   $nord3  $nord8
       inactive_workspace $nord8  $nord3
-      urgent_workspace   $nord3  $nord15 
+      urgent_workspace   $nord3  $nord15
     }
 }
 
