@@ -258,5 +258,7 @@ mode "$mode_exit" {
   bindsym Return mode "default"
 }
 
+exec --no-startup-id /usr/bin/dunst
+
 # local settings
 #exec --no-startup-id bash ~/.config/i3/startup.sh
