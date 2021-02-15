@@ -75,4 +75,4 @@ alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 #enable keychain
 keychain ~/.ssh/id_rsa
 . ~/.keychain/${HOST}-sh
-. ~/.keychain/${HOST}-sh-gpg
+#. ~/.keychain/${HOST}-sh-gpg
