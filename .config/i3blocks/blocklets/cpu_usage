@@ -55,7 +55,7 @@ printf "%.${decimals}f%%\n", $cpu_usage;
 if ($cpu_usage >= $t_crit) {
     #print "#FF0000\n";
     print "#BF616A\n";
-    exit 33;
+    #exit 33;
 } elsif ($cpu_usage >= $t_warn) {
     #print "#FFFC00\n";
     print "#EBCB8B\n";

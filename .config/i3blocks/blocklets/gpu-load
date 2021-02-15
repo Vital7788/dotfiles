@@ -81,7 +81,7 @@ printf "%.0f%%\n", $gpu_usage;
 if ($gpu_usage >= $t_crit || $gpu_mem >= $t_crit || $gpu_video >= $t_crit || $gpu_pcie >= $t_crit) {
     #print "#FF0000\n";
     print "#BF616A\n";
-    exit 33;
+    #exit 33;
 } elsif ($gpu_usage >= $t_warn || $gpu_mem >= $t_warn || $gpu_video >= $t_warn || $gpu_pcie >= $t_warn) {
     #print "#FFBF00\n";
     print "#D08770\n";
