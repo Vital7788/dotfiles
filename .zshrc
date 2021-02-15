@@ -71,3 +71,8 @@ test -r "~/.dir_colors" && eval $(dircolors ~/.dir_colors)
 alias ls='ls --color=auto -h'
 
 alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
+
+#enable keychain
+keychain ~/.ssh/id_rsa
+. ~/.keychain/${HOST}-sh
+. ~/.keychain/${HOST}-sh-gpg
