@@ -8,7 +8,7 @@ set hidden
 "set number relativenumber
 set number
 
-set scrolloff=10
+set scrolloff=5
 set backspace=indent,eol,start  "backspace over anything
 set ttimeout ttimeoutlen=30     "timeout on keycodes
 
@@ -69,11 +69,13 @@ set wildignorecase              " Case insensitive, if supported
 set wildcharm=<C-z>
 
 """ Indent & Whitespace
-set autoindent     " Use indent of previous line on new lines
-set expandtab      " Use spaces instead of tabs
-set shiftwidth=4   " Indent with four spaces
-set softtabstop=4  " Insert four spaces with tab key
-set breakindent    " Indent wrapped lines
+set autoindent               " Use indent of previous line on new lines
+set expandtab                " Use spaces instead of tabs
+set shiftwidth=4             " Indent with four spaces
+set softtabstop=4            " Insert four spaces with tab key
+set breakindent              " Indent wrapped lines
+set breakindentopt=shift:2   " Indent wrapped lines slightly more
+set linebreak                " Break at word boundaries
 
 " show trailing spaces
 set list
