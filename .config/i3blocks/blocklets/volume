@@ -2,6 +2,8 @@
 
 if [[ -n "$card" ]]; then
     card="-c "$card
+else
+    card=""
 fi
 
 statusline=$(amixer $card get Master | tail -n 1)
