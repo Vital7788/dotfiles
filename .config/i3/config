@@ -242,6 +242,7 @@ for_window [class="(?i)keepass"] floating enable resize set 800 600
 assign [class="discord"] 5
 assign [class="zoom"] 4
 for_window [class="zoom" title="Chat"] resize shrink width 600
+for_window [class="zoom" title="Breakout"] resize shrink width 600
 assign [class="teams"] 4
 assign [class="jetbrains-idea"] 2
 assign [class="jetbrains-studio"] 2
