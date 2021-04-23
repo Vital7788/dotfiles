@@ -105,6 +105,9 @@ if g:os == "Linux"
         call mkdir($HOME."/.vim/cache/undo", "p", 0700)
     endif
     set undodir^=~/.vim/cache/undo//
+
+    " no undo or backup files for files in /tmp
+    au BufWritePre /tmp/* setlocal noundofile nobackup nowritebackup
 else
     set directory^=~/vimfiles/cache/swap//
     set backupdir^=~/vimfiles/cache/backup//
