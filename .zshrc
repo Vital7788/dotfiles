@@ -1,3 +1,37 @@
+HISTFILE=~/.histfile
+HISTSIZE=10000
+SAVEHIST=10000
+#HISTORY_IGNORE="(ls|cd|fg|bg)"
+setopt appendhistory sharehistory histignorealldups
+setopt extendedglob
+unsetopt beep
+
+function zshaddhistory() {
+    emulate -L zsh
+    # strip newline
+    1=${1%%$'\n'}
+    if [[ "$1" =~ "^(ls|cd)[^\|]*$" || "$1" == "fg" || "$1" == "bg" ]]; then
+        # if return is 1, the history line won't be saved
+        # if return is 2, the history line will be saved to internal history list,
+        # but not written to history file
+        return 1
+    fi
+}
+
+# ctrl-z backgrounds the current job if line is empty
+# this way the foreground job can be backgrounded using ctrl-z ctrl-z
+# when line is not empty "suspend" current input line
+fancy-ctrl-z () {
+  if [[ $#BUFFER -eq 0 ]]; then
+    bg
+    zle redisplay
+  else
+    zle push-input
+  fi
+}
+zle -N fancy-ctrl-z
+bindkey '^Z' fancy-ctrl-z
+
 zstyle :compinstall filename '/home/vital/.zshrc'
 # load Git completion
 zstyle ':completion:*:*:git:*' script ~/.zsh/git-completion.bash
@@ -5,19 +39,11 @@ zstyle ':completion:*:*:git:*' script ~/.zsh/git-completion.bash
 # this command appends the ~/.zsh directory onto the shell's function lookup list
 fpath=(~/.zsh $fpath)
 
-# autoload scans each path within fpath for files starting with underscore 
+# autoload scans each path within fpath for files starting with underscore
 # and appends to corresponding script as a function file
 autoload -Uz compinit promptinit vcs_info
 compinit
 promptinit
-
-HISTFILE=~/.histfile
-HISTSIZE=1000
-SAVEHIST=1000
-setopt appendhistory extendedglob
-unsetopt beep
-
-alias open=xdg-open
 
 zstyle ':completion:*' menu select
 # activate approximate completion, but only after regular completion (_complete)
@@ -31,12 +57,10 @@ zstyle ':completion:*:*:vim:*' file-patterns '^*.(class|pdf):source-files' '*:al
 #completion on left side of text e.g. bar -> foobar
 zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 
-export EDITOR=vim
-export VISUAL=vim
 #vim editing mode in terminal
 bindkey -v
 #reduced lag after pressing <ESC>
-export KEYTIMEOUT=1
+KEYTIMEOUT=1
 
 bindkey '^P' up-history
 bindkey '^N' down-history
@@ -51,7 +75,7 @@ function zle-line-init zle-keymap-select {
     VIM_PROMPT_NORMAL="%F{green} [% NORMAL]% %f"
     VIM_PROMPT_INSERT="%F{cyan} [% INSERT]% %f"
     PROMPT="[%j]${${KEYMAP/vicmd/$VIM_PROMPT_NORMAL}/(main|viins)/$VIM_PROMPT_INSERT} %B%F{blue}%3~%b %B%F{green}$ %f%b"
-    
+
     zle reset-prompt
 }
 
@@ -70,4 +94,9 @@ zstyle ':vcs_info:*' enable git
 test -r "~/.dir_colors" && eval $(dircolors ~/.dir_colors)
 alias ls='ls --color=auto -h'
 
+alias open=xdg-open
+
 alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
+
+eval $(keychain --eval --quiet --noask ~/.ssh/id_rsa)
+alias keychain='keychain ~/.ssh/id_rsa'
