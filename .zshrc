@@ -33,6 +33,12 @@ zle -N fancy-ctrl-z
 bindkey '^Z' fancy-ctrl-z
 
 zstyle :compinstall filename '/home/vital/.zshrc'
+
+# allow completion with option stacking
+# e.g. docker run -it <TAB>
+zstyle ':completion:*:*:docker:*' option-stacking yes
+zstyle ':completion:*:*:docker-*:*' option-stacking yes
+
 # load Git completion
 zstyle ':completion:*:*:git:*' script ~/.zsh/git-completion.bash
 # git-completion.zsh is a function file, not designed to be sourced

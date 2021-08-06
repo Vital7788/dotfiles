@@ -83,12 +83,17 @@ set expandtab                " Use spaces instead of tabs
 set shiftwidth=4             " Indent with four spaces
 set softtabstop=4            " Insert four spaces with tab key
 set breakindent              " Indent wrapped lines
-set breakindentopt=shift:2   " Indent wrapped lines slightly more
+"set breakindentopt=shift:2   " Indent wrapped lines slightly more
+set breakindent showbreak=>\ 
 set linebreak                " Break at word boundaries
+
+set shiftround
+set smarttab
 
 " show trailing spaces
 set list
-set listchars=tab:\ \ ,trail:·
+"set listchars=tab:\ \ ,trail:·
+set listchars=tab:>\ ,trail:·,extends:>,precedes:<
 
 """ Swap, Undo, Backup
 set backup
