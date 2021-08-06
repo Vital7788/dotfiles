@@ -49,7 +49,7 @@ call plug#begin('~/.vim/vim_plug')
 
 Plug 'arcticicestudio/nord-vim'
 Plug 'ludovicchabant/vim-gutentags'
-Plug 'dense-analysis/ale'
+"Plug 'dense-analysis/ale'
 Plug 'jremmen/vim-ripgrep'
 
 call plug#end()
@@ -182,8 +182,9 @@ let g:netrw_dirhistmax=0
 let mapleader = ","
 let maplocalleader = "\<Space>"
 " toggle folds with <space><space>
-nnoremap <silent> <localleader><Space> @=(foldlevel('.')?'za':"\<Space>")<CR>
-vnoremap <localleader><space> zf
+"nnoremap <silent> <localleader><Space> @=(foldlevel('.')?'za':"\<Space>")<CR>
+"vnoremap <localleader><space> zf
+nnoremap <localleader><space> <C-^>
 
 nnoremap U <C-R>
 nnoremap Y y$
