@@ -1,0 +1,6 @@
+# use PulseAudio plugin hw
+# hw plugin communicates directly with ALSA kernel driver for low latency
+pcm.!default {
+   type plug
+   slave.pcm hw
+}
