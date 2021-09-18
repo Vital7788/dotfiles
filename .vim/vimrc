@@ -22,6 +22,8 @@ set cmdheight=2
 " reload file when edited outside vim
 set autoread
 
+set confirm
+
 " enable project-specific vimrc
 set exrc
 set secure
