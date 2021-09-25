@@ -18,6 +18,7 @@ set virtualedit=block,onemore   "move past end of line in v-block mode and 1 pas
 " cmd
 set showcmd
 set cmdheight=2
+set shortmess-=S
 
 " reload file when edited outside vim
 set autoread
@@ -75,8 +76,7 @@ let g:rg_command = 'rg --vimgrep -S'
 
 """ Wildmenu
 set wildmenu                    " Use wildmenu
-"set wildmode=list:longest,full  " Tab press completes longest common match and lists, second press cycles
-set wildmode=list:full
+set wildmode=list:longest,full  " Tab press completes longest common match and lists, second press cycles
 set wildignorecase              " Case insensitive, if supported
 set wildcharm=<C-z>
 
@@ -201,11 +201,11 @@ nnoremap Y y$
 nnoremap Q gQ
 
 " expand %% in command mode to current file path
-cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<CR>
+"cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<CR>
 
 " search recursively for edit and find
-"nnoremap <leader>e :e **/*<C-z>**/*
-nmap <leader>e :e %%<C-z><S-Tab>
+nnoremap <leader>e :e **/*<C-z>**/*
+"nmap <leader>e :e %%<C-z><S-Tab>
 nnoremap <leader>f :find **/*
 
 " cd to current file path for current window
