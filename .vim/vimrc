@@ -53,8 +53,7 @@ call plug#begin('~/.vim/vim_plug')
 
 Plug 'arcticicestudio/nord-vim'
 Plug 'ludovicchabant/vim-gutentags'
-"Plug 'dense-analysis/ale'
-Plug 'jremmen/vim-ripgrep'
+Plug 'dense-analysis/ale'
 
 call plug#end()
 
@@ -64,6 +63,8 @@ let g:ale_linters = {
 \ 'haskell': ['cabal_ghc', 'hdevtools', 'hie', 'hlint', 'stack_build', 'stack_ghc']
 \}
 
+let g:ale_python_pylint_options = '--disable=C'
+
 let g:ale_echo_msg_format = '%linter%: %s'
 
 let g:gutentags_ctags_tagfile = '.tags'
@@ -71,8 +72,6 @@ let g:gutentags_project_root = ['.tags']
 let g:gutentags_add_default_project_roots = 0
 let g:gutentags_add_ctrlp_root_markers = 0
 set tags=./.tags;,.tags;
-
-let g:rg_command = 'rg --vimgrep -S'
 
 """ Wildmenu
 set wildmenu                    " Use wildmenu
@@ -204,8 +203,9 @@ nnoremap Q gQ
 "cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<CR>
 
 " search recursively for edit and find
-nnoremap <leader>e :e **/*<C-z>**/*
+"nnoremap <leader>e :e **/*<C-z>**/*
 "nmap <leader>e :e %%<C-z><S-Tab>
+nmap <leader>e :e %%<C-z>
 nnoremap <leader>f :find **/*
 
 " cd to current file path for current window
