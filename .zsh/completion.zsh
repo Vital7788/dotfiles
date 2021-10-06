@@ -11,19 +11,19 @@ autoload -Uz compinit; compinit
 
 # Use hjlk in menu selection (during completion)
 # Doesn't work well with interactive mode
-bindkey -M menuselect 'h' vi-backward-char
-bindkey -M menuselect 'k' vi-up-line-or-history
-bindkey -M menuselect 'j' vi-down-line-or-history
-bindkey -M menuselect 'l' vi-forward-char
+#bindkey -M menuselect 'h' vi-backward-char
+#bindkey -M menuselect 'k' vi-up-line-or-history
+#bindkey -M menuselect 'j' vi-down-line-or-history
+#bindkey -M menuselect 'l' vi-forward-char
 
-bindkey -M menuselect '^[' vi-insert                      # Insert
-bindkey -M menuselect '^i' accept-and-infer-next-history  # Next
-bindkey -M menuselect '^u' undo                           # Undo
+#bindkey -M menuselect '^[' vi-insert                      # Insert
+#bindkey -M menuselect '^i' accept-and-infer-next-history  # Next
+#bindkey -M menuselect '^u' undo                           # Undo
 
 
 _comp_options+=(globdots) # with hidden files
 setopt GLOB_COMPLETE      # Show autocompletion menu with globs
-setopt MENU_COMPLETE        # Automatically highlight first element of completion menu
+#setopt MENU_COMPLETE        # Automatically highlight first element of completion menu
 setopt AUTO_LIST            # Automatically list choices on ambiguous completion.
 setopt COMPLETE_IN_WORD     # Complete from both ends of a word.
 
@@ -35,7 +35,7 @@ setopt COMPLETE_IN_WORD     # Complete from both ends of a word.
 zstyle ':completion:*' completer _extensions _complete _approximate
 
 # allow selection from menu
-zstyle ':completion:*' menu select
+zstyle ':completion:*' menu 'auto select'
 
 zstyle ':completion:*' file-sort modification
 
@@ -44,7 +44,7 @@ zstyle ':completion:*' complete-options true
 
 # complete case insensitive + complete partial words
 # partial completion before '.', '_' or '-' e.g. f.b -> foo.bar
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' '+l:|=* r:|=*' 'r:|[._-]=* r:|=*'
+zstyle ':completion:*' matcher-list 'm:{[:lower:]}={[:upper:]}' '+l:|=* r:|=*' 'r:|[._-]=* r:|=*'
 
 # limit to len/3 errors
 zstyle ':completion:*:approximate:*' max-errors 'reply=($((($#PREFIX+$#SUFFIX)/3))numeric)'
@@ -76,5 +76,5 @@ zstyle ':completion:*:*:docker:*' option-stacking yes
 zstyle ':completion:*:*:docker-*:*' option-stacking yes
 
 # load Git completion
-zstyle ':completion:*:*:git:*' script ~/.zsh/git-completion.bash
+zstyle ':completion:*:*:git:*' script ~/.zsh/completions/git-completion.bash
 # git-completion.zsh is a function file, not designed to be sourced
