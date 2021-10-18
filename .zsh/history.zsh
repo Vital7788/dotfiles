@@ -1,7 +1,6 @@
 HISTFILE=~/.histfile
 HISTSIZE=10000
 SAVEHIST=10000
-#HISTORY_IGNORE="(ls|cd|fg|bg)"
 setopt sharehistory         # share history file between all sessions
 setopt appendhistory        # immediately add commands to history file
 setopt histignorealldups    # delete old record when new event is duplicate
@@ -16,7 +15,7 @@ function zshaddhistory() {
     if [[ "$1" =~ "^(ls|cd) *\/(.*\/){2,}" ]]; then
         return 0
     fi
-    if [[ "$1" =~ "^ls[^\|]*$" || "$1" =~ "^cd" || "$1" == "fg" || "$1" == "bg" ]]; then
+    if [[ "$1" =~ "^ls[^\|]*$" || "$1" =~ "^cd" || "$1" =~ "^(fg|bg|d|[0-9])$" ]]; then
         return 1
     fi
 }
