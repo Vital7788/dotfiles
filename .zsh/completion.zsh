@@ -35,7 +35,8 @@ setopt COMPLETE_IN_WORD     # Complete from both ends of a word.
 zstyle ':completion:*' completer _extensions _complete _approximate
 
 # allow selection from menu
-zstyle ':completion:*' menu 'auto select'
+#zstyle ':completion:*' menu 'auto select'
+zstyle ':completion:*' menu select
 
 zstyle ':completion:*' file-sort modification
 

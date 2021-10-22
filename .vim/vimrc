@@ -205,7 +205,7 @@ nnoremap Q gQ
 " search recursively for edit and find
 "nnoremap <leader>e :e **/*<C-z>**/*
 "nmap <leader>e :e %%<C-z><S-Tab>
-nmap <leader>e :e %%<C-z>
+nnoremap <leader>e :e <C-R>=fnameescape(expand('%:h')).'/'<CR><C-z>
 nnoremap <leader>f :find **/*
 
 " cd to current file path for current window

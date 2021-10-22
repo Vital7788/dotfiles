@@ -14,6 +14,7 @@
     l1 (layer-rem vim)
     l2 (layer-add vim)
     ec (tap-next esc lctl)
+    vme (tap-macro (layer-rem vim_input) (layer-rem vim) lmet)
     vec (tap-next (layer-rem vim_input) lctl)
     vi (layer-add vim_input)
     vI (tap-macro home @vi)
@@ -21,8 +22,11 @@
     vA (tap-macro end @vi)
     vw (around lctl rght)
     vb (around lctl left)
+    vg (layer-next vim_g)
+    vgg (around lctl home)
+    vG (around lctl end)
     vu (around lctl z)
-    vU (around lctl (around lsft z))
+    vU (around lctl y)
     vy (layer-next vim_y)
     vyy (tap-macro home (around lsft end) (around lctl c) rght)
     vY (tap-macro (around lsft end) (around lctl c) rght)
@@ -35,11 +39,11 @@
     vcc (tap-macro home (around lsft end) (around lctl x) @vi)
     vC (tap-macro @vD @vi)
     vcw (tap-macro @vdw @vi)
-    vx (tap-macro rght bspc)
     vo (tap-macro end ret @vi)
     vO (tap-macro home ret up @vi)
     vp (around lctl v)
     vJ (tap-macro down home bspc spc)
+    vsl (around lctl f)
     vsh (layer-toggle vim_shift)
 )
 
@@ -91,17 +95,17 @@
     tab  q    w    e    r    t    y    u    i    o    p    [    ]    \    pgup
     @vec a    s    d    f    g    h    j    k    l    ;    '    ret       pgdn
     lsft z    x    c    v    b    n    m    ,    .    /    rsft           end
-    lctl      lmet lalt           spc            ralt rctl      up
+    lctl      @vme lalt           spc            ralt rctl      up
                                                            left down rght
 )
 
 (deflayer vim
     @esc _    _    _    _    _    _    _    _    _    _    _    _    _    _
-    _    XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   bspc _
+    _    _    _    _    _    _    _    _    _    _    _    XX   XX   bspc _
     _    XX   @vw  XX   XX   XX   @vy  @vu  @vi  @vo  @vp  XX   XX   XX   _
-    @ec  @va  XX   @vd  XX   XX   left down up   rght XX   XX   ret       _
-    @vsh XX   @vx  @vc  XX   @vb  XX   XX   XX   XX   XX   @vsh           _
-    _         _    _              _              _    _         _
+    lctl @va  XX   @vd  XX   @vg  left down up   rght XX   XX   ret       _
+    @vsh XX   del  @vc  XX   @vb  XX   XX   XX   XX   @vsl @vsh           _
+    _         @vme _              _              _    _         _
                                                            _    _    _
 )
 
@@ -109,7 +113,7 @@
     _    _    _    _    _    _    _    _    _    _    _    _    _    _    _
     _    _    _    _    end  _    home _    _    _    _    _    _    _    _
     _    _    _    _    _    _    @vY  @vU  @vI  @vO  _    _    _    _    _
-    _    @vA  _    @vD  _    _    _    @vJ  _    _    _    _    _         _
+    _    @vA  _    @vD  _    @vG  _    @vJ  _    _    _    _    _         _
     _    _    _    @vC  _    _    _    _    _    _    _    _              _
     _         _    _              _              _    _         _
                                                            _    _    _
@@ -141,6 +145,16 @@
     _    _    @vcw _    _    _    _    _    _    _    _    _    _    _    _
     _    _    _    _    _    _    _    _    _    _    _    _    _         _
     _    _    _    @vcc _    _    _    _    _    _    _    _              _
+    _         _    _              _              _    _         _
+                                                           _    _    _
+)
+
+(deflayer vim_g
+    _    _    _    _    _    _    _    _    _    _    _    _    _    _    _
+    _    _    _    _    _    _    _    _    _    _    _    _    _    _    _
+    _    _    _    _    _    _    _    _    _    _    _    _    _    _    _
+    _    _    _    _    _    @vgg _    _    _    _    _    _    _         _
+    _    _    _    _    _    _    _    _    _    _    _    _              _
     _         _    _              _              _    _         _
                                                            _    _    _
 )
