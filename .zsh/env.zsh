@@ -1,8 +1,10 @@
-export PATH="${PATH}:${HOME}/.local/bin"
+path+=("${HOME}/.local/bin")
+export PATH
 
 export XDG_CONFIG_HOME="${HOME}/.config"
 export XDG_CACHE_HOME="${HOME}/.cache"
 export XDG_DATA_HOME="${HOME}/.local/share"
+export XDG_STATE_HOME="${HOME}/.local/state"
 
 # dotfiles
 export USERXSESSION="${XDG_CACHE_HOME}/X11/xsession"
