@@ -11,7 +11,7 @@
 
 (defalias
     esc (tap-next esc (layer-toggle layers))
-    l1 (layer-rem vim)
+    l1 (tap-macro (layer-rem vim_input) (layer-rem vim))
     l2 (layer-add vim)
     ec (tap-next esc lctl)
     vme (tap-macro (layer-rem vim_input) (layer-rem vim) lmet)
@@ -95,7 +95,7 @@
     tab  q    w    e    r    t    y    u    i    o    p    [    ]    \    pgup
     @vec a    s    d    f    g    h    j    k    l    ;    '    ret       pgdn
     lsft z    x    c    v    b    n    m    ,    .    /    rsft           end
-    lctl      @vme lalt           spc            ralt rctl      up
+    lctl      lmet lalt           spc            ralt rctl      up
                                                            left down rght
 )
 
@@ -105,7 +105,7 @@
     _    XX   @vw  XX   XX   XX   @vy  @vu  @vi  @vo  @vp  XX   XX   XX   _
     lctl @va  XX   @vd  XX   @vg  left down up   rght XX   XX   ret       _
     @vsh XX   del  @vc  XX   @vb  XX   XX   XX   XX   @vsl @vsh           _
-    _         @vme _              _              _    _         _
+    _         lmet _              _              _    _         _
                                                            _    _    _
 )
 
