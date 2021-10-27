@@ -40,8 +40,12 @@ zstyle ':completion:*' menu select
 
 zstyle ':completion:*' file-sort modification
 
+# add .. as possible completion when current prefix is '' or '.'
+# or consists only of a path beginning with '../'
+zstyle -e ':completion:*' special-dirs '[[ $PREFIX = (../)#(|.|..) ]] && reply=(..)'
+
 # autocomplete options for cd instead of directory stack
-zstyle ':completion:*' complete-options true
+#zstyle ':completion:*' complete-options true
 
 # complete case insensitive + complete partial words
 # partial completion before '.', '_' or '-' e.g. f.b -> foo.bar
@@ -61,6 +65,10 @@ zstyle ':completion:*:*:*:*:default' list-colors ${(s.:.)LS_COLORS}
 
 # set order of descriptions
 zstyle ':completion:*:*:-command-:*:*' group-order aliases builtins functions commands
+
+# use ls colors for complist
+zstyle ':completion:*:*:*:*:default' list-colors \
+       ${(s.:.)LS_COLORS}
 
 
 # only display some tags for the command cd
