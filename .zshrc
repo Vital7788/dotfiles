@@ -4,7 +4,6 @@ setopt extendedglob
 unsetopt beep
 
 # set ls colors
-#test -r "~/.dir_colors" && eval $(dircolors ~/.dir_colors)
 eval $(dircolors ~/.dir_colors)
 
 source ~/.zsh/env.zsh

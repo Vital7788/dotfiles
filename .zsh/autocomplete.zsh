@@ -3,6 +3,9 @@
 local list_completions=0
 
 bindkey '^I' override-tab
+bindkey '+' show-dirstack
+bindkey '\-' show-dirstack
+bindkey '%' show-processes
 
 # Wrap existing widgets to provide auto-completion.
 local widget
@@ -11,11 +14,29 @@ do
     eval "zle -N $widget
     $widget() {
         zle .$widget
-        if [[ \$list_completions == 1 ]]; then
+        if (( list_completions )); then
             zle list-choices
         fi
     }"
 done
+
+zle -N show-dirstack
+show-dirstack() {
+    if [[ $BUFFER == "cd " ]]; then
+        BUFFER+="~"
+        CURSOR=$CURSOR+1
+        list_completions=1
+    fi
+    zle self-insert
+}
+
+zle -N show-processes
+show-processes() {
+    if [[ $BUFFER == "fg " || $BUFFER == "bg " ]]; then
+        list_completions=1
+    fi
+    zle self-insert
+}
 
 # completion function that shows matches if there aren't too many
 zle -C list-choices list-choices _list_choices
