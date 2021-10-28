@@ -49,7 +49,7 @@ _list_choices() {
     fi
     # clear previous matches if current doesn't get displayed
     if (( ${#compstate[list]} == 0 )); then
-      zle -M ''
+      zle -M 'Too many matches'
     fi
 }
 
