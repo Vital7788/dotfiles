@@ -60,7 +60,7 @@ interval=10
 
 [wifi]
 label= 
-instance=wlo1
+instance=wlp3s0
 interval=10
 
 [battery]
