@@ -4,9 +4,13 @@ local list_completions=0
 
 bindkey '^I' override-tab
 bindkey ' ' override-space
+bindkey -M isearch ' ' self-insert
 bindkey '+' show-dirstack
+bindkey -M isearch '+' self-insert
 bindkey '\-' show-dirstack
+bindkey -M isearch '\-' self-insert
 bindkey '%' show-processes
+bindkey -M isearch '%' self-insert
 
 # Wrap existing widgets to provide auto-completion.
 local widget
