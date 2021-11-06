@@ -3,6 +3,7 @@
 local list_completions=0
 
 bindkey '^I' override-tab
+bindkey ' ' override-space
 bindkey '+' show-dirstack
 bindkey '\-' show-dirstack
 bindkey '%' show-processes
@@ -41,15 +42,17 @@ show-processes() {
 # completion function that shows matches if there aren't too many
 zle -C list-choices list-choices _list_choices
 _list_choices() {
-    _main_complete
-    # check if amount of matches doesn't exceed screen or LISTMAX
-    if (( (compstate[list_lines] + BUFFERLINES + 1) > LINES
-        || ( compstate[list_max] != 0 && compstate[nmatches] > compstate[list_max] ) )); then
-        compstate[list]=
-    fi
-    # clear previous matches if current doesn't get displayed
-    if (( ${#compstate[list]} == 0 )); then
-      zle -M 'Too many matches'
+    if (( PENDING == 0 && KEYS_QUEUED_COUNT == 0 )); then
+        _main_complete
+        # check if amount of matches doesn't exceed screen or LISTMAX
+        if (( (compstate[list_lines] + BUFFERLINES + 1) > LINES
+            || ( compstate[list_max] != 0 && compstate[nmatches] > compstate[list_max] ) )); then
+            compstate[list]=
+        fi
+        # clear previous matches if current doesn't get displayed
+        if (( ${#compstate[list]} == 0 )); then
+        zle -M 'Too many matches'
+        fi
     fi
 }
 
@@ -71,6 +74,14 @@ override-tab() {
         zle .auto-suffix-retain
         zle list-choices
     fi
+}
+
+zle -N override-space
+override-space() {
+    list_completions=0
+    # clear listed matches
+    zle -M ''
+    zle .self-insert
 }
 
 autoload -U add-zsh-hook
