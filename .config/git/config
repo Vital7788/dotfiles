@@ -5,3 +5,5 @@
 	excludesfile = /home/vital/.config/git/gitignore
 [pull]
 	rebase = false
+[includeIf "gitdir:~/school/"]
+	path = /home/vital/.config/git/config-school
