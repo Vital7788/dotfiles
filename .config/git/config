@@ -2,8 +2,10 @@
 	name = Vital Wang
 	email = vital.wang@hotmail.com
 [core]
-	excludesfile = /home/vital/.config/git/gitignore
+	excludesfile = gitignore
 [pull]
 	rebase = false
 [includeIf "gitdir:~/school/"]
-	path = /home/vital/.config/git/config-school
+	path = config-school
+[includeIf "gitdir/i:~/documents/school/"]
+	path = config-school
