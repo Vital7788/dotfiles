@@ -11,6 +11,7 @@ bindkey '\-' show-dirstack
 bindkey -M isearch '\-' self-insert
 bindkey '%' show-processes
 bindkey -M isearch '%' self-insert
+bindkey -M isearch '.' self-insert
 
 # Wrap existing widgets to provide auto-completion.
 local widget
