@@ -83,9 +83,11 @@ override-tab() {
 
 zle -N override-space
 override-space() {
-    list_completions=0
-    # clear listed matches
-    zle -M ''
+    if [[ $list_completions == 1 ]]; then
+        list_completions=0
+        # clear listed matches
+        zle -M ''
+    fi
     zle .self-insert
 }
 
