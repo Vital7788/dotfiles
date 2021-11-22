@@ -2,22 +2,21 @@
 # this way the foreground job can be backgrounded using ctrl-z ctrl-z
 # when line is not empty "suspend" current input line
 fancy-ctrl-z () {
-  if [[ $#BUFFER -eq 0 ]]; then
-    bg
-    zle redisplay
-  else
-    zle push-input
-  fi
+    if [[ $#BUFFER -eq 0 ]]; then
+        bg
+        zle redisplay
+    else
+        zle push-input
+    fi
 }
 zle -N fancy-ctrl-z
 bindkey '^Z' fancy-ctrl-z
 
 rationalise-dot() {
-  if [[ $LBUFFER = *.. ]]; then
-    LBUFFER+=/..
-  else
-    LBUFFER+=.
-  fi
+    if [[ $LBUFFER = *.. ]]; then
+        LBUFFER+=/.
+    fi
+    zle self-insert
 }
 zle -N rationalise-dot
 bindkey . rationalise-dot
