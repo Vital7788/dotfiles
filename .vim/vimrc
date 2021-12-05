@@ -6,7 +6,7 @@ syntax on
 " allow buffers to have changes without being displayed
 set hidden
 "set number relativenumber
-set number
+"set number
 set cursorline
 
 set scrolloff=5
@@ -105,24 +105,28 @@ set undofile
 " keep swap, backup and undo files in dedicated directory
 " // expands to file's full path
 if g:os == "Linux"
-    if !isdirectory($HOME."/.vim")
-        call mkdir($HOME."/.vim", "", 0770)
+    let s:version = 'vim'
+    if has('nvim')
+        let s:version = 'nvim'
     endif
 
-    if !isdirectory($HOME."/.vim/cache/swap")
-        call mkdir($HOME."/.vim/cache/swap", "p", 0700)
+    let s:directory = $XDG_STATE_HOME."/".s:version."/swap"
+    if !isdirectory(s:directory)
+        call mkdir(s:directory, "p", 0700)
     endif
-    set directory^=~/.vim/cache/swap//
+    let &directory=s:directory.",/var/tmp,/tmp"
 
-    if !isdirectory($HOME."/.vim/cache/backup")
-        call mkdir($HOME."/.vim/cache/backup", "p", 0700)
+    let s:directory = $XDG_STATE_HOME."/".s:version."/backup"
+    if !isdirectory(s:directory)
+        call mkdir(s:directory, "p", 0700)
     endif
-    set backupdir^=~/.vim/cache/backup//
+    let &backupdir=s:directory
 
-    if !isdirectory($HOME."/.vim/cache/undo")
-        call mkdir($HOME."/.vim/cache/undo", "p", 0700)
+    let s:directory = $XDG_STATE_HOME."/".s:version."/undo"
+    if !isdirectory(s:directory)
+        call mkdir(s:directory, "p", 0700)
     endif
-    set undodir^=~/.vim/cache/undo//
+    let &undodir=s:directory
 
     " no undo or backup files for files in /tmp
     au BufWritePre /tmp/* setlocal noundofile nobackup nowritebackup

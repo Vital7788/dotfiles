@@ -6,6 +6,8 @@ export XDG_CACHE_HOME="${HOME}/.cache"
 export XDG_DATA_HOME="${HOME}/.local/share"
 export XDG_STATE_HOME="${HOME}/.local/state"
 
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/cuda/extras/CUPTI/lib64
+
 # dotfiles
 export USERXSESSION="${XDG_CACHE_HOME}/X11/xsession"
 export USERXSESSIONRC="${XDG_CACHE_HOME}/X11/xsessionrc"
