@@ -29,8 +29,7 @@ done
 zle -N show-dirstack
 show-dirstack() {
     if [[ $BUFFER == "cd " ]]; then
-        BUFFER+="~"
-        CURSOR=$CURSOR+1
+        LBUFFER+="~"
         list_completions=1
     fi
     zle self-insert
