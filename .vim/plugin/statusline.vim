@@ -17,7 +17,7 @@ function ActiveStatus()
     let statusline.="%#DiffDelete#%{(mode()==#'S')?'\ \ S-LINE\ ':''}"
     let statusline.="%#DiffDelete#%{(mode()==#'')?'\ \ S-BLOCK\ ':''}"
     let statusline.="%#DiffText#%{(mode()==#'R')?'\ \ REPLACE\ ':''}"
-    let statusline.="%#Visual#%{(mode()==#'c')?'\ \ COMMAND\ ':''}"
+    let statusline.="%#TermCursor#%{(mode()==#'c')?'\ \ COMMAND\ ':''}"
     let statusline.="%#Statusline#"                                 " colour
     let statusline.="\ \ %n\ "                                      " buffer number
     let statusline.="\ %f\ "                                        " file name

@@ -141,8 +141,6 @@ function! s:Wildignore() abort
   let l:ignores += [
         \ '*~'
         \,'*.swp'
-        \,'*/.vim/cache/*'
-        \,'*/vim/cache/*'
         \ ]
 
   " If on a system where case matters for filenames, for any that had
