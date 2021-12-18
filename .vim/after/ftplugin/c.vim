@@ -1,4 +1,6 @@
-"set path+=/usr/include
+set path+=/usr/include
+
+compiler gcc
 
 let g:ale_c_clangd_options="-I" . getcwd()
 

@@ -54,6 +54,9 @@ call plug#begin('~/.vim/vim_plug')
 Plug 'arcticicestudio/nord-vim'
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'dense-analysis/ale'
+if has('nvim')
+    Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh' }
+endif
 
 call plug#end()
 
