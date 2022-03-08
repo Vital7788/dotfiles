@@ -9,3 +9,7 @@ for index ({1..9}) alias "$index"="cd +${index}"; unset index
 alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 
 alias keychain='keychain ~/.ssh/id_rsa'
+
+alias ssh="kitty +kitten ssh"
+
+alias vim='nvim'

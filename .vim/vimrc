@@ -5,8 +5,9 @@ syntax on
 
 " allow buffers to have changes without being displayed
 set hidden
-"set number relativenumber
+set number relativenumber
 "set number
+set signcolumn=number
 set cursorline
 
 set scrolloff=5
@@ -53,9 +54,11 @@ call plug#begin('~/.vim/vim_plug')
 
 Plug 'arcticicestudio/nord-vim'
 Plug 'ludovicchabant/vim-gutentags'
-Plug 'dense-analysis/ale'
 if has('nvim')
     Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh' }
+    Plug 'neovim/nvim-lspconfig'
+else
+    Plug 'dense-analysis/ale'
 endif
 
 call plug#end()
