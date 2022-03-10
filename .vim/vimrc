@@ -30,6 +30,8 @@ set confirm
 set exrc
 set secure
 
+let g:filetype_pl="prolog"
+
 """ OS
 if !exists("g:os")
     if has("win32") || has("win64")
