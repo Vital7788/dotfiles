@@ -54,6 +54,8 @@ endif
 
 call plug#begin('~/.vim/vim_plug')
 
+Plug 'romainl/vim-cool'
+Plug 'romainl/vim-qf'
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'arcticicestudio/nord-vim'
 if has('nvim')
@@ -173,6 +175,11 @@ set hlsearch
 set ignorecase
 set incsearch
 
+if executable('rg')
+    set grepprg=rg\ -S\ --vimgrep
+    set grepformat=%f:%l:%c:%m
+endif
+
 """ Fold
 set foldenable
 set modeline
@@ -209,6 +216,7 @@ let maplocalleader = "\<Space>"
 "nnoremap <silent> <localleader><Space> @=(foldlevel('.')?'za':"\<Space>")<CR>
 "vnoremap <localleader><space> zf
 nnoremap <localleader><space> <C-^>
+nmap <localleader><backspace> <Plug>(qf_qf_switch)
 
 nnoremap U <C-R>
 nnoremap Y y$
@@ -236,11 +244,15 @@ nnoremap ]a :next<CR>
 nnoremap [b :bprevious<CR>
 nnoremap ]b :bnext<CR>
 " Cycle through quicklist/:helpgrep items
-nnoremap [c :cprevious<CR>
-nnoremap ]c :cnext<CR>
+"nnoremap [c :cprevious<CR>
+"nnoremap ]c :cnext<CR>
+nmap [c <Plug>(qf_qf_previous)
+nmap ]c  <Plug>(qf_qf_next)
 " Cycle through location list items
-nnoremap [l :lprevious<CR>
-nnoremap ]l :lnext<CR>
+"nnoremap [l :lprevious<CR>
+"nnoremap ]l :lnext<CR>
+nmap [l <Plug>(qf_loc_previous)
+nmap ]l  <Plug>(qf_loc_next)
 
 nnoremap <localleader>y :%y+<CR>
 

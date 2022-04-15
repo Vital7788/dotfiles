@@ -20,9 +20,9 @@ function ActiveStatus()
     let statusline.="%#TermCursor#%{(mode()==#'c')?'\ \ COMMAND\ ':''}"
     let statusline.="%#Statusline#"                                 " colour
     let statusline.="\ \ %n\ "                                      " buffer number
-    let statusline.="\ %f\ "                                        " file name
+    let statusline.="%{fnamemodify(expand('%'), ':~:.')}"           " file name
+    "let statusline.="\ %f\ "                                        " file name
     let statusline.="%r%m"                                          " flags
-    let statusline.="%{gutentags#statusline('[', ']')}"             " gutentags status
     let statusline.="%="                                            " right align
     let statusline.="\ %y"                                          " file type
     let statusline.="\ %{&fileencoding?&fileencoding:&encoding}"    " file encoding
