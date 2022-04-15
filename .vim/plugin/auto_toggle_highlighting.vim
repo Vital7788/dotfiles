@@ -1,6 +1,8 @@
 " auto turn off highlighting
 " https://github.com/romainl/vim-cool/issues/9
 
+finish
+
 noremap <expr> <Plug>(StopHL) execute('nohlsearch')[-1]
 noremap! <expr> <Plug>(StopHL) execute('nohlsearch')[-1]
 

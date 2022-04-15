@@ -7,8 +7,8 @@ bindkey ' ' override-space
 bindkey -M isearch ' ' self-insert
 bindkey '+' show-dirstack
 bindkey -M isearch '+' self-insert
-bindkey '\-' show-dirstack
-bindkey -M isearch '\-' self-insert
+#bindkey '\-' show-dirstack
+#bindkey -M isearch '\-' self-insert
 bindkey '%' show-processes
 bindkey -M isearch '%' self-insert
 bindkey -M isearch '.' self-insert
