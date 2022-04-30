@@ -45,116 +45,53 @@ endif
 
 """ Plugins
 if g:os == "Linux"
-    if empty(glob('~/.vim/autoload/plug.vim'))
-      silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
-        \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-      autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+    " Install vim-plug if not found
+    let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
+    if empty(glob(data_dir . '/autoload/plug.vim'))
+        silent execute '!curl -fLo '.data_dir.'/autoload/plug.vim --create-dirs  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+        autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
     endif
+
+    " Run PlugInstall if there are missing plugins
+    autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
+        \| PlugInstall --sync | source $MYVIMRC
+    \| endif
 endif
 
-call plug#begin('~/.vim/vim_plug')
+if !has('nvim')
+    call plug#begin('~/.vim/vim_plug')
 
-Plug 'romainl/vim-cool'
-Plug 'romainl/vim-qf'
-Plug 'tpope/vim-abolish'
-"Plug 'ludovicchabant/vim-gutentags'
-Plug 'arcticicestudio/nord-vim'
-if has('nvim')
-    function! UpdateRemotePlugins(...)
-        " Needed to refresh runtime files
-        let &rtp=&rtp
-        UpdateRemotePlugins
-    endfunction
-
-    "Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh' }
-    Plug 'neovim/nvim-lspconfig'
-    "Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
-    Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }
-
-    Plug 'nixprime/cpsm'
-    Plug 'romgrk/fzy-lua-native'
-
-    "Plug 'shaunsingh/nord.nvim'
-    "Plug 'andersevenrud/nordic.nvim'
-else
+    Plug 'romainl/vim-cool'
+    Plug 'romainl/vim-qf'
+    Plug 'tpope/vim-abolish'
+    "Plug 'ludovicchabant/vim-gutentags'
+    Plug 'arcticicestudio/nord-vim'
     Plug 'dense-analysis/ale'
+
+    call plug#end()
+
+    let g:ale_linters = {
+    \ 'c': ['clangcheck', 'clangd', 'clangtidy', 'cppcheck', 'cpplint'],
+    \ 'cpp': ['clangcheck', 'clangd', 'clangtidy', 'cppcheck', 'cpplint'],
+    \ 'haskell': ['cabal_ghc', 'hdevtools', 'hie', 'hlint', 'stack_build', 'stack_ghc']
+    \}
+
+    let g:ale_python_pylint_options = '--disable=C'
+
+    let g:ale_echo_msg_format = '%linter%: %s'
+
+    let g:gutentags_ctags_tagfile = '.tags'
+    let g:gutentags_project_root = ['.tags']
+    let g:gutentags_add_default_project_roots = 0
+    let g:gutentags_add_ctrlp_root_markers = 0
+    set tags=./.tags;,.tags;
 endif
-
-call plug#end()
-
-let g:ale_linters = {
-\ 'c': ['clangcheck', 'clangd', 'clangtidy', 'cppcheck', 'cpplint'],
-\ 'cpp': ['clangcheck', 'clangd', 'clangtidy', 'cppcheck', 'cpplint'],
-\ 'haskell': ['cabal_ghc', 'hdevtools', 'hie', 'hlint', 'stack_build', 'stack_ghc']
-\}
-
-let g:ale_python_pylint_options = '--disable=C'
-
-let g:ale_echo_msg_format = '%linter%: %s'
-
-let g:gutentags_ctags_tagfile = '.tags'
-let g:gutentags_project_root = ['.tags']
-let g:gutentags_add_default_project_roots = 0
-let g:gutentags_add_ctrlp_root_markers = 0
-set tags=./.tags;,.tags;
 
 """ Wildmenu
 set wildmenu                    " Use wildmenu
 set wildmode=list:longest,full  " Tab press completes longest common match and lists, second press cycles
 set wildignorecase              " Case insensitive, if supported
 set wildcharm=<C-z>
-
-"TODO wildignore
-call wilder#setup({
-    \ 'modes': [':'],
-    \ 'next_key': '<Tab>',
-    \ 'previous_key': '<S-Tab>',
-    \ 'accept_key': '<C-n>',
-    \ 'reject_key': '<C-p>',
-    \ })
-
-call wilder#set_option('pipeline', [
-    \   wilder#branch(
-    \     wilder#python_file_finder_pipeline({
-    \       'file_command': {_, arg -> stridx(arg, '.') != -1 ? ['fd', '-tf', '-H'] : ['fd', '-tf']},
-    \       'dir_command': ['fd', '-td'],
-    \       'filters': ['cpsm_filter'],
-    \     }),
-    \     wilder#cmdline_pipeline({
-    \       'fuzzy': 2,
-    \       'fuzzy_filter': has('nvim') ? wilder#lua_fzy_filter() : wilder#vim_fuzzy_filter(),
-    \     }),
-    \     [
-    \       wilder#check({_, x -> empty(x)}),
-    \       wilder#history(),
-    \     ],
-    \   ),
-    \ ])
-
-let s:highlighters = [
-      \ wilder#pcre2_highlighter(),
-      \ has('nvim') ? wilder#lua_fzy_highlighter() : wilder#cpsm_highlighter(),
-      \ ]
-
-call wilder#set_option('renderer',
-    \ wilder#popupmenu_renderer(wilder#popupmenu_border_theme({
-    \     'max_height': 12,
-    \     'max_width': '100%',
-    \     'border': 'rounded',
-    \     'empty_message': wilder#popupmenu_empty_message_with_spinner(),
-    \     'highlighter': s:highlighters,
-    \     'left': [
-    \        ' ',
-    \        wilder#popupmenu_buffer_flags({
-    \          'flags': '1u% +- ',
-    \          'icons': {'%': '', '#': '', '+': '', '=': '', '-': ''},
-    \        }),
-    \     ],
-    \     'right': [
-    \        ' ',
-    \        wilder#popupmenu_scrollbar(),
-    \     ],
-    \ })))
 
 """ Indent & Whitespace
 set autoindent               " Use indent of previous line on new lines
@@ -250,7 +187,9 @@ set modeline
 set modelineexpr
 
 """ Colorscheme + Font
-colorscheme nord
+if !has('nvim')
+    colorscheme nord
+endif
 set bg=dark
 if g:os == "Linux"
     set guifont=Fira_Code_Medium:h11
