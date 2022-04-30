@@ -1,7 +1,37 @@
+""" Source vimrc
 set runtimepath^=~/.vim runtimepath+=~/.vim/after
 let &packpath = &runtimepath
 source ~/.vim/vimrc
 
+""" Plugins
+call plug#begin('~/.vim/nvim_plug')
+function! UpdateRemotePlugins(...)
+    " Needed to refresh runtime files
+    let &rtp=&rtp
+    UpdateRemotePlugins
+endfunction
+
+Plug 'romainl/vim-cool'
+Plug 'romainl/vim-qf'
+Plug 'tpope/vim-abolish'
+Plug 'arcticicestudio/nord-vim'
+
+"Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh' }
+Plug 'neovim/nvim-lspconfig'
+"Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }
+
+Plug 'nixprime/cpsm'
+Plug 'romgrk/fzy-lua-native'
+
+"Plug 'shaunsingh/nord.nvim'
+"Plug 'andersevenrud/nordic.nvim'
+call plug#end()
+
+""" Colorscheme
+colorscheme nord
+
+""" LSP
 lua << EOF
 -- Mappings.
 -- See `:help vim.diagnostic.*` for documentation on any of the below functions
@@ -66,3 +96,6 @@ require("lspconfig").pylsp.setup {
             }
         }
 EOF
+
+"" vim:fdm=expr:fdl=0
+"" vim:fde=getline(v\:lnum)=~'^""'?'>'.(matchend(getline(v\:lnum),'""*')-2)\:'='
