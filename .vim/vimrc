@@ -56,12 +56,24 @@ call plug#begin('~/.vim/vim_plug')
 
 Plug 'romainl/vim-cool'
 Plug 'romainl/vim-qf'
-Plug 'ludovicchabant/vim-gutentags'
+Plug 'tpope/vim-abolish'
+"Plug 'ludovicchabant/vim-gutentags'
 Plug 'arcticicestudio/nord-vim'
 if has('nvim')
-    Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh' }
+    function! UpdateRemotePlugins(...)
+        " Needed to refresh runtime files
+        let &rtp=&rtp
+        UpdateRemotePlugins
+    endfunction
+
+    "Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh' }
     Plug 'neovim/nvim-lspconfig'
     "Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+    Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }
+
+    Plug 'nixprime/cpsm'
+    Plug 'romgrk/fzy-lua-native'
+
     "Plug 'shaunsingh/nord.nvim'
     "Plug 'andersevenrud/nordic.nvim'
 else
@@ -91,6 +103,58 @@ set wildmenu                    " Use wildmenu
 set wildmode=list:longest,full  " Tab press completes longest common match and lists, second press cycles
 set wildignorecase              " Case insensitive, if supported
 set wildcharm=<C-z>
+
+"TODO wildignore
+call wilder#setup({
+    \ 'modes': [':'],
+    \ 'next_key': '<Tab>',
+    \ 'previous_key': '<S-Tab>',
+    \ 'accept_key': '<C-n>',
+    \ 'reject_key': '<C-p>',
+    \ })
+
+call wilder#set_option('pipeline', [
+    \   wilder#branch(
+    \     wilder#python_file_finder_pipeline({
+    \       'file_command': {_, arg -> stridx(arg, '.') != -1 ? ['fd', '-tf', '-H'] : ['fd', '-tf']},
+    \       'dir_command': ['fd', '-td'],
+    \       'filters': ['cpsm_filter'],
+    \     }),
+    \     wilder#cmdline_pipeline({
+    \       'fuzzy': 2,
+    \       'fuzzy_filter': has('nvim') ? wilder#lua_fzy_filter() : wilder#vim_fuzzy_filter(),
+    \     }),
+    \     [
+    \       wilder#check({_, x -> empty(x)}),
+    \       wilder#history(),
+    \     ],
+    \   ),
+    \ ])
+
+let s:highlighters = [
+      \ wilder#pcre2_highlighter(),
+      \ has('nvim') ? wilder#lua_fzy_highlighter() : wilder#cpsm_highlighter(),
+      \ ]
+
+call wilder#set_option('renderer',
+    \ wilder#popupmenu_renderer(wilder#popupmenu_border_theme({
+    \     'max_height': 12,
+    \     'max_width': '100%',
+    \     'border': 'rounded',
+    \     'empty_message': wilder#popupmenu_empty_message_with_spinner(),
+    \     'highlighter': s:highlighters,
+    \     'left': [
+    \        ' ',
+    \        wilder#popupmenu_buffer_flags({
+    \          'flags': '1u% +- ',
+    \          'icons': {'%': '', '#': '', '+': '', '=': '', '-': ''},
+    \        }),
+    \     ],
+    \     'right': [
+    \        ' ',
+    \        wilder#popupmenu_scrollbar(),
+    \     ],
+    \ })))
 
 """ Indent & Whitespace
 set autoindent               " Use indent of previous line on new lines
@@ -229,7 +293,7 @@ nnoremap Q gQ
 "nnoremap <leader>e :e **/*<C-z>**/*
 "nmap <leader>e :e %%<C-z><S-Tab>
 nnoremap <leader>e :e <C-R>=fnameescape(expand('%:h')).'/'<CR><C-z>
-nnoremap <leader>f :find **/*
+cnoremap <expr> f<Space> getcmdline() == '' ? 'find **/*' : 'f '
 
 " cd to current file path for current window
 nnoremap <leader>cd :lcd %:h<CR>
