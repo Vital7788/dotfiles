@@ -225,4 +225,14 @@ else
         \        wilder#popupmenu_scrollbar(),
         \     ],
         \ })))
+
+    autocmd CmdlineEnter * let g:wilder_active = 0
+    function! s:handle_space()
+        if !g:wilder_active && index(['e', 'b', 'find', 'cd'], getcmdline()) != -1
+            let g:wilder_active = 1
+            call wilder#main#start()
+        endif
+        return "\<Space>"
+    endfunction
+    cnoremap <expr> <Space> wilder#in_context() ? <SID>handle_space() : "\<Space>"
 endif
