@@ -232,7 +232,6 @@ nnoremap Q gQ
 "nnoremap <leader>e :e **/*<C-z>**/*
 "nmap <leader>e :e %%<C-z><S-Tab>
 nnoremap <leader>e :e <C-R>=fnameescape(expand('%:h')).'/'<CR><C-z>
-cnoremap <expr> f<Space> getcmdline() == '' ? 'find **/*' : 'f '
 
 " cd to current file path for current window
 nnoremap <leader>cd :lcd %:h<CR>
