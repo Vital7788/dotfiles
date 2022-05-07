@@ -30,7 +30,9 @@ set confirm
 set exrc
 set secure
 
+""" Filetype
 let g:filetype_pl="prolog"
+let g:tex_flavor = "latex"
 
 """ OS
 if !exists("g:os")
@@ -58,6 +60,8 @@ if g:os == "Linux"
     \| endif
 endif
 
+let g:ale_disable_lsp = 1
+
 if !has('nvim')
     call plug#begin('~/.vim/vim_plug')
 
@@ -70,22 +74,15 @@ if !has('nvim')
 
     call plug#end()
 
-    let g:ale_linters = {
-    \ 'c': ['clangcheck', 'clangd', 'clangtidy', 'cppcheck', 'cpplint'],
-    \ 'cpp': ['clangcheck', 'clangd', 'clangtidy', 'cppcheck', 'cpplint'],
-    \ 'haskell': ['cabal_ghc', 'hdevtools', 'hie', 'hlint', 'stack_build', 'stack_ghc']
-    \}
-
-    let g:ale_python_pylint_options = '--disable=C'
-
-    let g:ale_echo_msg_format = '%linter%: %s'
-
     let g:gutentags_ctags_tagfile = '.tags'
     let g:gutentags_project_root = ['.tags']
     let g:gutentags_add_default_project_roots = 0
     let g:gutentags_add_ctrlp_root_markers = 0
     set tags=./.tags;,.tags;
 endif
+
+let g:ale_echo_msg_format = '%linter%: %s'
+
 
 """ Wildmenu
 set wildmenu                    " Use wildmenu

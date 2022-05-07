@@ -1,6 +1,7 @@
+set path+=/usr/include
+let b:undo_ftplugin .= '| set path-=/usr/include'
+
 compiler gpp
-nnoremap <buffer> <Leader>r
-      \ :!./%<.out<CR>
 
 "if !empty(findfile("CMakeLists.txt", ".;"))
 "    let b:buildpath=expand('%:p')[:stridx(expand('%:p'), '/src/')] . 'build/'
@@ -9,8 +10,10 @@ nnoremap <buffer> <Leader>r
 "          \ ':!' . globpath(b:buildpath, '*.out') . '<CR>'
 "endif
 
-let b:undo_ftplugin .= '|nunmap <buffer> <Leader>r'
+nnoremap <buffer> <Leader>r
+      \ :!./%<.out<CR>
 
-set path+=/usr/include
+let b:undo_ftplugin .= '| nunmap <buffer> <Leader>r'
 
 let g:ale_cpp_clangd_options="-I" . getcwd()
+let b:undo_ftplugin .= '| unlet g:ale_cpp_clangd_options'
