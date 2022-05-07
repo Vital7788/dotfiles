@@ -189,6 +189,7 @@ else
         \       'file_command': {_, arg -> stridx(arg, '.') != -1 ? s:fd_command + ['-H'] : s:fd_command},
         \       'dir_command': ['fd', '-td'],
         \       'filters': ['cpsm_filter'],
+        \       'path': wilder#project_root([]),
         \     }),
         \     wilder#cmdline_pipeline({
         \       'fuzzy': 2,
