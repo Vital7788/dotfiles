@@ -58,6 +58,12 @@ if g:os == "Linux"
     \| endif
 endif
 
+if exists("$VIRTUAL_ENV")
+    let g:python3_host_prog=substitute(system("which -a python3 | head -n2 | tail -n1"), "\n", '', 'g')
+else
+    let g:python3_host_prog=substitute(system("which python3"), "\n", '', 'g')
+endif
+
 if !has('nvim')
     call plug#begin('~/.vim/vim_plug')
 
