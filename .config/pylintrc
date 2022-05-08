@@ -12,4 +12,7 @@
 disable=C,
         too-many-branches,
         too-many-arguments,
-        too-many-locals
+        too-many-locals,
+        too-many-instance-attributes,
+        too-many-public-methods,
+        import-error
