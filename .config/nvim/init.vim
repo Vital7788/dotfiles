@@ -16,6 +16,7 @@ Plug 'romainl/vim-qf'
 Plug 'tpope/vim-abolish'
 Plug 'arcticicestudio/nord-vim'
 
+Plug 'dense-analysis/ale'
 "Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh' }
 Plug 'neovim/nvim-lspconfig'
 "Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
@@ -33,6 +34,11 @@ colorscheme nord
 
 """ LSP
 lua << EOF
+-- uncomment to enable logging
+--vim.lsp.set_log_level("debug")
+-- execute following command to view logfile
+-- :lua vim.cmd('e'..vim.lsp.get_log_path())
+
 -- Mappings.
 -- See `:help vim.diagnostic.*` for documentation on any of the below functions
 local opts = { noremap=true, silent=true }
@@ -67,16 +73,16 @@ end
 
 -- Use a loop to conveniently call 'setup' on multiple servers and
 -- map buffer local keybindings when the language server attaches
---local servers = { 'pylsp', 'clangd', 'eslint' }
---for _, lsp in pairs(servers) do
---  require('lspconfig')[lsp].setup {
---    on_attach = on_attach,
---    flags = {
---      -- This will be the default in neovim 0.7+
---      debounce_text_changes = 150,
---    }
---  }
---end
+local servers = { 'clangd', 'texlab' }
+for _, lsp in pairs(servers) do
+  require('lspconfig')[lsp].setup {
+    on_attach = on_attach,
+    flags = {
+      -- This will be the default in neovim 0.7+
+      debounce_text_changes = 150,
+    }
+  }
+end
 
 require("lspconfig").pylsp.setup {
         settings = {
