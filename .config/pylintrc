@@ -15,4 +15,5 @@ disable=C,
         too-many-locals,
         too-many-instance-attributes,
         too-many-public-methods,
+        too-few-public-methods,
         import-error
