@@ -14,23 +14,40 @@ endfunction
 Plug 'romainl/vim-cool'
 Plug 'romainl/vim-qf'
 Plug 'tpope/vim-abolish'
-Plug 'arcticicestudio/nord-vim'
+Plug 'mbbill/undotree'
+Plug 'ggandor/leap.nvim'
 
 Plug 'dense-analysis/ale'
 "Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh' }
 Plug 'neovim/nvim-lspconfig'
-"Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }
 
 Plug 'nixprime/cpsm'
 Plug 'romgrk/fzy-lua-native'
 
+Plug 'arcticicestudio/nord-vim'
+Plug 'rakr/vim-one'
+Plug 'joshdick/onedark.vim'
+Plug 'romainl/apprentice'
+Plug 'embark-theme/vim', { 'as': 'embark', 'branch': 'main' }
 "Plug 'shaunsingh/nord.nvim'
 "Plug 'andersevenrud/nordic.nvim'
 call plug#end()
 
+
+lua << EOF
+require('leap').set_default_keymaps()
+--require('leap').setup {
+--    case_insensitive = false,
+--    safe_labels = {}
+--}
+EOF
+
 """ Colorscheme
-colorscheme nord
+set background=dark
+colorscheme onedark
+set termguicolors
 
 """ LSP
 lua << EOF
@@ -102,6 +119,39 @@ require("lspconfig").pylsp.setup {
             }
         }
 EOF
+
+""" Treesitter
+
+lua << EOF
+require'nvim-treesitter.configs'.setup {
+  -- A list of parser names, or "all"
+  ensure_installed = { "c", "cpp", "python", "javascript", "bash", "latex" },
+
+  -- Install parsers synchronously (only applied to `ensure_installed`)
+  sync_install = false,
+
+  -- List of parsers to ignore installing (for "all")
+  -- ignore_install = { "javascript" },
+
+  highlight = {
+    enable = true,
+
+    -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
+    -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
+    -- Using this option may slow down your editor, and you may see some duplicate highlights.
+    -- Instead of true it can also be a list of languages
+    additional_vim_regex_highlighting = false,
+  },
+  indent = {
+      enable = true
+  }
+}
+EOF
+set foldmethod=expr
+set foldexpr=nvim_treesitter#foldexpr()
+
+""" Mappings
+nnoremap <F5> :UndotreeToggle<CR>
 
 "" vim:fdm=expr:fdl=0
 "" vim:fde=getline(v\:lnum)=~'^""'?'>'.(matchend(getline(v\:lnum),'""*')-2)\:'='
