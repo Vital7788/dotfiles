@@ -242,6 +242,10 @@ nnoremap <leader>cd :lcd %:h<CR>
 " list loaded buffers and populate prompt
 nnoremap gb :ls<CR>:b<Space>
 
+" don't add { and } motions to jumplist
+nnoremap <silent> } :<C-u>execute "keepjumps norm! " . v:count1 . "}"<CR>
+nnoremap <silent> { :<C-u>execute "keepjumps norm! " . v:count1 . "{"<CR>
+
 " Cycle through argument list
 nnoremap [a :previous<CR>
 nnoremap ]a :next<CR>

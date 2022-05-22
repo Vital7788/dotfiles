@@ -1,8 +1,6 @@
 [user]
 	name = Vital Wang
 	email = vital.wang@hotmail.com
-[core]
-	excludesfile = gitignore
 [pull]
 	rebase = false
 [includeIf "gitdir:~/school/"]
