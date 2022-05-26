@@ -6,7 +6,7 @@ export XDG_CACHE_HOME="${HOME}/.cache"
 export XDG_DATA_HOME="${HOME}/.local/share"
 export XDG_STATE_HOME="${HOME}/.local/state"
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/cuda/extras/CUPTI/lib64
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/cuda/extras/CUPTI/lib64"
 
 # dotfiles
 export USERXSESSION="${XDG_CACHE_HOME}/X11/xsession"
@@ -24,9 +24,13 @@ export _JAVA_OPTIONS="-Djava.util.prefs.userRoot=${XDG_CONFIG_HOME}/java"
 export STACK_ROOT="${XDG_DATA_HOME}/stack"
 export WGETRC="${XDG_CONFIG_HOME}/wgetrc"
 export SSB_HOME="${XDG_DATA_HOME}/zoom"
-export CUDA_CACHE_PATH="$XDG_CACHE_HOME/nv"
-export GRADLE_USER_HOME="$XDG_DATA_HOME/gradle"
-export GTK2_RC_FILES="$XDG_CONFIG_HOME/gtk-2.0"
-export KDEHOME="$XDG_CONFIG_HOME/kde4"
-export PSQL_HISTORY="$XDG_STATE_HOME/psql_history"
-export NPM_CONFIG_USERCONFIG="$XDG_CONFIG_HOME/npmrc"
+export CUDA_CACHE_PATH="${XDG_CACHE_HOME}/nv"
+export GRADLE_USER_HOME="${XDG_DATA_HOME}/gradle"
+export GTK2_RC_FILES="${XDG_CONFIG_HOME}/gtk-2.0"
+export KDEHOME="${XDG_CONFIG_HOME}/kde4"
+export PSQL_HISTORY="${XDG_STATE_HOME}/psql_history"
+export NPM_CONFIG_USERCONFIG="${XDG_CONFIG_HOME}/npmrc"
+export ANDROID_HOME="${XDG_DATA_HOME}/android"
+export MAXIMA_USERDIR="${XDG_CONFIG_HOME}/maxima"
+export DOT_SAGE="${XDG_CONFIG_HOME}/sage"
+
