@@ -11,6 +11,8 @@ function! UpdateRemotePlugins(...)
     UpdateRemotePlugins
 endfunction
 
+Plug 'lewis6991/impatient.nvim'
+
 Plug 'romainl/vim-cool'
 Plug 'romainl/vim-qf'
 Plug 'tpope/vim-abolish'
@@ -19,6 +21,7 @@ Plug 'ggandor/leap.nvim'
 
 Plug 'dense-analysis/ale'
 "Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh' }
+Plug 'williamboman/nvim-lsp-installer'
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }
@@ -35,6 +38,7 @@ Plug 'embark-theme/vim', { 'as': 'embark', 'branch': 'main' }
 "Plug 'andersevenrud/nordic.nvim'
 call plug#end()
 
+lua require('impatient')
 
 lua << EOF
 require('leap').set_default_keymaps()
@@ -51,6 +55,19 @@ set termguicolors
 
 """ LSP
 lua << EOF
+
+-- has to be called before setting up any servers with lspconfig
+require("nvim-lsp-installer").setup({
+    automatic_installation = { exclude = { "clangd" } }, -- automatically detect which servers to install (based on which servers are set up via lspconfig)
+    ui = {
+        icons = {
+            server_installed = "✓",
+            server_pending = "➜",
+            server_uninstalled = "✗"
+        }
+    }
+})
+
 -- uncomment to enable logging
 --vim.lsp.set_log_level("debug")
 -- execute following command to view logfile
@@ -90,7 +107,7 @@ end
 
 -- Use a loop to conveniently call 'setup' on multiple servers and
 -- map buffer local keybindings when the language server attaches
-local servers = { 'clangd', 'texlab' }
+local servers = { 'clangd', 'texlab', 'jdtls' }
 for _, lsp in pairs(servers) do
   require('lspconfig')[lsp].setup {
     on_attach = on_attach,
