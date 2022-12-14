@@ -279,6 +279,7 @@ mode "$mode_exit" {
 }
 
 exec --no-startup-id /usr/bin/dunst
+exec_always --no-startup-id "picom --config ~/.config/picom.conf"
 
 # local settings
 #exec --no-startup-id bash ~/.config/i3/startup.sh
