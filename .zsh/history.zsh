@@ -15,7 +15,7 @@ function zshaddhistory() {
     if [[ "$1" =~ "^(ls|cd) *\/(.*\/){2,}" ]]; then
         return 0
     fi
-    if [[ "$1" =~ "^ls[^\|]*$" || "$1" =~ "^cd" || "$1" =~ "^(fg|bg|d|[0-9])$" ]]; then
+    if [[ "$1" =~ "^ls [^\|]*$" || "$1" =~ "^cd " || "$1" =~ "^(fg|bg|d|[0-9])$" ]]; then
         return 1
     fi
 }
