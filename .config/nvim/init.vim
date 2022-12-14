@@ -26,19 +26,34 @@ Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }
 
+" Need to run install script in the folder where the plugin is installed
 Plug 'nixprime/cpsm'
 Plug 'romgrk/fzy-lua-native'
 
-Plug 'arcticicestudio/nord-vim'
+Plug 'lervag/vimtex'
+Plug 'SirVer/ultisnips'
+Plug 'KeitaNakamura/tex-conceal.vim'
+
+"Plug 'arcticicestudio/nord-vim'
 Plug 'rakr/vim-one'
 Plug 'joshdick/onedark.vim'
 Plug 'romainl/apprentice'
-Plug 'embark-theme/vim', { 'as': 'embark', 'branch': 'main' }
+Plug 'sainnhe/everforest'
 "Plug 'shaunsingh/nord.nvim'
 "Plug 'andersevenrud/nordic.nvim'
 call plug#end()
 
 lua require('impatient')
+
+let g:tex_flavor='latex'
+let g:vimtex_view_method = 'zathura'
+let g:vimtex_quickfix_mode=0
+set conceallevel=1
+let g:tex_conceal='abdmg'
+
+let g:UltiSnipsExpandTrigger="<c-j>"
+let g:UltiSnipsJumpForwardTrigger="<c-j>"
+let g:UltiSnipsJumpBackwardTrigger="<c-k>"
 
 lua << EOF
 require('leap').set_default_keymaps()
@@ -49,9 +64,11 @@ require('leap').set_default_keymaps()
 EOF
 
 """ Colorscheme
-set background=dark
-colorscheme onedark
 set termguicolors
+set background=light
+let g:everforest_background='medium'
+let g:everforest_better_performance=1
+colorscheme everforest
 
 """ LSP
 lua << EOF
@@ -142,7 +159,7 @@ EOF
 lua << EOF
 require'nvim-treesitter.configs'.setup {
   -- A list of parser names, or "all"
-  ensure_installed = { "c", "cpp", "python", "javascript", "bash", "latex" },
+  ensure_installed = { "c", "cpp", "python", "javascript", "bash" },
 
   -- Install parsers synchronously (only applied to `ensure_installed`)
   sync_install = false,

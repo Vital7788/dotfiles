@@ -261,6 +261,7 @@ for_window [class="zoom" title="Polls"] resize shrink width 400
 assign [class="(?i)microsoft teams"] $ws4
 assign [class="jetbrains-idea"] $ws2
 assign [class="jetbrains-studio"] $ws2
+assign [class="keepassxc"] $ws9
 
 # exit with keyboard shortcuts
 set $mode_exit exit: loc[k], [l]ogout, s[u]spend, [r]eboot, [s]hutdown
