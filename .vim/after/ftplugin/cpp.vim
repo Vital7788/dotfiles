@@ -15,5 +15,4 @@ nnoremap <buffer> <Leader>r
 
 let b:undo_ftplugin .= '| nunmap <buffer> <Leader>r'
 
-let g:ale_cpp_clangd_options="-I" . getcwd()
-let b:undo_ftplugin .= '| unlet g:ale_cpp_clangd_options'
+let b:ale_cpp_clangd_options="-I" . getcwd()

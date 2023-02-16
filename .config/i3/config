@@ -291,6 +291,8 @@ bar {
     }
 }
 
+# assign workspaces to monitors
+workspace $ws6 output HDMI-0
 
 # assign windows to workspaces
 for_window [class="PPSSPP"] floating enable resize set 960 544

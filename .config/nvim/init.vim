@@ -11,8 +11,6 @@ function! UpdateRemotePlugins(...)
     UpdateRemotePlugins
 endfunction
 
-Plug 'lewis6991/impatient.nvim'
-
 Plug 'romainl/vim-cool'
 Plug 'romainl/vim-qf'
 Plug 'tpope/vim-abolish'
@@ -21,7 +19,7 @@ Plug 'ggandor/leap.nvim'
 
 Plug 'dense-analysis/ale'
 "Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh' }
-Plug 'williamboman/nvim-lsp-installer'
+Plug 'williamboman/mason.nvim'
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }
@@ -41,13 +39,13 @@ Plug 'romainl/apprentice'
 Plug 'sainnhe/everforest'
 "Plug 'shaunsingh/nord.nvim'
 "Plug 'andersevenrud/nordic.nvim'
-call plug#end()
 
-lua require('impatient')
+call plug#end()
 
 let g:tex_flavor='latex'
 let g:vimtex_view_method = 'zathura'
 let g:vimtex_quickfix_mode=0
+let g:vimtex_view_forward_search_on_start=0
 set conceallevel=1
 let g:tex_conceal='abdmg'
 
@@ -73,17 +71,7 @@ colorscheme everforest
 """ LSP
 lua << EOF
 
--- has to be called before setting up any servers with lspconfig
-require("nvim-lsp-installer").setup({
-    automatic_installation = { exclude = { "clangd" } }, -- automatically detect which servers to install (based on which servers are set up via lspconfig)
-    ui = {
-        icons = {
-            server_installed = "✓",
-            server_pending = "➜",
-            server_uninstalled = "✗"
-        }
-    }
-})
+require("mason").setup()
 
 -- uncomment to enable logging
 --vim.lsp.set_log_level("debug")
@@ -124,9 +112,25 @@ end
 
 -- Use a loop to conveniently call 'setup' on multiple servers and
 -- map buffer local keybindings when the language server attaches
-local servers = { 'clangd', 'texlab', 'jdtls' }
+local servers = { 'clangd', 'texlab', 'jdtls', 'pyright', 'pylsp' }
 for _, lsp in pairs(servers) do
   require('lspconfig')[lsp].setup {
+    settings = {
+        pylsp = {
+            configurationSources = {"flake8"},
+            plugins = {
+                pycodestyle = {enabled = false},
+                flake8 = {enabled = true},
+                jedi_completion = {fuzzy = true},
+                rope_autoimport = {enabled = true}
+            }
+        },
+        python = {
+            analysis = {
+                autoImportCompletions = true
+            }
+        }
+    },
     on_attach = on_attach,
     flags = {
       -- This will be the default in neovim 0.7+
@@ -135,23 +139,6 @@ for _, lsp in pairs(servers) do
   }
 end
 
-require("lspconfig").pylsp.setup {
-        settings = {
-            pylsp = {
-                configurationSources = {"flake8"},
-                plugins = {
-                    pycodestyle = {enabled = false},
-                    flake8 = {enabled = true},
-                    jedi_completion = {fuzzy = true}
-                }
-            }
-        },
-        on_attach = on_attach,
-        flags = {
-            -- This will be the default in neovim 0.7+
-            debounce_text_changes = 150,
-            }
-        }
 EOF
 
 """ Treesitter
@@ -181,6 +168,7 @@ require'nvim-treesitter.configs'.setup {
   }
 }
 EOF
+
 
 """ Mappings
 nnoremap <F5> :UndotreeToggle<CR>
