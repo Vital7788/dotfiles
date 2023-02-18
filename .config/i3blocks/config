@@ -67,7 +67,10 @@ interval=10
 #label= 
 interval=30
 
-[time]
-label= 
-command=date '+%d/%m/%Y %H:%M:%S'
+[calendar]
 interval=1
+LABEL= 
+DATEFMT=+%d/%m/%Y %H:%M:%S
+SHORTFMT=+%H:%M:%S
+#HEIGHT=180
+#WIDTH=220

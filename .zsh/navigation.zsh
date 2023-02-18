@@ -7,6 +7,18 @@ function list_all() {
   emulate -L zsh
   ls --color=auto
 }
+
+# auto activate and deactivate python virtual environments
+function python_venv() {
+  MYVENV=./venv
+  # when you cd into a folder that contains $MYVENV
+  [[ -d $MYVENV ]] && source $MYVENV/bin/activate > /dev/null 2>&1
+  # when you cd into a folder that doesn't
+  [[ ! -d $MYVENV ]] && deactivate > /dev/null 2>&1
+}
+
 autoload -U add-zsh-hook
 add-zsh-hook -Uz chpwd list_all
+add-zsh-hook -Uz chpwd python_venv
 
+python_venv
