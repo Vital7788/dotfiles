@@ -308,6 +308,8 @@ assign [class="(?i)microsoft teams"] $ws4
 assign [class="jetbrains-idea"] $ws2
 assign [class="jetbrains-studio"] $ws2
 assign [class="keepassxc"] $ws9
+assign [class="Steam"] $ws8
+for_window [class="Yad"] floating enable
 
 exec --no-startup-id /usr/bin/dunst
 
