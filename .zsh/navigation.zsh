@@ -22,3 +22,10 @@ add-zsh-hook -Uz chpwd list_all
 add-zsh-hook -Uz chpwd python_venv
 
 python_venv
+
+autoload -Uz chpwd_recent_dirs cdr
+add-zsh-hook chpwd chpwd_recent_dirs
+zstyle ':chpwd:*' recent-dirs-default yes
+zstyle ':chpwd:*' recent-dirs-file ~/.zsh/chpwd-recent-dirs
+zstyle ':completion:*' recent-dirs-insert always
+alias j=cdr
