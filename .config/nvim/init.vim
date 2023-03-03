@@ -53,6 +53,9 @@ let g:UltiSnipsExpandTrigger="<c-j>"
 let g:UltiSnipsJumpForwardTrigger="<c-j>"
 let g:UltiSnipsJumpBackwardTrigger="<c-k>"
 
+let g:ale_disable_lsp = 1
+let g:ale_use_neovim_diagnostics_api = 1
+
 lua << EOF
 require('leap').set_default_keymaps()
 --require('leap').setup {
@@ -139,6 +142,16 @@ for _, lsp in pairs(servers) do
   }
 end
 
+vim.diagnostic.config({
+  virtual_text = {
+    --source = "always",
+    format = fmt,
+  },
+  float = {
+    source = "always",
+    format = fmt,
+  },
+})
 EOF
 
 """ Treesitter
