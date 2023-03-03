@@ -1,6 +1,6 @@
 HISTFILE=~/.histfile
-HISTSIZE=10000
-SAVEHIST=10000
+HISTSIZE=100000
+SAVEHIST=100000
 setopt sharehistory         # share history file between all sessions
 setopt appendhistory        # immediately add commands to history file
 setopt histignorealldups    # delete old record when new event is duplicate

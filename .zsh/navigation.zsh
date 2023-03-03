@@ -14,7 +14,9 @@ function python_venv() {
   # when you cd into a folder that contains $MYVENV
   [[ -d $MYVENV ]] && source $MYVENV/bin/activate > /dev/null 2>&1
   # when you cd into a folder that doesn't
-  [[ ! -d $MYVENV ]] && deactivate > /dev/null 2>&1
+  if ! [[ ${PWD:A} =~ ^${VIRTUAL_ENV:h} ]]; then
+    deactivate > /dev/null 2>&1
+  fi
 }
 
 autoload -U add-zsh-hook
@@ -22,3 +24,10 @@ add-zsh-hook -Uz chpwd list_all
 add-zsh-hook -Uz chpwd python_venv
 
 python_venv
+
+autoload -Uz chpwd_recent_dirs cdr
+add-zsh-hook chpwd chpwd_recent_dirs
+zstyle ':chpwd:*' recent-dirs-default yes
+zstyle ':chpwd:*' recent-dirs-file ~/.zsh/chpwd-recent-dirs
+zstyle ':completion:*' recent-dirs-insert always
+alias j=cdr
