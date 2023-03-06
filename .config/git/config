@@ -7,3 +7,5 @@
 	path = config-school
 [includeIf "gitdir/i:~/documents/school/"]
 	path = config-school
+[init]
+	defaultBranch = main
