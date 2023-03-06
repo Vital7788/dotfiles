@@ -16,4 +16,7 @@ disable=C,
         too-many-instance-attributes,
         too-many-public-methods,
         too-few-public-methods,
-        import-error
+        import-error,
+        missing-module-docstring,
+        missing-class-docstring,
+        missing-function-docstring
