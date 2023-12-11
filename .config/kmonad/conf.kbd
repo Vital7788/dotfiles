@@ -14,6 +14,7 @@
     l1 (tap-macro (layer-rem vim_input) (layer-rem vim))
     l2 (layer-add vim)
     ec (tap-next esc lctl)
+    ea (tap-next esc lalt)
     vme (tap-macro (layer-rem vim_input) (layer-rem vim) lmet)
     vec (tap-next (layer-rem vim_input) lctl)
     vi (layer-add vim_input)
@@ -75,7 +76,7 @@
     tab  q    w    e    r    t    y    u    i    o    p    [    ]    \    pgup
     @ec  a    s    d    f    g    h    j    k    l    ;    '    ret       pgdn
     lsft z    x    c    v    b    n    m    ,    .    /    rsft           end
-    lctl      lmet lalt           spc            ralt rctl      up
+    lctl      lmet @ea            spc            ralt rctl      up
                                                            left down rght
 )
 
