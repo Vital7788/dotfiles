@@ -74,7 +74,8 @@ if !has('nvim')
     Plug 'romainl/vim-qf'
     Plug 'tpope/vim-abolish'
     "Plug 'ludovicchabant/vim-gutentags'
-    Plug 'arcticicestudio/nord-vim'
+    "Plug 'arcticicestudio/nord-vim'
+    Plug 'sainnhe/everforest'
     Plug 'dense-analysis/ale'
 
     call plug#end()
@@ -110,8 +111,13 @@ set smarttab
 
 " show trailing spaces
 set list
-"set listchars=tab:\ \ ,trail:·
-set listchars=tab:>\ ,trail:·,extends:>,precedes:<
+if &encoding == "utf-8"
+    set showbreak=↪\ 
+    set listchars=tab:»\ ,trail:·,extends:›,precedes:‹,nbsp:␣
+else
+    set showbreak=\\\ 
+    set listchars=tab:>\ ,trail:-,extends:>,precedes:<
+endif
 
 """ History, Swap, Undo, Backup
 set history=300
@@ -121,31 +127,33 @@ set undofile
 " keep swap, backup and undo files in dedicated directory
 " // expands to file's full path
 if g:os == "Linux"
-    let s:version = 'vim'
-    if has('nvim')
-        let s:version = 'nvim'
-    endif
+    if !empty($XDG_STATE_HOME)
+        let s:version = 'vim'
+        if has('nvim')
+            let s:version = 'nvim'
+        endif
 
-    let s:directory = $XDG_STATE_HOME."/".s:version."/swap"
-    if !isdirectory(s:directory)
-        call mkdir(s:directory, "p", 0700)
-    endif
-    let &directory=s:directory.",/var/tmp,/tmp"
+        let s:directory = $XDG_STATE_HOME."/".s:version."/swap"
+        if !isdirectory(s:directory)
+            call mkdir(s:directory, "p", 0700)
+        endif
+        let &directory=s:directory.",/var/tmp,/tmp"
 
-    let s:directory = $XDG_STATE_HOME."/".s:version."/backup"
-    if !isdirectory(s:directory)
-        call mkdir(s:directory, "p", 0700)
-    endif
-    let &backupdir=s:directory
+        let s:directory = $XDG_STATE_HOME."/".s:version."/backup"
+        if !isdirectory(s:directory)
+            call mkdir(s:directory, "p", 0700)
+        endif
+        let &backupdir=s:directory
 
-    let s:directory = $XDG_STATE_HOME."/".s:version."/undo"
-    if !isdirectory(s:directory)
-        call mkdir(s:directory, "p", 0700)
-    endif
-    let &undodir=s:directory
+        let s:directory = $XDG_STATE_HOME."/".s:version."/undo"
+        if !isdirectory(s:directory)
+            call mkdir(s:directory, "p", 0700)
+        endif
+        let &undodir=s:directory
 
-    " no undo or backup files for files in /tmp
-    au BufWritePre /tmp/* setlocal noundofile nobackup nowritebackup
+        " no undo or backup files for files in /tmp
+        au BufWritePre /tmp/* setlocal noundofile nobackup nowritebackup
+    endif
 else
     set directory^=~/vimfiles/cache/swap//
     set backupdir^=~/vimfiles/cache/backup//
@@ -190,9 +198,12 @@ set modelineexpr
 
 """ Colorscheme + Font
 if !has('nvim')
-    colorscheme nord
+    set termguicolors
+    set background=light
+    let g:everforest_background='medium'
+    let g:everforest_better_performance=1
+    colorscheme everforest
 endif
-set bg=dark
 if g:os == "Linux"
     set guifont=Fira_Code_Medium:h11
 elseif g:os == "Windows"
