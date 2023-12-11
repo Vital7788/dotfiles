@@ -50,8 +50,7 @@ bindsym $mod+Return exec kitty
 # kill focused window
 bindsym $mod+Shift+q kill
 
-# start dmenu (a program launcher)
-#bindsym $mod+d exec dmenu_run
+# start rofi (a program launcher)
 bindsym $mod+space exec --no-startup-id rofi -show drun -modi drun -lines 10 -width 30
 bindsym $mod+BackSpace exec --no-startup-id rofi -show drun -modi drun -lines 10 -width 30
 
@@ -89,9 +88,9 @@ bindsym $mod+v split v
 bindsym $mod+f fullscreen toggle
 
 # change container layout (stacked, tabbed, toggle split)
-#bindsym $mod+s layout stacking
-#bindsym $mod+w layout tabbed
-#bindsym $mod+e layout toggle split
+bindsym $mod+s layout stacking
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
 bindsym $mod+u layout toggle stacking splitv
 bindsym $mod+i layout toggle tabbed splith
 bindsym $mod+o layout toggle split
@@ -106,7 +105,7 @@ bindsym $mod+Shift+space focus mode_toggle
 bindsym $mod+a focus parent
 
 # focus the child container
-#bindsym $mod+d focus child
+bindsym $mod+d focus child
 
 # Define names for default workspaces for which we configure key bindings later on.
 # We use variables to avoid repeating the names in multiple places.
@@ -144,6 +143,13 @@ bindsym $mod+Shift+7 move container to workspace number $ws7
 bindsym $mod+Shift+8 move container to workspace number $ws8
 bindsym $mod+Shift+9 move container to workspace number $ws9
 bindsym $mod+Shift+0 move container to workspace number $ws10
+
+# cycle between workspaces
+bindsym Mod1+Escape workspace next_on_output
+bindsym Mod1+Shift+Escape workspace prev_on_output
+
+# switch to previously focused workspace when switching to the workspace that is currently focused
+workspace_auto_back_and_forth yes
 
 # move workspace to next display
 bindsym $mod+p move workspace to output next
@@ -273,8 +279,9 @@ bar {
 }
 
 bar {
-    #tray_output none
-    output nonprimary
+    tray_output none
+    #output nonprimary
+    output HDMI-0
     status_command i3blocks -c ~/.config/i3blocks/config-small
     position top
     font pango:FiraCode Nerd Font 12px

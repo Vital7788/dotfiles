@@ -10,9 +10,9 @@ function list_all() {
 
 # auto activate and deactivate python virtual environments
 function python_venv() {
-  MYVENV=./venv
-  # when you cd into a folder that contains $MYVENV
-  [[ -d $MYVENV ]] && source $MYVENV/bin/activate > /dev/null 2>&1
+  MYVENV=./.venv
+  # when you cd into a folder that contains $MYVENV and the venv isn't active yet
+  [[ -d $MYVENV ]] && [[ ${PWD:A} != ${VIRTUAL_ENV:h} ]] && source $MYVENV/bin/activate > /dev/null 2>&1
   # when you cd into a folder that doesn't
   if ! [[ ${PWD:A} =~ ^${VIRTUAL_ENV:h} ]]; then
     deactivate > /dev/null 2>&1
