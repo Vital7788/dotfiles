@@ -28,8 +28,8 @@ case "$BLOCK_BUTTON" in
 	# the position of the upper left corner of the popup
 	#posX=$(($BLOCK_X - $WIDTH / 2))
 	#posY=$(($BLOCK_Y - $HEIGHT))
-        posX=1705
-        posY=20
+        posX=1740
+        posY=5
 
 	i3-msg -q "exec yad --calendar \
         --width=$WIDTH --height=$HEIGHT \

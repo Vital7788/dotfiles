@@ -1,5 +1,4 @@
 " map tab to autocomplete or tab depending on context
-finish
 
 function CleverTab()
     let l:line = strpart( getline('.'), 0, col('.')-1)
