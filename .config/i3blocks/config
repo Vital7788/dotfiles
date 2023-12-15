@@ -32,10 +32,7 @@ markup=none
 label= 
 interval=3
 
-[volume-pulseaudio]
-#label= 
-#interval=1
-#card=Generic
+[volume-pipewire]
 interval=persist
 SUBSCRIBE=1
 USE_ALSA_NAME=1
