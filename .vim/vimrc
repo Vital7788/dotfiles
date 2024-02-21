@@ -225,14 +225,9 @@ let g:netrw_winsize = 20
 let g:netrw_dirhistmax=0
 
 """ Keybindings
-" use leader for buffer/pane operations
-let mapleader = ","
-let maplocalleader = "\<Space>"
-" toggle folds with <space><space>
-"nnoremap <silent> <localleader><Space> @=(foldlevel('.')?'za':"\<Space>")<CR>
-"vnoremap <localleader><space> zf
-nnoremap <localleader><space> <C-^>
-nmap <localleader><backspace> <Plug>(qf_qf_switch)
+let mapleader = "\<Space>"
+nnoremap <leader><space> <C-^>
+nmap <leader><backspace> <Plug>(qf_qf_switch)
 
 nnoremap U <C-R>
 nnoremap Y y$
@@ -244,10 +239,7 @@ nnoremap Q gQ
 " search recursively for edit and find
 "nnoremap <leader>e :e **/*<C-z>**/*
 "nmap <leader>e :e %%<C-z><S-Tab>
-nnoremap <leader>e :e <C-R>=fnameescape(expand('%:h')).'/'<CR><C-z>
-
-" cd to current file path for current window
-nnoremap <leader>cd :lcd %:h<CR>
+"nnoremap <leader>e :e <C-R>=fnameescape(expand('%:h')).'/'<CR><C-z>
 
 " list loaded buffers and populate prompt
 nnoremap gb :ls<CR>:b<Space>
@@ -273,7 +265,7 @@ nmap ]c  <Plug>(qf_qf_next)
 nmap [l <Plug>(qf_loc_previous)
 nmap ]l  <Plug>(qf_loc_next)
 
-nnoremap <localleader>y :%y+<CR>
+nnoremap <leader>y :%y+<CR>
 
 "" vim:fdm=expr:fdl=0
 "" vim:fde=getline(v\:lnum)=~'^""'?'>'.(matchend(getline(v\:lnum),'""*')-2)\:'='
