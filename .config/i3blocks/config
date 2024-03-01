@@ -28,9 +28,9 @@ command=~/.config/i3blocks/blocklets/$BLOCK_NAME
 separator_block_width=30
 markup=none
 
-[brightness]
-label= 
-interval=3
+#[brightness]
+#label= 
+#interval=3
 
 [volume-pipewire]
 interval=persist

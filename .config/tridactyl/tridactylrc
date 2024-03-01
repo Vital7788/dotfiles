@@ -3,6 +3,7 @@ sanitise tridactyllocal
 
 " General Settings
 set smoothscroll true
+set hintchars jfkdls;aieowur,cxmvhgytnb
 
 " Binds
 bind J tabnext
@@ -18,6 +19,7 @@ bind gd tabdetach
 bind gD composite tabduplicate; tabdetach
 bind >> fillcmdline tabpush
 bind << fillcmdline tabgrab
+bind <> fillcmdline winmerge
 
 " Subconfig Settings
 seturl ^https://codeforces.com disable false
@@ -31,7 +33,7 @@ autocmd DocStart https://www.canva.com/design mode ignore
 
 " Youtube
 seturl www.youtube.com modeindicator false
-bindurl www.youtube.com ,f hint
+bindurl www.youtube.com ,f hint -Jc ytd-comment-replies-renderer button, .yt-simple-endpoint:not(#thumbnail, #logo, .ytd-topbar-menu-button-renderer, .ytd-comment-renderer, .yt-formatted-string)
 unbindurl www.youtube.com f
 unbindurl www.youtube.com x
 unbindurl www.youtube.com z
