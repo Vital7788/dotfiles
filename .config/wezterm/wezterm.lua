@@ -6,7 +6,7 @@ config.audible_bell = "Disabled"
 
 config.hide_tab_bar_if_only_one_tab = true
 config.font = wezterm.font 'FiraCode Nerd Font'
-config.font_size = 11
+config.font_size = 13
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
 --config.color_scheme = 'nord'
@@ -14,7 +14,7 @@ config.color_scheme = 'Everforest Light (Gogh)'
 config.window_frame = {
   font = wezterm.font { family = 'Roboto', weight = 'Bold' },
 
-  font_size = 11.0,
+  font_size = 12.0,
 
   active_titlebar_bg = '#efebd4',
   inactive_titlebar_bg = '#efebd4',
