@@ -5,8 +5,8 @@ syntax on
 
 " allow buffers to have changes without being displayed
 set hidden
-set number relativenumber
-"set number
+"set number relativenumber
+set number
 set signcolumn=number
 set cursorline
 
@@ -47,7 +47,7 @@ if !exists("g:os")
 endif
 
 """ Plugins
-if g:os == "Linux"
+if g:os == "Linux" && !has('nvim')
     " Install vim-plug if not found
     let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
     if empty(glob(data_dir . '/autoload/plug.vim'))
@@ -226,6 +226,7 @@ let g:netrw_dirhistmax=0
 
 """ Keybindings
 let mapleader = "\<Space>"
+let maplocalleader = ","
 nnoremap <leader><space> <C-^>
 nmap <leader><backspace> <Plug>(qf_qf_switch)
 
@@ -239,7 +240,8 @@ nnoremap Q gQ
 " search recursively for edit and find
 "nnoremap <leader>e :e **/*<C-z>**/*
 "nmap <leader>e :e %%<C-z><S-Tab>
-"nnoremap <leader>e :e <C-R>=fnameescape(expand('%:h')).'/'<CR><C-z>
+
+nnoremap <localleader>e :e <C-R>=fnameescape(expand('%:h')).'/'<CR><C-z>
 
 " list loaded buffers and populate prompt
 nnoremap gb :ls<CR>:b<Space>
