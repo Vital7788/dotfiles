@@ -1,0 +1,53 @@
+"sanitise tridactyllocal tridactylsync
+sanitise tridactyllocal
+
+" General Settings
+set smoothscroll true
+
+" Binds
+bind J tabnext
+bind K tabprev
+unbind <C-f>
+bind / fillcmdline find
+bind ? fillcmdline find --reverse
+bind n findnext --search-from-view
+bind N findnext --search-from-view --reverse
+bind --mode=ex <C-p> ex.prev_history
+bind --mode=ex <C-n> ex.next_history
+bind gd tabdetach
+bind gD composite tabduplicate; tabdetach
+bind >> fillcmdline tabpush
+bind << fillcmdline tabgrab
+
+" Subconfig Settings
+seturl ^https://codeforces.com disable false
+seturl ^https://codeforces.com noiframe true
+seturl ^https://userve.ugent.be disable false
+seturl ^https://userve.ugent.be noiframe true
+
+" Autocmds
+autocmd DocStart www.overleaf.com mode ignore
+autocmd DocStart https://www.canva.com/design mode ignore
+
+" Youtube
+seturl www.youtube.com modeindicator false
+bindurl www.youtube.com ,f hint
+unbindurl www.youtube.com f
+unbindurl www.youtube.com x
+unbindurl www.youtube.com z
+unbindurl www.youtube.com zz
+unbindurl www.youtube.com zI
+unbindurl www.youtube.com zM
+unbindurl www.youtube.com zO
+unbindurl www.youtube.com zR
+unbindurl www.youtube.com zi
+unbindurl www.youtube.com zm
+unbindurl www.youtube.com zo
+unbindurl www.youtube.com zr
+
+" Only hint search results on Google
+bindurl www.google.com f hint -Jc #center_col a
+bindurl www.google.com F hint -Jbc #center_col a
+
+" For syntax highlighting see https://github.com/tridactyl/vim-tridactyl
+" vim: set filetype=tridactyl

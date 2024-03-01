@@ -9,6 +9,8 @@ if exists('g:loaded_wildmenu')
 endif
 let g:loaded_wildmenu = 1
 
+finish
+
 " Helper function for local scope
 function! s:Wildignore(wilder) abort
 
