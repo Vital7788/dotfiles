@@ -327,6 +327,7 @@ assign [class="Steam"] $ws8
 for_window [class="Yad"] floating enable
 
 exec --no-startup-id /usr/bin/dunst
+exec --no-startup-id /usr/bin/gentoo-pipewire-launcher
 
 # local settings
 #exec --no-startup-id bash ~/.config/i3/startup.sh
