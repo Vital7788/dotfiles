@@ -487,3 +487,27 @@ snippet frame "frame" w
 $0
 \end{frame}
 endsnippet
+
+snippet \"i "trema" iA
+\"{\i}
+endsnippet
+
+snippet '\\"([aeou])' "trema" irA
+\"{`!p snip.rv = match.group(1)`}
+endsnippet
+
+snippet \`i "grave" iA
+\`{\i}
+endsnippet
+
+snippet '\\`([aeou])' "grave" irA
+\`{`!p snip.rv = match.group(1)`}
+endsnippet
+
+snippet \'i "acute" iA
+\'{\i}
+endsnippet
+
+snippet '\\'([aeou])' "acute" irA
+\'{`!p snip.rv = match.group(1)`}
+endsnippet

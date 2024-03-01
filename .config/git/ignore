@@ -6,7 +6,7 @@ tags
 # intellij
 .idea/
 
-#vscode
+# vscode
 project.iml
 
 # C/C++
@@ -18,3 +18,5 @@ compile_commands.json
 
 # python
 .ropeproject
+pyrightconfig.json
+pylintrc
