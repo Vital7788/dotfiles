@@ -55,8 +55,8 @@ unbindurl www.youtube.com/watch zr
 
 " Reddit
 bindurl www.reddit.com ;c hint -Jc #comment-fold-button, faceplate-partial>div>button
-bindurl www.reddit.com f hint -Jc a[id*="post-title"], a[data-testid="subreddit-name"]
-bindurl www.reddit.com F hint -Jbc a[id*="post-title"], a[data-testid="subreddit-name"]
+bindurl www.reddit.com$ f hint -Jc a[id*="post-title"], a[data-testid="subreddit-name"]
+bindurl www.reddit.com$ F hint -Jbc a[id*="post-title"], a[data-testid="subreddit-name"]
 
 " Only hint search results on Google
 bindurl www.google.com f hint -Jc #center_col a
