@@ -21,6 +21,9 @@ bind >> fillcmdline tabpush
 bind << fillcmdline tabgrab
 bind <> fillcmdline winmerge
 
+bind ;f hint
+bind ;F hint
+
 " Subconfig Settings
 seturl ^https://codeforces.com disable false
 seturl ^https://codeforces.com noiframe true
@@ -33,23 +36,31 @@ autocmd DocStart https://www.canva.com/design mode ignore
 
 " Youtube
 seturl www.youtube.com modeindicator false
-bindurl www.youtube.com ,f hint -Jc ytd-comment-replies-renderer button, .yt-simple-endpoint:not(#thumbnail, #logo, .ytd-topbar-menu-button-renderer, .ytd-comment-renderer, .yt-formatted-string)
-unbindurl www.youtube.com f
-unbindurl www.youtube.com x
-unbindurl www.youtube.com z
-unbindurl www.youtube.com zz
-unbindurl www.youtube.com zI
-unbindurl www.youtube.com zM
-unbindurl www.youtube.com zO
-unbindurl www.youtube.com zR
-unbindurl www.youtube.com zi
-unbindurl www.youtube.com zm
-unbindurl www.youtube.com zo
-unbindurl www.youtube.com zr
+bindurl www.youtube.com f hint -Jc .yt-simple-endpoint:not(#thumbnail, #logo, .ytd-topbar-menu-button-renderer, .yt-formatted-string)
+bindurl www.youtube.com F hint -Jbc .yt-simple-endpoint:not(#thumbnail, #logo, .ytd-topbar-menu-button-renderer, .yt-formatted-string)
+bindurl www.youtube.com/watch ;f hint -Jc ytd-comment-replies-renderer button, .yt-simple-endpoint:not(#thumbnail, #logo, .ytd-topbar-menu-button-renderer, .ytd-comment-renderer, .yt-formatted-string)
+bindurl www.youtube.com/watch ;F hint -Jbc ytd-comment-replies-renderer button, .yt-simple-endpoint:not(#thumbnail, #logo, .ytd-topbar-menu-button-renderer, .ytd-comment-renderer, .yt-formatted-string)
+unbindurl www.youtube.com/watch f
+unbindurl www.youtube.com/watch x
+unbindurl www.youtube.com/watch z
+unbindurl www.youtube.com/watch zz
+unbindurl www.youtube.com/watch zI
+unbindurl www.youtube.com/watch zM
+unbindurl www.youtube.com/watch zO
+unbindurl www.youtube.com/watch zR
+unbindurl www.youtube.com/watch zi
+unbindurl www.youtube.com/watch zm
+unbindurl www.youtube.com/watch zo
+unbindurl www.youtube.com/watch zr
+
+" Reddit
+bindurl www.reddit.com ;c hint -Jc #comment-fold-button, faceplate-partial>div>button
+bindurl www.reddit.com f hint -Jc a[id*="post-title"], a[data-testid="subreddit-name"]
+bindurl www.reddit.com F hint -Jbc a[id*="post-title"], a[data-testid="subreddit-name"]
 
 " Only hint search results on Google
 bindurl www.google.com f hint -Jc #center_col a
 bindurl www.google.com F hint -Jbc #center_col a
 
 " For syntax highlighting see https://github.com/tridactyl/vim-tridactyl
-" vim: set filetype=tridactyl
+" vim: set filetype=vim
