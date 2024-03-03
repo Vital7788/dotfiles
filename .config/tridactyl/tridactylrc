@@ -6,8 +6,8 @@ set smoothscroll true
 set hintchars jfkdls;aieowur,cxmvhgytnb
 
 " Binds
-bind j scrollline 5
-bind k scrollline -5
+bind j scrollline 7
+bind k scrollline -7
 bind J tabnext
 bind K tabprev
 unbind <C-f>
