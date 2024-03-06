@@ -10,6 +10,9 @@ bind j scrollline 7
 bind k scrollline -7
 bind J tabnext
 bind K tabprev
+bind O fillcmdline tabopen
+bind e current_url open
+bind E current_url tabopen
 unbind <C-f>
 bind / fillcmdline find
 bind ? fillcmdline find --reverse
@@ -56,9 +59,9 @@ unbindurl www.youtube.com/watch zo
 unbindurl www.youtube.com/watch zr
 
 " Reddit
-bindurl www.reddit.com ;c hint -Jc #comment-fold-button, faceplate-partial>div>button
-bindurl www.reddit.com/$ f hint -Jc a[id*="post-title"], a[data-testid="subreddit-name"]
-bindurl www.reddit.com/$ F hint -Jbc a[id*="post-title"], a[data-testid="subreddit-name"]
+bindurl www.reddit.com ;c hint -Jc .contents>div>button, faceplate-partial>div>button, summary>div>button
+bindurl www.reddit.com(/r/[^/]*)?/$ f hint -Jc a[id*="post-title"], a[data-testid="subreddit-name"]
+bindurl www.reddit.com(/r/[^/]*)?/$ F hint -Jbc a[id*="post-title"], a[data-testid="subreddit-name"]
 
 " Only hint search results on Google
 bindurl www.google.com f hint -Jc #center_col a
