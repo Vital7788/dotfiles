@@ -1,3 +1,4 @@
 .vim/cache
 .vim/vim_plug
 .cfg
+.config/nvim/lazy-lock.json

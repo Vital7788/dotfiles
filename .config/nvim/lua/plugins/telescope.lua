@@ -1,7 +1,7 @@
 return {
   {
     'nvim-telescope/telescope.nvim',
-    event = 'VeryLazy',
+    -- event = 'VeryLazy',
     branch = '0.1.x',
     dependencies = {
       'nvim-lua/plenary.nvim',
@@ -12,14 +12,35 @@ return {
       },
       { 'nvim-tree/nvim-web-devicons' }
     },
-    config = function()
+    config = function(_, opts)
       pcall(require('telescope').load_extension, 'fzf')
 
-      local builtin = require('telescope.builtin')
-      vim.keymap.set('n', '<localleader>f', builtin.find_files, {})
-      vim.keymap.set('n', '<localleader>/', builtin.live_grep, {})
-      vim.keymap.set('n', '<localleader>b', builtin.buffers, {})
-      vim.keymap.set('n', '<localleader>h', builtin.help_tags, {})
+      require('telescope').setup(opts)
+    end,
+    keys = {
+      { '<localleader>f', function() require('telescope.builtin').find_files() end },
+      { '<localleader>/', function() require('telescope.builtin').live_grep() end },
+      { '<localleader>b', function() require('telescope.builtin').buffers() end },
+      { '<localleader>h', function() require('telescope.builtin').help_tags() end },
+    },
+    opts = function()
+      return {
+        defaults = vim.tbl_extend(
+          "force",
+          require('telescope.themes').get_dropdown(),
+          {
+            path_display = {
+              truncate = 1,
+            },
+            dynamic_preview_title = true,
+          }
+        ),
+        pickers = {
+          find_files = {
+            follow = true,
+          },
+        },
+      }
     end,
   },
 }

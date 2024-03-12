@@ -1,0 +1,1 @@
+../../../firenvim/lua/plugins/firenvim.lua
