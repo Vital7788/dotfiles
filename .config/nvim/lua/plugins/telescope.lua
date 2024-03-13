@@ -29,6 +29,19 @@ return {
           "force",
           require('telescope.themes').get_dropdown(),
           {
+            file_ignore_patterns = {
+              -- Documents
+              '%.docx$', '%.odp$', '%.ods$', '%.odt$', '%.pdf$', '%.ppt$', '%.pptx$', '%.xls$', '%.xlsx$',
+
+              -- Images
+              '%.gif$', '%.ico$', '%.jpeg$', '%.jpg$', '%.png$',
+
+              -- Audio
+              '%.flac$', '%.mp3$', '%.opus$', '%.wav$',
+
+              -- Video
+              '%.mp4$', '%.webm$', '%.mkv$',
+            },
             path_display = {
               truncate = 1,
             },
