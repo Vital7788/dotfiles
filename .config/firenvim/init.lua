@@ -17,7 +17,7 @@ vim.opt.undofile = false
 
 vim.api.nvim_create_autocmd("UIEnter", {
   callback = function()
-    vim.fn.timer_start(10, function()
+    vim.fn.timer_start(50, function()
       vim.opt.lines = 5
     end)
   end,

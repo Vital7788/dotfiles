@@ -257,15 +257,25 @@ nnoremap ]a :next<CR>
 nnoremap [b :bprevious<CR>
 nnoremap ]b :bnext<CR>
 " Cycle through quicklist/:helpgrep items
-"nnoremap [c :cprevious<CR>
-"nnoremap ]c :cnext<CR>
-nmap [c <Plug>(qf_qf_previous)
-nmap ]c  <Plug>(qf_qf_next)
+"nnoremap [q :cprevious<CR>
+"nnoremap ]q :cnext<CR>
+nmap [q <Plug>(qf_qf_previous)
+nmap ]q  <Plug>(qf_qf_next)
 " Cycle through location list items
 "nnoremap [l :lprevious<CR>
 "nnoremap ]l :lnext<CR>
 nmap [l <Plug>(qf_loc_previous)
 nmap ]l  <Plug>(qf_loc_next)
+" Cycle through tags
+nnoremap [t :tprevious<CR>
+nnoremap ]t :tnext<CR>
+" Go to previous/next conflict marker
+nnoremap <silent> [x :<C-U>call <SID>Context(1)<CR>
+nnoremap <silent> ]x :<C-U>call <SID>Context(0)<CR>
+
+function! s:Context(reverse) abort
+  call search('^\(@@ .* @@\|[<=>|]\{7}[<=>|]\@!\)', a:reverse ? 'bW' : 'W')
+endfunction
 
 nnoremap <leader>y :%y+<CR>
 
