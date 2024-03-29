@@ -120,44 +120,42 @@ else
 endif
 
 """ History, Swap, Undo, Backup
-set history=300
+set history=1000
 
 set backup
 set undofile
+
+" no undo or backup files for files in /tmp
+au BufWritePre /tmp/* setlocal noundofile nobackup nowritebackup
+
 " keep swap, backup and undo files in dedicated directory
 " // expands to file's full path
-if g:os == "Linux"
-    if !empty($XDG_STATE_HOME)
-        let s:version = 'vim'
-        if has('nvim')
-            let s:version = 'nvim'
-        endif
-
-        let s:directory = $XDG_STATE_HOME."/".s:version."/swap"
-        if !isdirectory(s:directory)
-            call mkdir(s:directory, "p", 0700)
-        endif
-        let &directory=s:directory.",/var/tmp,/tmp"
-
-        let s:directory = $XDG_STATE_HOME."/".s:version."/backup"
-        if !isdirectory(s:directory)
-            call mkdir(s:directory, "p", 0700)
-        endif
-        let &backupdir=s:directory
-
-        let s:directory = $XDG_STATE_HOME."/".s:version."/undo"
-        if !isdirectory(s:directory)
-            call mkdir(s:directory, "p", 0700)
-        endif
-        let &undodir=s:directory
-
-        " no undo or backup files for files in /tmp
-        au BufWritePre /tmp/* setlocal noundofile nobackup nowritebackup
-    endif
+if has('nvim')
+    set backupdir-=.
 else
-    set directory^=~/vimfiles/cache/swap//
-    set backupdir^=~/vimfiles/cache/backup//
-    set undodir^=~/vimfiles/cache/undo//
+    if g:os == "Linux"
+        let s:basedir = empty($XDG_STATE_HOME) ? "~/.local/share" : $XDG_STATE_HOME
+    endif
+    if g:os == "Windows"
+        let s:basedir = $LOCALAPPDATA
+    endif
+    let s:directory = s:basedir."/vim/swap//"
+    if !isdirectory(s:directory)
+        call mkdir(s:directory, "p", 0700)
+    endif
+    let &directory=s:directory.",/var/tmp,/tmp"
+
+    let s:directory = s:basedir."/vim/backup//"
+    if !isdirectory(s:directory)
+        call mkdir(s:directory, "p", 0700)
+    endif
+    let &backupdir=s:directory
+
+    let s:directory = s:basedir."/vim/undo//"
+    if !isdirectory(s:directory)
+        call mkdir(s:directory, "p", 0700)
+    endif
+    let &undodir=s:directory
 endif
 
 """ Path
