@@ -98,6 +98,7 @@ set wildcharm=<C-z>
 
 """ Indent & Whitespace
 set autoindent               " Use indent of previous line on new lines
+set smartindent
 set expandtab                " Use spaces instead of tabs
 set shiftwidth=4             " Indent with four spaces
 set softtabstop=4            " Insert four spaces with tab key
@@ -183,7 +184,7 @@ inoremap <expr> <C-p> pumvisible() ? '<C-p>' :
 
 """ Search
 set hlsearch
-set ignorecase
+set smartcase
 set incsearch
 
 if executable('rg')
@@ -257,10 +258,10 @@ nnoremap ]a :next<CR>
 nnoremap [b :bprevious<CR>
 nnoremap ]b :bnext<CR>
 " Cycle through quicklist/:helpgrep items
-"nnoremap [q :cprevious<CR>
-"nnoremap ]q :cnext<CR>
-nmap [q <Plug>(qf_qf_previous)
-nmap ]q  <Plug>(qf_qf_next)
+"nnoremap [c :cprevious<CR>
+"nnoremap ]c :cnext<CR>
+nmap [c <Plug>(qf_qf_previous)
+nmap ]c  <Plug>(qf_qf_next)
 " Cycle through location list items
 "nnoremap [l :lprevious<CR>
 "nnoremap ]l :lnext<CR>
