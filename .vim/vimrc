@@ -37,17 +37,18 @@ let g:markdown_fenced_languages = ['python', 'c', 'cpp']
 
 """ OS
 if !exists("g:os")
-    if has("win32") || has("win64")
+    if has("win64") || has("win32") || has("win16")
         let g:os = "Windows"
-    elseif has("unix")
-        let g:os = "Linux"
     else
-        let g:os = ""
+        let g:os = substitute(system('uname'), '\n', '', '')
+        if stridx(substitute(system('uname'), '\n', '', ''), "MINGW") >= 0
+            let g:os = "Windows"
+        endif
     endif
 endif
 
 """ Plugins
-if g:os == "Linux" && !has('nvim')
+if !has('nvim')
     " Install vim-plug if not found
     let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
     if empty(glob(data_dir . '/autoload/plug.vim'))
@@ -59,15 +60,7 @@ if g:os == "Linux" && !has('nvim')
     autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
         \| PlugInstall --sync | source $MYVIMRC
     \| endif
-endif
 
-if exists("$VIRTUAL_ENV")
-    let g:python3_host_prog=substitute(system("which -a python3 | head -n2 | tail -n1"), "\n", '', 'g')
-else
-    let g:python3_host_prog=substitute(system("which python3"), "\n", '', 'g')
-endif
-
-if !has('nvim')
     call plug#begin('~/.vim/vim_plug')
 
     Plug 'romainl/vim-cool'
@@ -88,7 +81,11 @@ if !has('nvim')
     let g:ale_echo_msg_format = '%linter%: %s'
 endif
 
-
+if exists("$VIRTUAL_ENV")
+    let g:python3_host_prog=substitute(system("which -a python3 | head -n2 | tail -n1"), "\n", '', 'g')
+else
+    let g:python3_host_prog=substitute(system("which python3"), "\n", '', 'g')
+endif
 
 """ Wildmenu
 set wildmenu                    " Use wildmenu
@@ -98,6 +95,7 @@ set wildcharm=<C-z>
 
 """ Indent & Whitespace
 set autoindent               " Use indent of previous line on new lines
+set smartindent
 set expandtab                " Use spaces instead of tabs
 set shiftwidth=4             " Indent with four spaces
 set softtabstop=4            " Insert four spaces with tab key
@@ -120,44 +118,45 @@ else
 endif
 
 """ History, Swap, Undo, Backup
-set history=300
+set history=1000
 
 set backup
 set undofile
+
+" no undo or backup files for files in /tmp
+au BufWritePre /tmp/* setlocal noundofile nobackup nowritebackup
+
 " keep swap, backup and undo files in dedicated directory
 " // expands to file's full path
-if g:os == "Linux"
-    if !empty($XDG_STATE_HOME)
-        let s:version = 'vim'
-        if has('nvim')
-            let s:version = 'nvim'
-        endif
-
-        let s:directory = $XDG_STATE_HOME."/".s:version."/swap"
+if has('nvim')
+    set backupdir-=.
+else
+    let s:basedir = ""
+    if g:os == "Linux"
+        let s:basedir = empty($XDG_STATE_HOME) ? "~/.local/share" : $XDG_STATE_HOME
+    endif
+    if g:os == "Windows"
+        let s:basedir = $LOCALAPPDATA
+    endif
+    if !empty(s:basedir)
+        let s:directory = s:basedir."/vim/swap//"
         if !isdirectory(s:directory)
             call mkdir(s:directory, "p", 0700)
         endif
         let &directory=s:directory.",/var/tmp,/tmp"
 
-        let s:directory = $XDG_STATE_HOME."/".s:version."/backup"
+        let s:directory = s:basedir."/vim/backup//"
         if !isdirectory(s:directory)
             call mkdir(s:directory, "p", 0700)
         endif
         let &backupdir=s:directory
 
-        let s:directory = $XDG_STATE_HOME."/".s:version."/undo"
+        let s:directory = s:basedir."/vim/undo//"
         if !isdirectory(s:directory)
             call mkdir(s:directory, "p", 0700)
         endif
         let &undodir=s:directory
-
-        " no undo or backup files for files in /tmp
-        au BufWritePre /tmp/* setlocal noundofile nobackup nowritebackup
     endif
-else
-    set directory^=~/vimfiles/cache/swap//
-    set backupdir^=~/vimfiles/cache/backup//
-    set undodir^=~/vimfiles/cache/undo//
 endif
 
 """ Path
@@ -183,7 +182,7 @@ inoremap <expr> <C-p> pumvisible() ? '<C-p>' :
 
 """ Search
 set hlsearch
-set ignorecase
+set smartcase
 set incsearch
 
 if executable('rg')
@@ -257,10 +256,10 @@ nnoremap ]a :next<CR>
 nnoremap [b :bprevious<CR>
 nnoremap ]b :bnext<CR>
 " Cycle through quicklist/:helpgrep items
-"nnoremap [q :cprevious<CR>
-"nnoremap ]q :cnext<CR>
-nmap [q <Plug>(qf_qf_previous)
-nmap ]q  <Plug>(qf_qf_next)
+"nnoremap [c :cprevious<CR>
+"nnoremap ]c :cnext<CR>
+nmap [c <Plug>(qf_qf_previous)
+nmap ]c  <Plug>(qf_qf_next)
 " Cycle through location list items
 "nnoremap [l :lprevious<CR>
 "nnoremap ]l :lnext<CR>

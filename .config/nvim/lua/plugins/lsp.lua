@@ -1,12 +1,12 @@
 return {
   {
     'neovim/nvim-lspconfig',
-    event = { 'BufReadPre', 'BufNewFile' },
     dependencies = {
       'williamboman/mason.nvim',
       'williamboman/mason-lspconfig.nvim',
-      'https://git.sr.ht/~whynothugo/lsp_lines.nvim',
     },
+    ft = {"tex", "java", "python", "c", "cpp", "lua"},
+    cmd = { "Mason" },
     config = function()
       -- setup keymaps
       vim.api.nvim_create_autocmd('LspAttach', {
@@ -20,20 +20,18 @@ return {
           map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
           map('gI', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
           map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
-          map('<leader>D', require('telescope.builtin').lsp_type_definitions, 'Type [D]efinition')
+          map('<localleader>D', require('telescope.builtin').lsp_type_definitions, 'Type [D]efinition')
 
           map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
           map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
 
           -- Fuzzy find all the symbols in your current document.
-          map('<leader>ds', require('telescope.builtin').lsp_document_symbols, '[D]ocument [S]ymbols')
+          map('<localleader>ds', require('telescope.builtin').lsp_document_symbols, '[D]ocument [S]ymbols')
 
           -- Fuzzy find all the symbols in your current workspace
-          map('<leader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
+          map('<localleader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
 
           map('K', vim.lsp.buf.hover, 'Hover Documentation')
-          --map('<space>e', vim.diagnostic.open_float, 'Float Diagnostic')
-          map('<leader>e', require('lsp_lines').toggle, "Toggle lsp_lines")
 
           map('<leader>wa', vim.lsp.buf.add_workspace_folder, 'Add workspace folder')
           map('<leader>wr', vim.lsp.buf.remove_workspace_folder, 'Remove workspace folder')
@@ -147,19 +145,6 @@ return {
       for server_name, server in pairs(local_servers) do
         register(server_name, server)
       end
-
-
-      vim.diagnostic.config({
-          underline = false,
-          virtual_text = false,
-          -- disable lsp_lines by default
-          virtual_lines = false,
-          float = {
-            source = "always",
-          },
-        })
-
-      require("lsp_lines").setup()
     end,
   },
 }

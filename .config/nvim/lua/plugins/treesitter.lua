@@ -1,14 +1,28 @@
+languages = {
+  "bash",
+  "c",
+  "cpp",
+  "html",
+  "javascript",
+  "json",
+  "lua",
+  "markdown",
+  "markdown_inline",
+  "python",
+}
+
 return {
   {
     "nvim-treesitter/nvim-treesitter",
     version = false, -- last release is way too old and doesn't work on Windows
     build = ":TSUpdate",
-    event = { "VeryLazy" },
+    ft = languages,
+    cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
     init = function(plugin)
       -- PERF: add nvim-treesitter queries to the rtp and it's custom query predicates early
       -- This is needed because a bunch of plugins no longer `require("nvim-treesitter")`, which
-      -- no longer trigger the **nvim-treeitter** module to be loaded in time.
-      -- Luckily, the only thins that those plugins need are the custom queries, which we make available
+      -- no longer trigger the **nvim-treesitter** module to be loaded in time.
+      -- Luckily, the only things that those plugins need are the custom queries, which we make available
       -- during startup.
       require("lazy.core.loader").add_to_rtp(plugin)
       require("nvim-treesitter.query_predicates")
@@ -19,20 +33,7 @@ return {
     opts = {
       highlight = { enable = true },
       indent = { enable = true },
-      ensure_installed = {
-        "bash",
-        "c",
-        "cpp",
-        "html",
-        "javascript",
-        "json",
-        "lua",
-        "markdown",
-        "markdown_inline",
-        "python",
-        "vim",
-        "vimdoc",
-      },
+      ensure_installed = languages,
       textobjects = {
         select = {
           enable = true,
@@ -54,10 +55,10 @@ return {
         move = {
           enable = true,
           set_jumps = false,
-          goto_next_start = { ["]m"] = "@function.outer", ["]c"] = "@class.outer" },
-          goto_next_end = { ["]M"] = "@function.outer", ["]C"] = "@class.outer" },
-          goto_previous_start = { ["[m"] = "@function.outer", ["[c"] = "@class.outer" },
-          goto_previous_end = { ["[M"] = "@function.outer", ["[C"] = "@class.outer" },
+          goto_next_start = { ["]m"] = "@function.outer" },
+          goto_next_end = { ["]M"] = "@function.outer" },
+          goto_previous_start = { ["[m"] = "@function.outer" },
+          goto_previous_end = { ["[M"] = "@function.outer" },
         },
       },
     },
@@ -69,6 +70,7 @@ return {
   -- Show context of the current function
   {
     "nvim-treesitter/nvim-treesitter-context",
-    event = { "VeryLazy" },
+    -- enabled=false,
+    ft = languages,
   },
 }

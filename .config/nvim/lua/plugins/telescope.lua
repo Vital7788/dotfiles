@@ -1,7 +1,6 @@
 return {
   {
     'nvim-telescope/telescope.nvim',
-    -- event = 'VeryLazy',
     branch = '0.1.x',
     dependencies = {
       'nvim-lua/plenary.nvim',
@@ -22,6 +21,8 @@ return {
       { '<localleader>/', function() require('telescope.builtin').live_grep() end },
       { '<localleader>b', function() require('telescope.builtin').buffers() end },
       { '<localleader>h', function() require('telescope.builtin').help_tags() end },
+      { '<localleader>d', function() require('telescope.builtin').diagnostics() end },
+      { '<localleader><localleader>', function() require('telescope.builtin').resume() end },
     },
     opts = function()
       return {
@@ -51,6 +52,18 @@ return {
         pickers = {
           find_files = {
             follow = true,
+          },
+          lsp_references = {
+            initial_mode = "normal",
+          },
+          lsp_definitions = {
+            initial_mode = "normal",
+          },
+          lsp_implementations = {
+            initial_mode = "normal",
+          },
+          lsp_type_definitions = {
+            initial_mode = "normal",
           },
         },
       }

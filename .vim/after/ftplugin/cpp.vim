@@ -13,10 +13,4 @@ compiler gpp
 nnoremap <buffer> <Leader>r
       \ :!./%<.out<CR>
 
-let b:undo_ftplugin .= '| nunmap <buffer> <Leader>r'
-
-if has('nvim')
-    let b:ale_linters_ignore = ['clangd']
-endif
-
 let b:ale_cpp_clangd_options="-I" . getcwd()
