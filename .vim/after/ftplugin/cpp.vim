@@ -13,4 +13,4 @@ compiler gpp
 nnoremap <buffer> <Leader>r
       \ :!./%<.out<CR>
 
-let b:ale_cpp_clangd_options="-I" . getcwd()
+let b:ale_cpp_clangd_options="-I " . getcwd()

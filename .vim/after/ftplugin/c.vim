@@ -6,7 +6,7 @@ compiler gcc
 nnoremap <buffer> <Leader>r
       \ :!./%<.out<CR>
 
-let b:ale_c_clangd_options="-I" . getcwd()
+let b:ale_c_clangd_options="-I " . getcwd()
 
 let b:ale_linters = ['clangcheck', 'clangd', 'clangtidy', 'cppcheck', 'cpplint']
 
