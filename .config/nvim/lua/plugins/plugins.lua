@@ -2,7 +2,6 @@ return {
   "romainl/vim-cool",
   "romainl/vim-qf",
   "tpope/vim-abolish",
-  "tpope/vim-sleuth",
   {
     "sheerun/vim-polyglot",
     enabled = false,

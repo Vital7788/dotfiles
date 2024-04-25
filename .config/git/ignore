@@ -37,6 +37,7 @@ compile_commands.json
 .ropeproject
 pyrightconfig.json
 pylintrc
+.venv
 
 # latex
 *.aux
