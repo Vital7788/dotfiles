@@ -183,7 +183,7 @@ inoremap <expr> <C-p> pumvisible() ? '<C-p>' :
 
 """ Search
 set hlsearch
-set smartcase
+set ignorecase smartcase
 set incsearch
 
 if executable('rg')
