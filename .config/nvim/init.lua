@@ -21,6 +21,23 @@ require("lazy").setup("plugins", {
   },
 })
 
+vim.opt.signcolumn="no"
+
+-- diagnostics
+vim.diagnostic.config({
+  underline = true,
+  virtual_text = true,
+  severity_sort = true,
+  float = {
+    source = "always",
+  },
+})
+
+vim.fn.sign_define("DiagnosticSignError", {text="", texthl="DiagnosticSignError", numhl="DiagnosticSignError"})
+vim.fn.sign_define("DiagnosticSignWarn", {text="", texthl="DiagnosticSignWarn", numhl="DiagnosticSignWarn"})
+vim.fn.sign_define("DiagnosticSignInfo", {text="", texthl="DiagnosticSignInfo", numhl="DiagnosticSignInfo"})
+vim.fn.sign_define("DiagnosticSignHint", {text="", texthl="DiagnosticSignHint", numhl="DiagnosticSignHint"})
+
 -- set max width of lsp/diagnostic floating windows to 80
 local orig_util_open_floating_preview = vim.lsp.util.open_floating_preview
 function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
@@ -28,14 +45,5 @@ function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
   opts.max_width= opts.max_width or 80
   return orig_util_open_floating_preview(contents, syntax, opts, ...)
 end
-
--- diagnostics
-vim.diagnostic.config({
-  underline = false,
-  virtual_text = true,
-  float = {
-    source = "always",
-  },
-})
 
 vim.keymap.set('n', '<space>e', vim.diagnostic.open_float)

@@ -12,4 +12,4 @@ alias keychain="keychain --absolute --dir $XDG_RUNTIME_DIR/keychain $HOME/.ssh/i
 
 alias wget="wget --hsts-file=$XDG_STATE_HOME/wget-hsts"
 
-alias vim='nvim'
+alias vim='env TERM=wezterm nvim'
