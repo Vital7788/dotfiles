@@ -8,6 +8,8 @@ export XDG_STATE_HOME="${HOME}/.local/state"
 
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/cuda/extras/CUPTI/lib64"
 
+# export TERM=wezterm
+
 # dotfiles
 export USERXSESSION="${XDG_CACHE_HOME}/X11/xsession"
 export USERXSESSIONRC="${XDG_CACHE_HOME}/X11/xsessionrc"
