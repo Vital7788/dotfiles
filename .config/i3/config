@@ -57,6 +57,7 @@ bindsym $mod+Shift+q kill
 # start rofi (a program launcher)
 bindsym $mod+space exec --no-startup-id rofi -show drun -modi drun -lines 10 -width 30
 bindsym $mod+BackSpace exec --no-startup-id rofi -show drun -modi drun -lines 10 -width 30
+bindsym $mod+Escape exec --no-startup-id rofi -show drun -modi drun -lines 10 -width 30
 
 # change focus
 bindsym $mod+h focus left
@@ -149,8 +150,8 @@ bindsym $mod+Shift+9 move container to workspace number $ws9
 bindsym $mod+Shift+0 move container to workspace number $ws10
 
 # cycle between workspaces
-bindsym Mod1+Escape workspace next_on_output
-bindsym Mod1+Shift+Escape workspace prev_on_output
+bindsym Mod1+Tab workspace next_on_output
+bindsym Mod1+Shift+Tab workspace prev_on_output
 
 # switch to previously focused workspace when switching to the workspace that is currently focused
 workspace_auto_back_and_forth yes

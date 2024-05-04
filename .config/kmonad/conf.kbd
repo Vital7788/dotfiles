@@ -14,7 +14,6 @@
     l1 (tap-macro (layer-rem vim_input) (layer-rem vim))
     l2 (layer-add vim)
     ec (tap-next esc lctl)
-    ea (tap-next esc lalt)
     vme (tap-macro (layer-rem vim_input) (layer-rem vim) lmet)
     vec (tap-next (layer-rem vim_input) lctl)
     vi (layer-add vim_input)
@@ -74,9 +73,9 @@
     @esc f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f12  ins  prnt del
     grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc home
     tab  q    w    e    r    t    y    u    i    o    p    [    ]    \    pgup
-    @ec  a    s    d    f    g    h    j    k    l    ;    '    ret       pgdn
+    caps a    s    d    f    g    h    j    k    l    ;    '    ret       pgdn
     lsft z    x    c    v    b    n    m    ,    .    /    rsft           end
-    lctl      lmet @ea            spc            ralt rctl      up
+    lalt      lmet @ec            spc            ralt rctl      up
                                                            left down rght
 )
 
@@ -94,9 +93,9 @@
     esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f12  ins  prnt del
     grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc home
     tab  q    w    e    r    t    y    u    i    o    p    [    ]    \    pgup
-    @vec a    s    d    f    g    h    j    k    l    ;    '    ret       pgdn
+    caps a    s    d    f    g    h    j    k    l    ;    '    ret       pgdn
     lsft z    x    c    v    b    n    m    ,    .    /    rsft           end
-    lctl      lmet lalt           spc            ralt rctl      up
+    lalt      lmet @vec           spc            ralt rctl      up
                                                            left down rght
 )
 
@@ -104,7 +103,7 @@
     @esc _    _    _    _    _    _    _    _    _    _    _    _    _    _
     _    _    _    _    _    _    _    _    _    _    _    XX   XX   bspc _
     _    XX   @vw  XX   XX   XX   @vy  @vu  @vi  @vo  @vp  XX   XX   XX   _
-    lctl @va  XX   @vd  XX   @vg  left down up   rght XX   XX   ret       _
+    _    @va  XX   @vd  XX   @vg  left down up   rght XX   XX   ret       _
     @vsh XX   del  @vc  XX   @vb  XX   XX   XX   XX   @vsl @vsh           _
     _         lmet _              _              _    _         _
                                                            _    _    _
