@@ -12,7 +12,7 @@ source ~/.zsh/prompt.zsh
 source ~/.zsh/input.zsh
 source ~/.zsh/navigation.zsh
 source ~/.zsh/completion.zsh
-source ~/.zsh/autocomplete.zsh
+#source ~/.zsh/autocomplete.zsh
 source ~/.zsh/alias.zsh
 source /usr/share/zsh/site-functions/zsh-syntax-highlighting.zsh
 

@@ -12,14 +12,14 @@ fancy-ctrl-z () {
 zle -N fancy-ctrl-z
 bindkey '^Z' fancy-ctrl-z
 
-rationalise-dot() {
-    if [[ $LBUFFER = *.. ]]; then
-        LBUFFER+=/.
-    fi
-    zle self-insert
-}
-zle -N rationalise-dot
-bindkey . rationalise-dot
+#rationalise-dot() {
+#    if [[ $LBUFFER = *.. ]]; then
+#        LBUFFER+=/.
+#    fi
+#    zle self-insert
+#}
+#zle -N rationalise-dot
+#bindkey . rationalise-dot
 
 # vim editing mode in terminal
 bindkey -v
