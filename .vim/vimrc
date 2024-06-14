@@ -186,6 +186,7 @@ inoremap <expr> <C-p> pumvisible() ? '<C-p>' :
 set hlsearch
 set ignorecase smartcase
 set incsearch
+set inccommand=split
 
 if executable('rg')
     set grepprg=rg\ -S\ --vimgrep
