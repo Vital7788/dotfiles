@@ -1,6 +1,8 @@
 -- source vimrc
 vim.cmd('source ~/.vim/vimrc')
 
+-- vim.opt.smoothscroll = true
+
 -- plugins
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
