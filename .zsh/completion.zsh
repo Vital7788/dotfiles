@@ -1,6 +1,6 @@
 # this command appends the ~/.zsh/completions directory onto the shell's function lookup list
 # names of completers should be prefixed with an underscore
-fpath=(~/.zsh/completions $fpath)
+# fpath=(~/.zsh/completions $fpath)
 
 # should be called before compinit
 zmodload zsh/complist
@@ -85,5 +85,5 @@ zstyle ':completion:*:*:docker:*' option-stacking yes
 zstyle ':completion:*:*:docker-*:*' option-stacking yes
 
 # load Git completion
-zstyle ':completion:*:*:git:*' script ~/.zsh/completions/git-completion.bash
+# zstyle ':completion:*:*:git:*' script ~/.zsh/completions/git-completion.bash
 # git-completion.zsh is a function file, not designed to be sourced

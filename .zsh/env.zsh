@@ -35,4 +35,4 @@ export NPM_CONFIG_USERCONFIG="${XDG_CONFIG_HOME}/npmrc"
 export ANDROID_HOME="${XDG_DATA_HOME}/android"
 export MAXIMA_USERDIR="${XDG_CONFIG_HOME}/maxima"
 export DOT_SAGE="${XDG_CONFIG_HOME}/sage"
-
+export DOCKER_CONFIG="${XDG_CONFIG_HOME}/docker"
