@@ -35,6 +35,10 @@ seturl ^https://codeforces.com noiframe true
 seturl ^https://userve.ugent.be disable false
 seturl ^https://userve.ugent.be noiframe true
 
+" Search engines
+set searchurls.sc https://scryfall.com/search?q=%s+game%3Apaper
+set searchurls.scc https://scryfall.com/search?q=legal%3Acommander+commander%3A%s1+%s[2:]
+
 " Autocmds
 autocmd DocStart www.overleaf.com mode ignore
 autocmd DocStart https://www.canva.com/design mode ignore

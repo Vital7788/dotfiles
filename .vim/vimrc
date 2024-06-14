@@ -5,8 +5,7 @@ syntax on
 
 " allow buffers to have changes without being displayed
 set hidden
-"set number relativenumber
-set number
+set number relativenumber
 set signcolumn=yes:1
 set numberwidth=3
 set cursorline
