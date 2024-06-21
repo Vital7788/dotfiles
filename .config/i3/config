@@ -41,8 +41,8 @@ bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOU
 #bindsym XF86AudioMute exec --no-startup-id amixer -c Generic -q sset Master toggle
 
 # Use flameshot to make screenshots
-bindsym Print exec flameshot gui -p ~/Pictures/screenshots
-bindsym Shift+Print exec flameshot full -p ~/Pictures/screenshots
+bindsym Print exec flameshot gui -p ~/media/screenshots
+bindsym Shift+Print exec flameshot full -p ~/media/screenshots
 
 # Use Mouse+$mod to drag floating windows to their wanted position
 floating_modifier $mod
@@ -275,7 +275,7 @@ bar {
     output primary
     status_command i3blocks
     position top
-    font pango:Fira Code Regular Nerd Font Complete 12px
+    font pango:FiraCode Nerd Font 12px
 
     colors {
       background $nord1
@@ -291,8 +291,7 @@ bar {
 
 bar {
     tray_output none
-    #output nonprimary
-    output HDMI-0
+    output nonprimary
     status_command i3blocks -c ~/.config/i3blocks/config-small
     position top
     font pango:FiraCode Nerd Font 12px
