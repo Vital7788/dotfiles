@@ -6,7 +6,7 @@
 zmodload zsh/complist
 
 # autoload compinit function and call it to initialize completion for the current session
-autoload -Uz compinit; compinit
+autoload -Uz compinit; compinit -d .zsh/zcompdump
 
 
 # Use hjlk in menu selection (during completion)

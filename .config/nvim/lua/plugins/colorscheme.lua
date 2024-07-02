@@ -7,6 +7,7 @@ return {
       vim.opt.termguicolors = true
       vim.opt.background = 'light'
       vim.g.everforest_background = 'medium'
+      vim.g.everforest_better_performance = 1
     end,
     config = function()
       vim.cmd([[colorscheme everforest]])

@@ -1,4 +1,4 @@
-HISTFILE=~/.histfile
+HISTFILE=~/.zsh/histfile
 HISTSIZE=100000
 SAVEHIST=100000
 setopt sharehistory         # share history file between all sessions
@@ -12,10 +12,11 @@ function zshaddhistory() {
     emulate -L zsh
     # strip newline
     1=${1%%$'\n'}
-    if [[ "$1" =~ "^(ls|cd) *\/(.*\/){2,}" ]]; then
-        return 0
-    fi
-    if [[ "$1" =~ "^ls [^\|]*$" || "$1" =~ "^cd " || "$1" =~ "^(fg|bg|d|[0-9])$" ]]; then
+    # if [[ "$1" =~ "^(ls|cd) *\/(.*\/){2,}" ]]; then
+    #     return 0
+    # fi
+    # if [[ "$1" =~ "^ls [^\|]*$" || "$1" =~ "^cd " || "$1" =~ "^(fg|bg|d|[0-9])$" ]]; then
+    if [[ "$1" == "ls" || "$1" == "cd" || "$1" =~ "^(fg|bg|d|[0-9])$" ]]; then
         return 1
     fi
 }

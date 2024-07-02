@@ -18,4 +18,15 @@ return {
       require("Comment").setup()
     end,
   },
+  {
+    "OXY2DEV/markview.nvim",
+    enabled = false,
+    dependencies = {
+      "nvim-tree/nvim-web-devicons", -- Used by the code blocks
+    },
+
+    config = function ()
+      require("markview").setup();
+    end
+  }
 }
