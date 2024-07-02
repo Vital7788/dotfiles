@@ -94,6 +94,8 @@ config.keys = {
       end),
     },
   },
+  { key = 'PageUp', action = wezterm.action.ScrollByPage(-0.5) },
+  { key = 'PageDown', action = wezterm.action.ScrollByPage(0.5) },
 }
 
 config.mouse_bindings = {
