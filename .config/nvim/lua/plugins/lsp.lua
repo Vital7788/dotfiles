@@ -5,7 +5,7 @@ return {
       'williamboman/mason.nvim',
       'williamboman/mason-lspconfig.nvim',
     },
-    ft = {"tex", "java", "python", "c", "cpp", "lua"},
+    ft = {"tex", "java", "python", "c", "cpp", "lua", "javascript", "typescript", "javascriptreact", "typescriptreact"},
     cmd = { "Mason" },
     config = function()
       -- setup keymaps
@@ -73,9 +73,6 @@ return {
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local mason_servers = {
-        texlab = {},
-        jdtls = {},
-        pyright = {},
         pylsp = {
           settings = {
             pylsp = {
@@ -94,7 +91,6 @@ return {
             }
           }
         },
-
         lua_ls = {
           settings = {
             Lua = {
@@ -116,7 +112,11 @@ return {
       }
 
       local local_servers = {
+        texlab = {},
+        -- jdtls = {},
+        pyright = {},
         clangd = {},
+        tsserver = {},
       }
 
       require('mason').setup()

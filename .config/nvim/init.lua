@@ -1,6 +1,7 @@
 -- source vimrc
 vim.cmd('source ~/.vim/vimrc')
 
+vim.opt.mousemodel="extend"
 vim.opt.smoothscroll = true
 vim.opt.signcolumn = "no"
 vim.opt.inccommand = "split"
