@@ -9,3 +9,5 @@
 	path = config-school
 [init]
 	defaultBranch = main
+[credential]
+	helper = cache
