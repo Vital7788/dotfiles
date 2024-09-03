@@ -53,11 +53,13 @@ GPU_BRAND=NVIDIA
 #T_CRIT=80
 
 [memory]
-label=  
+markup=pango
+label=<big> </big>
 interval=10
 
 [wifi]
-label=  
+markup=pango
+label=<small>  </small>
 instance=wlo1
 interval=10
 
