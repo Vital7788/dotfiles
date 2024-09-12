@@ -72,5 +72,5 @@ interval=1
 LABEL= 
 DATEFMT=+%d/%m/%Y %H:%M:%S
 SHORTFMT=+%H:%M:%S
-#HEIGHT=180
-#WIDTH=220
+HEIGHT=180
+WIDTH=220
