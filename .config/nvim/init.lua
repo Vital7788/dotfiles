@@ -1,7 +1,10 @@
 -- source vimrc
 vim.cmd('source ~/.vim/vimrc')
 
--- vim.opt.smoothscroll = true
+vim.opt.mousemodel="extend"
+vim.opt.smoothscroll = true
+vim.opt.signcolumn = "no"
+vim.opt.inccommand = "split"
 
 -- plugins
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -22,8 +25,6 @@ require("lazy").setup("plugins", {
     notify = false,
   },
 })
-
-vim.opt.signcolumn="no"
 
 -- diagnostics
 vim.diagnostic.config({

@@ -2,4 +2,6 @@
 .vim/vim_plug
 .cfg
 .config/nvim/lazy-lock.json
+.zsh/histfile
 .zsh/chpwd-recent-dirs
+.zsh/zcompdump
