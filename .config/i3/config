@@ -272,27 +272,7 @@ client.background       $nord0
 # finds out, if available)
 bar {
     tray_output primary
-    output primary
     status_command i3blocks
-    position top
-    font pango:FiraCode Nerd Font 12px
-
-    colors {
-      background $nord1
-      statusline $nord8
-      focused_background $nord1
-
-      focused_workspace  $nord3  $nord8
-      active_workspace   $nord3  $nord10
-      inactive_workspace $nord8  $nord3
-      urgent_workspace   $nord3  $nord15
-    }
-}
-
-bar {
-    tray_output none
-    output nonprimary
-    status_command i3blocks -c ~/.config/i3blocks/config-small
     position top
     font pango:FiraCode Nerd Font 12px
 
