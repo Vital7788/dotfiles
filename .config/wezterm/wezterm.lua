@@ -7,9 +7,12 @@ config.automatically_reload_config = false
 config.audible_bell = "Disabled"
 
 config.hide_tab_bar_if_only_one_tab = true
-config.font = wezterm.font 'FiraCode Nerd Font'
-config.font_size = 11
-config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
+config.font = wezterm.font {
+    family = 'FiraCode Nerd Font',
+    harfbuzz_features = { "ss03", "ss05" },
+}
+config.font_size = 11.5
+-- config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
 --config.color_scheme = 'nord'
 config.color_scheme = 'Everforest Light (Gogh)'
