@@ -33,13 +33,10 @@ return {
             file_ignore_patterns = {
               -- Documents
               '%.docx$', '%.odp$', '%.ods$', '%.odt$', '%.pdf$', '%.ppt$', '%.pptx$', '%.xls$', '%.xlsx$',
-
               -- Images
               '%.gif$', '%.ico$', '%.jpeg$', '%.jpg$', '%.png$',
-
               -- Audio
               '%.flac$', '%.mp3$', '%.opus$', '%.wav$',
-
               -- Video
               '%.mp4$', '%.webm$', '%.mkv$',
             },
@@ -52,6 +49,9 @@ return {
         pickers = {
           find_files = {
             follow = true,
+          },
+          buffers = {
+            sort_mru = true,
           },
           lsp_references = {
             initial_mode = "normal",

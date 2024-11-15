@@ -134,7 +134,7 @@ if has('nvim')
 else
     let s:basedir = ""
     if g:os == "Linux"
-        let s:basedir = empty($XDG_STATE_HOME) ? "~/.local/share" : $XDG_STATE_HOME
+        let s:basedir = empty($XDG_STATE_HOME) ? "~/.local/state" : $XDG_STATE_HOME
     endif
     if g:os == "Windows"
         let s:basedir = $LOCALAPPDATA
@@ -252,6 +252,8 @@ nnoremap gb :ls<CR>:b<Space>
 nnoremap <silent> } :<C-u>execute "keepjumps norm! " . v:count1 . "}"<CR>
 nnoremap <silent> { :<C-u>execute "keepjumps norm! " . v:count1 . "{"<CR>
 
+nnoremap [[ [m
+nnoremap ]] ]m
 " Cycle through argument list
 nnoremap [a :previous<CR>
 nnoremap ]a :next<CR>

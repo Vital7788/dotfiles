@@ -73,4 +73,30 @@ return {
     -- enabled=false,
     ft = languages,
   },
+
+  {
+    'stevearc/aerial.nvim',
+    opts = {},
+    -- Optional dependencies
+    dependencies = {
+       "nvim-treesitter/nvim-treesitter",
+       "nvim-tree/nvim-web-devicons"
+    },
+    config = function ()
+      require("aerial").setup({
+        -- Use on_attach to set keymaps when aerial has attached to a buffer
+        -- on_attach = function(bufnr)
+        --   vim.keymap.set("n", "[[", "<cmd>AerialPrev<CR>", { buffer = bufnr })
+        --   vim.keymap.set("n", "]]", "<cmd>AerialNext<CR>", { buffer = bufnr })
+        -- end,
+        autojump = true,
+      });
+    end,
+    keys = {
+        -- With ! after command, cursor stays in current window
+        { "<leader>a", "<cmd>AerialToggle left<CR>" },
+        { "[[", "<cmd>AerialPrev<CR>" },
+        { "]]", "<cmd>AerialNext<CR>" }
+    },
+  },
 }
