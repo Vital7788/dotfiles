@@ -1,0 +1,15 @@
+Only show local branches in git switch autocompletion
+
+--- a/Completion/Unix/Command/_git
++++ b/Completion/Unix/Command/_git
+@@ -2255,9 +2255,7 @@ _git-switch() {
+ 	# we'll only complete remote branches
+ 	__git_remote_branch_names_noprefix && ret=0
+       else
+-	_alternative \
+-	  'branches::__git_branch_names' \
+-	  'remote-branch-names-noprefix::__git_remote_branch_names_noprefix' && ret=0
++	__git_branch_names && ret=0
+       fi
+     ;;
+     start-points)
