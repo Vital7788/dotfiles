@@ -97,8 +97,15 @@ config.keys = {
       end),
     },
   },
-  { key = 'PageUp', action = wezterm.action.ScrollByPage(-0.5) },
-  { key = 'PageDown', action = wezterm.action.ScrollByPage(0.5) },
+  { key = 'PageUp', action = wezterm.action.ScrollToPrompt(-1) },
+  { key = 'PageDown', action = wezterm.action.ScrollToPrompt(1) },
+}
+
+config.mouse_bindings = {
+  {
+    event = { Down = { streak = 4, button = 'Left' } },
+    action = wezterm.action.SelectTextAtMouseCursor 'SemanticZone',
+  },
 }
 
 return config
