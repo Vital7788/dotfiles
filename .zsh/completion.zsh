@@ -1,7 +1,3 @@
-# this command appends the ~/.zsh/completions directory onto the shell's function lookup list
-# names of completers should be prefixed with an underscore
-# fpath=(~/.zsh/completions $fpath)
-
 # should be called before compinit
 zmodload zsh/complist
 
@@ -23,8 +19,8 @@ autoload -Uz compinit; compinit -d .zsh/zcompdump
 
 _comp_options+=(globdots) # with hidden files
 setopt GLOB_COMPLETE      # Show autocompletion menu with globs
-#setopt MENU_COMPLETE        # Automatically highlight first element of completion menu
-#setopt AUTO_LIST            # Automatically list choices on ambiguous completion.
+# setopt MENU_COMPLETE        # Automatically highlight first element of completion menu
+setopt AUTO_LIST            # Automatically list choices on ambiguous completion.
 setopt COMPLETE_IN_WORD     # Complete from both ends of a word.
 
 
@@ -84,6 +80,9 @@ zstyle ':completion:*:*:vim:*' file-patterns '^*.(class|pdf):source-files' '*:al
 zstyle ':completion:*:*:docker:*' option-stacking yes
 zstyle ':completion:*:*:docker-*:*' option-stacking yes
 
-# load Git completion
-# zstyle ':completion:*:*:git:*' script ~/.zsh/completions/git-completion.bash
-# git-completion.zsh is a function file, not designed to be sourced
+# patch git switch completion to only complete local branches
+# https://unix.stackexchange.com/a/450133
+# _git 2>/dev/null
+# current="_alternative 'branches::__git_branch_names' 'remote-branch-names-noprefix::__git_remote_branch_names_noprefix' && ret=0"
+# replacement="__git_branch_names && ret=0"
+# functions[_git-switch]=${functions[_git-switch]/$current/$replacement}

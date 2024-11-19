@@ -1,7 +1,13 @@
 return {
   "romainl/vim-cool",
-  "romainl/vim-qf",
+  {
+    "romainl/vim-qf",
+    init = function()
+      vim.g.qf_shorten_path = 3
+    end,
+  },
   "tpope/vim-abolish",
+  "tpope/vim-sleuth",
   {
     "sheerun/vim-polyglot",
     enabled = false,
@@ -20,13 +26,13 @@ return {
   },
   {
     "OXY2DEV/markview.nvim",
-    enabled = false,
+    ft = "markdown",
     dependencies = {
+      "nvim-treesitter/nvim-treesitter",
       "nvim-tree/nvim-web-devicons", -- Used by the code blocks
     },
 
-    config = function ()
-      require("markview").setup();
-    end
+    -- opts = {
+    -- }
   }
 }

@@ -1,5 +1,5 @@
-"sanitise tridactyllocal tridactylsync
-sanitise tridactyllocal
+sanitise tridactyllocal tridactylsync
+" sanitise tridactyllocal
 
 " General Settings
 set smoothscroll true
@@ -30,10 +30,12 @@ bind ;f hint
 bind ;F hint
 
 " Subconfig Settings
-seturl ^https://codeforces.com disable false
 seturl ^https://codeforces.com noiframe true
-seturl ^https://userve.ugent.be disable false
+seturl ^https://codeforces.com modeindicator false
 seturl ^https://userve.ugent.be noiframe true
+seturl ^https://userve.ugent.be modeindicator false
+seturl 0.0.0.0:8601 noiframe true
+seturl 0.0.0.0:8601 modeindicator false
 
 " Search engines
 set searchurls.sc https://scryfall.com/search?q=%s+game%3Apaper
