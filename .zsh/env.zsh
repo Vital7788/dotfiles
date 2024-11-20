@@ -5,9 +5,11 @@ export XDG_CONFIG_HOME="${HOME}/.config"
 export XDG_CACHE_HOME="${HOME}/.cache"
 export XDG_DATA_HOME="${HOME}/.local/share"
 export XDG_STATE_HOME="${HOME}/.local/state"
+export XDG_CURRENT_DESKTOP="sway"
 
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/cuda/extras/CUPTI/lib64"
 
+export EDITOR=/usr/bin/nvim
 # export TERM=wezterm
 
 # dotfiles

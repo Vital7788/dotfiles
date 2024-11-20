@@ -6,7 +6,7 @@ alias d='dirs -v'
 alias dirs='dirs -v'
 for index ({1..9}) alias "$index"="cd +${index}"; unset index
 
-alias vim='env TERM=wezterm nvim'
+alias vim='nvim'
 
 alias cfg='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 

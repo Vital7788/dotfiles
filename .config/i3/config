@@ -41,8 +41,8 @@ bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOU
 #bindsym XF86AudioMute exec --no-startup-id amixer -c Generic -q sset Master toggle
 
 # Use flameshot to make screenshots
-bindsym Print exec flameshot gui -p ~/media/screenshots
-bindsym Shift+Print exec flameshot full -p ~/media/screenshots
+# bindsym Print exec flameshot gui -p ~/media/screenshots
+# bindsym Shift+Print exec flameshot full -p ~/media/screenshots
 
 # Use Mouse+$mod to drag floating windows to their wanted position
 floating_modifier $mod
@@ -53,6 +53,7 @@ bindsym $mod+Return exec wezterm
 
 # kill focused window
 bindsym $mod+Shift+q kill
+bindsym $mod+q kill
 
 # start rofi (a program launcher)
 bindsym $mod+space exec --no-startup-id rofi -show drun -modi drun -lines 10 -width 30
@@ -157,7 +158,8 @@ bindsym Mod1+Shift+Tab workspace prev_on_output
 workspace_auto_back_and_forth yes
 
 # move workspace to next display
-bindsym $mod+p move workspace to output next
+# bindsym $mod+p move workspace to output next
+bindsym $mod+p exec "swaymsg -t get_outputs |jq '[.[] | select(.active == true)] | .[(map(.focused) | index(true) + 1) % length].name' |xargs swaymsg move workspace to"
 
 # Make the currently focused window a scratchpad
 bindsym $mod+Shift+minus move scratchpad
@@ -232,15 +234,45 @@ bindsym $mod+x mode "$mode_exit"
 
 mode "$mode_exit" {
   bindsym k exec betterlockscreen -l, mode "default"
-  bindsym l exec i3-msg exit, mode "default"
+  # bindsym l exec i3-msg exit, mode "default"
+  bindsym l exec swaymsg exit, mode "default"
   bindsym u exec loginctl suspend, mode "default"
-  bindsym r exec loginctl reboot, mode "default"
-  #bindsym r exec systemctl reboot, mode "default"
-  bindsym s exec loginctl poweroff, mode "default"
-  #bindsym s exec shutdown -h now, mode "default"
+  # bindsym r exec loginctl reboot, mode "default"
+  bindsym r exec systemctl reboot, mode "default"
+  # bindsym s exec loginctl poweroff, mode "default"
+  bindsym s exec shutdown -h now, mode "default"
   bindsym Escape mode "default"
   bindsym Return mode "default"
 }
+
+#
+# Screen capture
+#
+set $screenshot 1 selected, 2 whole, 3 selected clipboard, 4 whole clipboard, 5 swappy
+mode "$screenshot" {
+    bindsym a exec 'grim -g "$(slurp)" ~/ps_$(date +"%Y%m%d%H%M%S").png', mode "default"
+    bindsym s exec 'grim ~/ps_$(date +"%Y%m%d%H%M%S").png', mode "default"
+    bindsym d exec 'grim -g "$(slurp)" - | wl-copy', mode "default"
+    bindsym f exec 'grim - | wl-copy', mode "default"
+    bindsym g exec 'grim -g "$(slurp)" - | swappy -f -', mode "default"
+
+# back to normal: Enter or Escape
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+    bindsym Print mode "default"
+}
+
+bindsym Print mode "$screenshot"
+
+
+# This will lock your screen after 300 seconds of inactivity, then turn off
+# your displays after another 300 seconds, and turn your screens back on when
+# resumed. It will also lock your screen before your computer goes to sleep.
+
+exec swayidle -w \
+         timeout 300 'swaylock -f -c 000000' \
+         timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
+         before-sleep 'swaylock -f -c 000000'
 
 # Nord theme colors
 set $nord0   #2E3440
@@ -281,15 +313,16 @@ bar {
       statusline $nord8
       focused_background $nord1
 
-      focused_workspace  $nord3  $nord8
-      active_workspace   $nord3  $nord10
-      inactive_workspace $nord8  $nord3
-      urgent_workspace   $nord3  $nord15
+      focused_workspace  $nord3  $nord8  $nord3
+      active_workspace   $nord3  $nord10 $nord3
+      inactive_workspace $nord8  $nord3  $nord8
+      urgent_workspace   $nord3  $nord15 $nord3
     }
 }
 
 # assign workspaces to monitors
-workspace $ws6 output HDMI-0
+# workspace $ws6 output HDMI-0
+workspace $ws3 output HDMI-A-1
 
 # assign windows to workspaces
 for_window [class="PPSSPP"] floating enable resize set 960 544

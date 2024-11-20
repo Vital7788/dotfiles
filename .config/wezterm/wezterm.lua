@@ -2,8 +2,6 @@ local wezterm = require 'wezterm'
 
 local config = wezterm.config_builder()
 
-config.automatically_reload_config = false
-
 config.audible_bell = "Disabled"
 
 config.hide_tab_bar_if_only_one_tab = true
@@ -99,6 +97,14 @@ config.keys = {
   },
   { key = 'PageUp', action = wezterm.action.ScrollByPage(-0.5) },
   { key = 'PageDown', action = wezterm.action.ScrollByPage(0.5) },
+  { key = 'i',
+    mods = 'CTRL',
+    action = wezterm.action_callback(function(window, pane)
+      local line = pane:get_logical_lines_as_text(3)
+      wezterm.log_info(line);
+      window:perform_action(wezterm.action.SendString(line), pane)
+    end),
+  }
 }
 
 return config
