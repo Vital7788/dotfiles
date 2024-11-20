@@ -95,8 +95,6 @@ config.keys = {
       end),
     },
   },
-  { key = 'PageUp', action = wezterm.action.ScrollByPage(-0.5) },
-  { key = 'PageDown', action = wezterm.action.ScrollByPage(0.5) },
   { key = 'i',
     mods = 'CTRL',
     action = wezterm.action_callback(function(window, pane)
@@ -104,7 +102,16 @@ config.keys = {
       wezterm.log_info(line);
       window:perform_action(wezterm.action.SendString(line), pane)
     end),
-  }
+  },
+  { key = 'PageUp', action = wezterm.action.ScrollToPrompt(-1) },
+  { key = 'PageDown', action = wezterm.action.ScrollToPrompt(1) },
+}
+
+config.mouse_bindings = {
+  {
+    event = { Down = { streak = 4, button = 'Left' } },
+    action = wezterm.action.SelectTextAtMouseCursor 'SemanticZone',
+  },
 }
 
 return config
