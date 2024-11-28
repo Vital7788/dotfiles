@@ -1,3 +1,4 @@
+set ignorecase
 set smartcase
 set hlsearch
 set incsearch
@@ -71,6 +72,12 @@ nnoremap <C-p> :eclipseopenresource<cr>
 
 " amazing 'omnibox' that searches buffers, commands, views, menus, preferences, etc.
 eclipseaction eclipsecmdsearch org.eclipse.ui.window.quickAccess
-nnoremap ,/ :eclipsecmdsearch<cr>
+nnoremap ,a :eclipsecmdsearch<cr>
+
+"ctrl+<space>
+"ctrl+1
+"ctrl+3
+"ctrl+shift+r
+"<F4>
 
 "vim: set filetype=vim

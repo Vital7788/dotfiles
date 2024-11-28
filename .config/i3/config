@@ -234,7 +234,8 @@ set $mode_exit exit: loc[k], [l]ogout, s[u]spend, [r]eboot, [s]hutdown
 bindsym $mod+x mode "$mode_exit"
 
 mode "$mode_exit" {
-  bindsym k exec betterlockscreen -l, mode "default"
+  # bindsym k exec betterlockscreen -l, mode "default"
+  bindsym k exec swaylock -f -c 000000, mode "default"
   # bindsym l exec i3-msg exit, mode "default"
   bindsym l exec swaymsg exit, mode "default"
   bindsym u exec loginctl suspend, mode "default"
@@ -249,10 +250,10 @@ mode "$mode_exit" {
 #
 # Screen capture
 #
-set $screenshot 1 selected, 2 whole, 3 selected clipboard, 4 whole clipboard, 5 swappy
+set $screenshot a: selected, s: whole, d: selected clipboard, f: whole clipboard, g: swappy
 mode "$screenshot" {
-    bindsym a exec 'grim -g "$(slurp)" ~/ps_$(date +"%Y%m%d%H%M%S").png', mode "default"
-    bindsym s exec 'grim ~/ps_$(date +"%Y%m%d%H%M%S").png', mode "default"
+    bindsym a exec 'grim -g "$(slurp)" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png', mode "default"
+    bindsym s exec 'grim ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png', mode "default"
     bindsym d exec 'grim -g "$(slurp)" - | wl-copy', mode "default"
     bindsym f exec 'grim - | wl-copy', mode "default"
     bindsym g exec 'grim -g "$(slurp)" - | swappy -f -', mode "default"
@@ -322,7 +323,7 @@ bar {
 }
 
 # assign workspaces to monitors
-workspace $ws3 output HDMI-A-1
+workspace $ws2 output HDMI-A-1
 
 # assign windows to workspaces
 for_window [class="PPSSPP"] floating enable resize set 960 544
@@ -344,9 +345,15 @@ assign [class="(?i)steam"] $ws8
 assign [title="(?i)steam"] $ws8
 for_window [class="Yad"] floating enable
 
+# get properties using `swaymsg -t get_tree`
+# matchable attributes: https://man.archlinux.org/man/sway.5.en#CRITERIA
+assign [app_id="SWT"] $ws3
+assign [app_id="java"] $ws3
+
 exec --no-startup-id /usr/bin/dunst
 exec_always --no-startup-id "picom --config ~/.config/picom.conf"
 exec --no-startup-id /usr/bin/gentoo-pipewire-launcher
+exec --no-startup-id /usr/bin/lxpolkit
 
 # local settings
 #exec --no-startup-id bash ~/.config/i3/startup.sh

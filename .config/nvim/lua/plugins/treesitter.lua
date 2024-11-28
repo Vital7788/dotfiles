@@ -4,6 +4,7 @@ languages = {
   "cpp",
   "html",
   "javascript",
+  "typescript",
   "json",
   "lua",
   "markdown",
