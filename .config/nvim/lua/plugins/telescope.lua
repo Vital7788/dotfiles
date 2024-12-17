@@ -17,12 +17,13 @@ return {
       require('telescope').setup(opts)
     end,
     keys = {
-      { '<localleader>f', function() require('telescope.builtin').find_files() end },
-      { '<localleader>/', function() require('telescope.builtin').live_grep() end },
+      -- { '<localleader>f', function() require('telescope.builtin').find_files() end },
+      { '<localleader>s', function() require('telescope.builtin').live_grep() end },
       { '<localleader>b', function() require('telescope.builtin').buffers() end },
       { '<localleader>h', function() require('telescope.builtin').help_tags() end },
       { '<localleader>d', function() require('telescope.builtin').diagnostics() end },
       { '<localleader><localleader>', function() require('telescope.builtin').resume() end },
+      { '<localleader>f', function() require('telescope').extensions.smart_open.smart_open() end },
     },
     opts = function()
       return {
@@ -68,5 +69,20 @@ return {
         },
       }
     end,
+  },
+  {
+    "danielfalk/smart-open.nvim",
+    branch = "0.2.x",
+    config = function()
+      require("telescope").load_extension("smart_open")
+    end,
+    dependencies = {
+      "kkharji/sqlite.lua",
+      -- Only required if using match_algorithm fzf
+      -- { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+      { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+      -- Optional.  If installed, native fzy will be used when match_algorithm is fzy
+      -- { "nvim-telescope/telescope-fzy-native.nvim" },
+    },
   },
 }
