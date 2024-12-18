@@ -2,7 +2,7 @@
 "set formatoptions+=a
 "let b:undo_ftplugin .= '| set textwidth&'
 "
-compiler pdflatex
+" compiler pdflatex
 "
 "nnoremap <buffer> <Leader>r
 "      \ :!zathura %<.pdf<CR>
