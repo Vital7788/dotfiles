@@ -117,7 +117,7 @@ return {
         -- jdtls = {},
         pyright = {},
         clangd = {},
-        -- ts_ls = {},
+        ts_ls = {},
       }
 
       require('mason').setup()

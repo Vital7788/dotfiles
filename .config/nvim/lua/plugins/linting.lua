@@ -4,6 +4,7 @@ return {
     event = { 'BufReadPre', 'BufNewFile' },
     init = function()
       vim.g.ale_use_neovim_diagnostics_api = 1
+      -- vim.g.ale_disable_lsp = 0
       vim.g.ale_echo_cursor = 0
     end
   },

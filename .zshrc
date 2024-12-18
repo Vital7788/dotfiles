@@ -3,6 +3,9 @@
 setopt extendedglob
 unsetopt beep
 
+# disable control flow (Ctrl-S and Ctrl-Q)
+stty -ixon
+
 # set ls colors
 eval $(dircolors ~/.config/dir_colors)
 
