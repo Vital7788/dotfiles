@@ -15,6 +15,7 @@ source ~/.zsh/completion.zsh
 #source ~/.zsh/autocomplete.zsh
 source ~/.zsh/alias.zsh
 source ~/.zsh/command.zsh
+source ~/.zsh/fzf.zsh
 source /usr/share/zsh/site-functions/zsh-syntax-highlighting.zsh
 source ~/.zsh/wezterm.sh
 

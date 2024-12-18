@@ -16,14 +16,14 @@ return {
 
       require('telescope').setup(opts)
     end,
-    keys = {
-      { '<localleader>f', function() require('telescope.builtin').find_files() end },
-      { '<localleader>/', function() require('telescope.builtin').live_grep() end },
-      { '<localleader>b', function() require('telescope.builtin').buffers() end },
-      { '<localleader>h', function() require('telescope.builtin').help_tags() end },
-      { '<localleader>d', function() require('telescope.builtin').diagnostics() end },
-      { '<localleader><localleader>', function() require('telescope.builtin').resume() end },
-    },
+    -- keys = {
+      -- { '<localleader>f', function() require('telescope.builtin').find_files() end },
+      -- { '<localleader>/', function() require('telescope.builtin').live_grep() end },
+      -- { '<localleader>b', function() require('telescope.builtin').buffers() end },
+      -- { '<localleader>h', function() require('telescope.builtin').help_tags() end },
+      -- { '<localleader>d', function() require('telescope.builtin').diagnostics() end },
+      -- { '<localleader><localleader>', function() require('telescope.builtin').resume() end },
+    -- },
     opts = function()
       return {
         defaults = vim.tbl_extend(
