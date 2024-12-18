@@ -319,4 +319,4 @@ exec_always --no-startup-id "picom --config ~/.config/picom.conf"
 exec --no-startup-id /usr/bin/gentoo-pipewire-launcher
 
 # local settings
-#exec --no-startup-id bash ~/.config/i3/startup.sh
+include ~/.config/i3/local
