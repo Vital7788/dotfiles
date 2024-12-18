@@ -22,7 +22,7 @@ font pango:FiraCode Nerd Font 12px
 # The combination of xss-lock, nm-applet and pactl is a popular choice, so
 # they are included here as an example. Modify as you see fit.
 # xss-lock grabs a logind suspend inhibit lock and will use i3lock to lock the # screen before suspend. Use loginctl lock-session to lock your screen.
-#exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
+exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
 
 # Brightness controls
 bindsym XF86MonBrightnessUp exec --no-startup-id sudo /home/vital/.local/bin/brightness.sh 5
@@ -233,7 +233,7 @@ set $mode_exit exit: loc[k], [l]ogout, s[u]spend, [r]eboot, [s]hutdown
 bindsym $mod+x mode "$mode_exit"
 
 mode "$mode_exit" {
-  bindsym k exec betterlockscreen -l, mode "default"
+  bindsym k exec i3lock, mode "default"
   bindsym l exec i3-msg exit, mode "default"
   bindsym u exec loginctl suspend, mode "default"
   bindsym r exec loginctl reboot, mode "default"

@@ -3,7 +3,7 @@ sanitise tridactyllocal tridactylsync
 
 " General Settings
 set smoothscroll true
-set hintchars jfkdls;aieowur,cxmvhgytnb
+set hintchars jfkdls:aieowur,cxmvhgytnb
 
 " Binds
 bind j scrollline 7
@@ -26,8 +26,8 @@ bind >> fillcmdline tabpush
 bind << fillcmdline tabgrab
 bind <> fillcmdline winmerge
 
-bind ;f hint
-bind ;F hint
+bind ,f hint
+bind ,F hint
 
 " Subconfig Settings
 seturl ^https://codeforces.com noiframe true
@@ -42,15 +42,15 @@ set searchurls.sc https://scryfall.com/search?q=%s+game%3Apaper
 set searchurls.scc https://scryfall.com/search?q=legal%3Acommander+commander%3A%s1+%s[2:]
 
 " Autocmds
-autocmd DocStart www.overleaf.com mode ignore
+autocmd DocStart www.overleaf.com/project mode ignore
 autocmd DocStart https://www.canva.com/design mode ignore
 
 " Youtube
 seturl www.youtube.com modeindicator false
 bindurl www.youtube.com f hint -Jc .yt-simple-endpoint:not(#thumbnail, #logo, .ytd-topbar-menu-button-renderer, .yt-formatted-string)
 bindurl www.youtube.com F hint -Jbc .yt-simple-endpoint:not(#thumbnail, #logo, .ytd-topbar-menu-button-renderer, .yt-formatted-string)
-bindurl www.youtube.com/watch ;f hint -Jc ytd-comment-replies-renderer button, .yt-simple-endpoint:not(#thumbnail, #logo, .ytd-topbar-menu-button-renderer, .ytd-comment-renderer, .yt-formatted-string)
-bindurl www.youtube.com/watch ;F hint -Jbc ytd-comment-replies-renderer button, .yt-simple-endpoint:not(#thumbnail, #logo, .ytd-topbar-menu-button-renderer, .ytd-comment-renderer, .yt-formatted-string)
+bindurl www.youtube.com/watch ,f hint -Jc ytd-comment-replies-renderer button, .yt-simple-endpoint:not(#thumbnail, #logo, .ytd-topbar-menu-button-renderer, .ytd-comment-renderer, .yt-formatted-string)
+bindurl www.youtube.com/watch ,F hint -Jbc ytd-comment-replies-renderer button, .yt-simple-endpoint:not(#thumbnail, #logo, .ytd-topbar-menu-button-renderer, .ytd-comment-renderer, .yt-formatted-string)
 unbindurl www.youtube.com/watch f
 unbindurl www.youtube.com/watch x
 unbindurl www.youtube.com/watch z
@@ -65,7 +65,7 @@ unbindurl www.youtube.com/watch zo
 unbindurl www.youtube.com/watch zr
 
 " Reddit
-bindurl www.reddit.com ;c hint -Jc .contents>div>button, faceplate-partial>div>button, summary>div>button
+bindurl www.reddit.com ,c hint -Jc .contents>div>button, faceplate-partial>div>button, summary>div>button
 bindurl www.reddit.com/(r/|$) f hint -Jc a[id*="post-title"], a[data-testid="subreddit-name"]
 bindurl www.reddit.com/(r/|$) F hint -Jbc a[id*="post-title"], a[data-testid="subreddit-name"]
 bindurl www.reddit.com/r/[^/]*/comments f hint

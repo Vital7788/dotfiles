@@ -34,5 +34,14 @@ return {
 
     -- opts = {
     -- }
-  }
+  },
+  {
+      "NvChad/nvim-colorizer.lua",
+      event = "BufReadPre",
+      ft = "css",
+      opts = {
+        -- css = true,
+        colors = false,
+      },
+  },
 }
