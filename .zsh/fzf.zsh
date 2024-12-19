@@ -1,6 +1,5 @@
 # Set up fzf key bindings and fuzzy completion
-source <(fzf --zsh)
-
+source <(patch -i ~/.zsh/fzf.patch -r - -o - =(fzf --zsh) 2>/dev/null)
 source ~/.zsh/fzf-git.sh
 
 # Use fd (https://github.com/sharkdp/fd) for listing path candidates.
