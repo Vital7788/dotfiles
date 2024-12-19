@@ -69,6 +69,9 @@ return {
       vim.g.vimtex_view_method = 'zathura'
       vim.g.vimtex_quickfix_mode = 0
       vim.g.vimtex_view_forward_search_on_start = 0
+      vim.g.vimtex_compiler_latexmk = {
+        out_dir = 'out'
+      }
     end
   },
   {
