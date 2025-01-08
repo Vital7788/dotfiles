@@ -1,6 +1,6 @@
 alias ls='ls --color=auto -h'
 
-alias open=xdg-open
+# alias open=xdg-open
 
 alias d='dirs -v'
 alias dirs='dirs -v'

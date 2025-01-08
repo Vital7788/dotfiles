@@ -21,26 +21,54 @@
 #   manopt find -print    # MUST prefix with '-' here.
 #   manopt find '-exec.*' # find options *starting* with '-exec'
 manopt() {
-  local cmd=$1 opt=$2
-  [[ $opt == -* ]] || { (( ${#opt} == 1 )) && opt="-$opt" || opt="--$opt"; }
-  man "$cmd" | col -b | awk -v opt="$opt" -v RS= '$0 ~ "(^|,)[[:blank:]]+" opt "([[:punct:][:space:]]|$)"'
+    local cmd=$1 opt=$2
+    [[ $opt == -* ]] || { (( ${#opt} == 1 )) && opt="-$opt" || opt="--$opt"; }
+    man "$cmd" | col -b | awk -v opt="$opt" -v RS= '$0 ~ "(^|,)[[:blank:]]+" opt "([[:punct:][:space:]]|$)"'
 }
 
 # Clean up patch file
 scrub_patch() {
-	sed -i \
-		-e '/^index /d' \
-		-e '/^new file mode /d' \
-		-e '/^Index:/d' \
-		-e '/^=========/d' \
-		-e '/^RCS file:/d' \
-		-e '/^retrieving/d' \
-		-e '/^diff/d' \
-		-e '/^Files .* differ$/d' \
-		-e '/^Only in /d' \
-		-e '/^Common subdirectories/d' \
-		-e '/^deleted file mode [0-9]*$/d' \
-		-e '/^+++/s:\t.*::' \
-		-e '/^---/s:\t.*::' \
-		"$@"
+    sed -i \
+        -e '/^index /d' \
+        -e '/^new file mode /d' \
+        -e '/^Index:/d' \
+        -e '/^=========/d' \
+        -e '/^RCS file:/d' \
+        -e '/^retrieving/d' \
+        -e '/^diff/d' \
+        -e '/^Files .* differ$/d' \
+        -e '/^Only in /d' \
+        -e '/^Common subdirectories/d' \
+        -e '/^deleted file mode [0-9]*$/d' \
+        -e '/^+++/s:\t.*::' \
+        -e '/^---/s:\t.*::' \
+        "$@"
+}
+
+open() {
+    local file=$1
+
+    if [[ $# -lt 1 ]]
+    then
+        file=$(fzf)
+        if [[ $file ]]
+        then
+            xdg-open $file & disown && exit
+        fi
+        return
+    fi
+
+    if [[ -d $file ]]
+    then
+        file=$(fzf --walker-root=$file)
+        if [[ $file ]]
+        then
+            xdg-open $file & disown && exit
+        fi
+    elif [[ -f $file ]]
+    then
+        xdg-open $file & disown && exit
+    else
+        echo "$file is not a valid file or directory"
+    fi
 }
