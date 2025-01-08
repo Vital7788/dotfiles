@@ -16,6 +16,7 @@ export USERXSESSIONRC="${XDG_CACHE_HOME}/X11/xsessionrc"
 export ALTUSERXSESSION="${XDG_CACHE_HOME}/X11/Xsession"
 export ERRFILE="${XDG_CACHE_HOME}/X11/xsession-errors"
 
+export TEXMFCNF="${XDG_CONFIG_HOME}/tex:"
 export CHKTEXRC="${XDG_CONFIG_HOME}/tex"
 export TEXMFHOME="${XDG_CONFIG_HOME}/texmf"
 export R_LIBS_USER="${XDG_DATA_HOME}/R/library"

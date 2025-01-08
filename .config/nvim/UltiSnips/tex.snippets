@@ -52,85 +52,85 @@ snippet dm "Math" wA
 \[ $1 \]$0
 endsnippet
 
-snippet ... "dots" iA
-\ldots
-endsnippet
-
-context "math()"
-snippet xn "x_n" iA
-x_n
-endsnippet
-
-context "math()"
-snippet yn "y_n" iA
-y_n
-endsnippet
-
-context "math()"
-snippet zn "z_n" iA
-z_n
-endsnippet
-
-context "math()"
-snippet fn "f_n" iA
-f_n
-endsnippet
-
-context "math()"
-snippet fxx "fxx" iA
-f_{xx}
-endsnippet
-
-context "math()"
-snippet fyy "fyy" iA
-f_{yy}
-endsnippet
-
-context "math()"
-snippet fxy "fxy" iA
-f_{xy}
-endsnippet
-
-context "math()"
-snippet fyx "fyx" iA
-f_{yx}
-endsnippet
-
-priority 20
-context "math()"
-snippet '([_^])([a-z])(\d)' "x_{n+1}" irA
-`!p snip.rv = match.group(1)`{`!p snip.rv = match.group(2)`+`!p snip.rv = match.group(3)`}
-endsnippet
-
-priority 20
-context "math()"
-snippet '([_^])([a-z]?[+-])' "x_{n-1}" irA
-`!p snip.rv = match.group(1)`{`!p snip.rv = match.group(2)`$1}$0
-endsnippet
-
-priority 20
-context "math() and backslash(snip)"
-snippet '([a-zA-Z])([ijk])' "a_i" irA
-`!p snip.rv = match.group(1)`_`!p snip.rv = match.group(2)`
-endsnippet
-
-priority 30
-context "math()"
-snippet '([a-zA-Z])_([ijk0-9]{2})' "a_i" irA
-`!p snip.rv = match.group(1)`_{`!p snip.rv = match.group(2)`}
-endsnippet
-
-priority 10
-context "math()"
-snippet '([A-Za-z])(\d)' "auto subscript" wrA
-`!p snip.rv = match.group(1)`_`!p snip.rv = match.group(2)`
-endsnippet
-
-priority 10
-context "math()"
-snippet '([A-Za-z])_(\d\d)' "auto subscript 2" wrA
-`!p snip.rv = match.group(1)`_{`!p snip.rv = match.group(2)`}
-endsnippet
+# snippet ... "dots" iA
+# \ldots
+# endsnippet
+#
+# context "math()"
+# snippet xn "x_n" iA
+# x_n
+# endsnippet
+#
+# context "math()"
+# snippet yn "y_n" iA
+# y_n
+# endsnippet
+#
+# context "math()"
+# snippet zn "z_n" iA
+# z_n
+# endsnippet
+#
+# context "math()"
+# snippet fn "f_n" iA
+# f_n
+# endsnippet
+#
+# context "math()"
+# snippet fxx "fxx" iA
+# f_{xx}
+# endsnippet
+#
+# context "math()"
+# snippet fyy "fyy" iA
+# f_{yy}
+# endsnippet
+#
+# context "math()"
+# snippet fxy "fxy" iA
+# f_{xy}
+# endsnippet
+#
+# context "math()"
+# snippet fyx "fyx" iA
+# f_{yx}
+# endsnippet
+#
+# priority 20
+# context "math()"
+# snippet '([_^])([a-z])(\d)' "x_{n+1}" irA
+# `!p snip.rv = match.group(1)`{`!p snip.rv = match.group(2)`+`!p snip.rv = match.group(3)`}
+# endsnippet
+#
+# priority 20
+# context "math()"
+# snippet '([_^])([a-z]?[+-])' "x_{n-1}" irA
+# `!p snip.rv = match.group(1)`{`!p snip.rv = match.group(2)`$1}$0
+# endsnippet
+#
+# priority 20
+# context "math() and backslash(snip)"
+# snippet '([a-zA-Z])([ijk])' "a_i" irA
+# `!p snip.rv = match.group(1)`_`!p snip.rv = match.group(2)`
+# endsnippet
+#
+# priority 30
+# context "math()"
+# snippet '([a-zA-Z])_([ijk0-9]{2})' "a_i" irA
+# `!p snip.rv = match.group(1)`_{`!p snip.rv = match.group(2)`}
+# endsnippet
+#
+# priority 10
+# context "math()"
+# snippet '([A-Za-z])(\d)' "auto subscript" wrA
+# `!p snip.rv = match.group(1)`_`!p snip.rv = match.group(2)`
+# endsnippet
+#
+# priority 10
+# context "math()"
+# snippet '([A-Za-z])_(\d\d)' "auto subscript 2" wrA
+# `!p snip.rv = match.group(1)`_{`!p snip.rv = match.group(2)`}
+# endsnippet
 
 context "math()"
 snippet ^[ "x^{[]}" iA
@@ -152,156 +152,156 @@ snippet '   ' "quad" irA
  \quad 
 endsnippet
 
-snippet .a "alpha" i
-\alpha
-endsnippet
-snippet .A "Alpha" i
-\Alpha
-endsnippet
-snippet .b "beta" i
-\beta
-endsnippet
-snippet .B "Beta" i
-\Beta
-endsnippet
-snippet .g "gamma" i
-\gamma
-endsnippet
-snippet .G "Gamma" i
-\Gamma
-endsnippet
-snippet .d "delta" i
-\delta
-endsnippet
-snippet .D "Delta" i
-\Delta
-endsnippet
-snippet .ep "epsilon" i
-\epsilon
-endsnippet
-snippet .Ep "Epsilon" i
-\Epsilon
-endsnippet
-snippet .z "zeta" i
-\zeta
-endsnippet
-snippet .Z "Zeta" i
-\Zeta
-endsnippet
-snippet .et "eta" i
-\eta
-endsnippet
-snippet .Et "Eta" i
-\Eta
-endsnippet
-snippet .th "theta" i
-\theta
-endsnippet
-snippet .Th "Theta" i
-\Theta
-endsnippet
-snippet .i "iota" i
-\iota
-endsnippet
-snippet .I "Iota" i
-\Iota
-endsnippet
-snippet .k "kappa" i
-\kappa
-endsnippet
-snippet .K "Kappa" i
-\Kappa
-endsnippet
-snippet .l "lambda" i
-\lambda
-endsnippet
-snippet .L "Lambda" i
-\Lambda
-endsnippet
-snippet .m "mu" i
-\mu
-endsnippet
-snippet .M "Mu" i
-\Mu
-endsnippet
-snippet .nu "nu" i
-\nu
-endsnippet
-snippet .Nu "Nu" i
-\Nu
-endsnippet
-snippet .x "xi" i
-\xi
-endsnippet
-snippet .X "Xi" i
-\Xi
-endsnippet
-snippet .o "omicron" i
-\omicron
-endsnippet
-snippet .O "Omicron" i
-\Omicron
-endsnippet
-snippet .pi "pi" i
-\pi
-endsnippet
-snippet .Pi "Pi" i
-\Pi
-endsnippet
-snippet .r "rho" i
-\rho
-endsnippet
-snippet .R "Rho" i
-\Rho
-endsnippet
-snippet .s "sigma" i
-\sigma
-endsnippet
-snippet .S "Sigma" i
-\Sigma
-endsnippet
-snippet .ta "tau" i
-\tau
-endsnippet
-snippet .Ta "Tau" i
-\Tau
-endsnippet
-snippet .u "upsilon" i
-\upsilon
-endsnippet
-snippet .U "Upsilon" i
-\Upsilon
-endsnippet
-snippet .ph "phi" i
-\phi
-endsnippet
-snippet .Ph "Phi" i
-\Phi
-endsnippet
-snippet .c "chi" i
-\chi
-endsnippet
-snippet .C "Chi" i
-\Chi
-endsnippet
-snippet .ps "psi" i
-\psi
-endsnippet
-snippet .Ps "Psi" i
-\Psi
-endsnippet
-snippet .w "omega" i
-\omega
-endsnippet
-snippet .W "Omega" i
-\Omega
-endsnippet
-snippet .na "nabla" i
-\nabla
-endsnippet
-snippet .Na "Nabla" i
-\Nabla
-endsnippet
+# snippet .a "alpha" i
+# \alpha
+# endsnippet
+# snippet .A "Alpha" i
+# \Alpha
+# endsnippet
+# snippet .b "beta" i
+# \beta
+# endsnippet
+# snippet .B "Beta" i
+# \Beta
+# endsnippet
+# snippet .g "gamma" i
+# \gamma
+# endsnippet
+# snippet .G "Gamma" i
+# \Gamma
+# endsnippet
+# snippet .d "delta" i
+# \delta
+# endsnippet
+# snippet .D "Delta" i
+# \Delta
+# endsnippet
+# snippet .ep "epsilon" i
+# \epsilon
+# endsnippet
+# snippet .Ep "Epsilon" i
+# \Epsilon
+# endsnippet
+# snippet .z "zeta" i
+# \zeta
+# endsnippet
+# snippet .Z "Zeta" i
+# \Zeta
+# endsnippet
+# snippet .et "eta" i
+# \eta
+# endsnippet
+# snippet .Et "Eta" i
+# \Eta
+# endsnippet
+# snippet .th "theta" i
+# \theta
+# endsnippet
+# snippet .Th "Theta" i
+# \Theta
+# endsnippet
+# snippet .i "iota" i
+# \iota
+# endsnippet
+# snippet .I "Iota" i
+# \Iota
+# endsnippet
+# snippet .k "kappa" i
+# \kappa
+# endsnippet
+# snippet .K "Kappa" i
+# \Kappa
+# endsnippet
+# snippet .l "lambda" i
+# \lambda
+# endsnippet
+# snippet .L "Lambda" i
+# \Lambda
+# endsnippet
+# snippet .m "mu" i
+# \mu
+# endsnippet
+# snippet .M "Mu" i
+# \Mu
+# endsnippet
+# snippet .nu "nu" i
+# \nu
+# endsnippet
+# snippet .Nu "Nu" i
+# \Nu
+# endsnippet
+# snippet .x "xi" i
+# \xi
+# endsnippet
+# snippet .X "Xi" i
+# \Xi
+# endsnippet
+# snippet .o "omicron" i
+# \omicron
+# endsnippet
+# snippet .O "Omicron" i
+# \Omicron
+# endsnippet
+# snippet .pi "pi" i
+# \pi
+# endsnippet
+# snippet .Pi "Pi" i
+# \Pi
+# endsnippet
+# snippet .r "rho" i
+# \rho
+# endsnippet
+# snippet .R "Rho" i
+# \Rho
+# endsnippet
+# snippet .s "sigma" i
+# \sigma
+# endsnippet
+# snippet .S "Sigma" i
+# \Sigma
+# endsnippet
+# snippet .ta "tau" i
+# \tau
+# endsnippet
+# snippet .Ta "Tau" i
+# \Tau
+# endsnippet
+# snippet .u "upsilon" i
+# \upsilon
+# endsnippet
+# snippet .U "Upsilon" i
+# \Upsilon
+# endsnippet
+# snippet .ph "phi" i
+# \phi
+# endsnippet
+# snippet .Ph "Phi" i
+# \Phi
+# endsnippet
+# snippet .c "chi" i
+# \chi
+# endsnippet
+# snippet .C "Chi" i
+# \Chi
+# endsnippet
+# snippet .ps "psi" i
+# \psi
+# endsnippet
+# snippet .Ps "Psi" i
+# \Psi
+# endsnippet
+# snippet .w "omega" i
+# \omega
+# endsnippet
+# snippet .W "Omega" i
+# \Omega
+# endsnippet
+# snippet .na "nabla" i
+# \nabla
+# endsnippet
+# snippet .Na "Nabla" i
+# \Nabla
+# endsnippet
 
 context "math()"
 snippet () "left( right)" i

@@ -1,0 +1,13 @@
+% allow minted package to be used
+% needs to be combined with setting the TEXMFCNF env var
+% not necessary anymore for versions of TeX Live after 2024
+shell_escape_commands = \
+bibtex,bibtex8,\
+extractbb,\
+gregorio,\
+kpsewhich,\
+makeindex,\
+repstopdf,\
+r-mpost,\
+texosquery-jre8,\
+latexminted
