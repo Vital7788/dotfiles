@@ -53,9 +53,10 @@ open() {
         file=$(fzf)
         if [[ $file ]]
         then
-            xdg-open $file & disown && exit
+            xdg-open $file & disown
+            return
         fi
-        return
+        return 1
     fi
 
     if [[ -d $file ]]
@@ -63,12 +64,17 @@ open() {
         file=$(fzf --walker-root=$file)
         if [[ $file ]]
         then
-            xdg-open $file & disown && exit
+            xdg-open $file & disown
         fi
     elif [[ -f $file ]]
     then
-        xdg-open $file & disown && exit
+        xdg-open $file & disown
     else
         echo "$file is not a valid file or directory"
+        return 1
     fi
+}
+
+openn() {
+    open $1 && exit
 }
