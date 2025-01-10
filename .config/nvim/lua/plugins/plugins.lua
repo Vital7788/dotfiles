@@ -45,6 +45,10 @@ return {
       -- calling `setup` is optional for customization
       require('fzf-lua').setup({
         fzf_colors = true,
+        files = {
+          fd_opts = [[--color=never --type f --hidden --follow --exclude .git --ignore-file ]]
+            .. vim.fn.expand("$XDG_CONFIG_HOME/nvim/fd_ignore"),
+        },
         keymap = {
             fzf = {
                 ["ctrl-q"] = "select-all+accept",
