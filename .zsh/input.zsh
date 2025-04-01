@@ -24,7 +24,7 @@ bindkey '^Z' fancy-ctrl-z
 # vim editing mode in terminal
 bindkey -v
 # reduced lag after pressing <ESC>
-KEYTIMEOUT=1
+# KEYTIMEOUT=1
 
 bindkey '^P' up-history
 bindkey '^N' down-history

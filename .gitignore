@@ -1,5 +1,5 @@
-.vim/cache
 .vim/vim_plug
+.config/i3/local
 .cfg
 .config/nvim/lazy-lock.json
 .zsh/histfile

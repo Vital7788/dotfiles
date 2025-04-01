@@ -103,8 +103,10 @@ config.keys = {
       window:perform_action(wezterm.action.SendString(line), pane)
     end),
   },
-  { key = 'PageUp', action = wezterm.action.ScrollToPrompt(-1) },
-  { key = 'PageDown', action = wezterm.action.ScrollToPrompt(1) },
+  -- { key = 'PageUp', action = wezterm.action.ScrollToPrompt(-1) },
+  -- { key = 'PageDown', action = wezterm.action.ScrollToPrompt(1) },
+  { key = 'PageUp', action = wezterm.action.ScrollByPage(-1) },
+  { key = 'PageDown', action = wezterm.action.ScrollByPage(1) },
 }
 
 config.mouse_bindings = {

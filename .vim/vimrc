@@ -79,6 +79,7 @@ if !has('nvim')
     let g:gutentags_add_ctrlp_root_markers = 0
     set tags=./.tags;,.tags;
     let g:ale_echo_msg_format = '%linter%: %s'
+    set omnifunc=ale#completion#OmniFunc
 endif
 
 if exists("$VIRTUAL_ENV")

@@ -16,20 +16,21 @@ return {
             vim.keymap.set('n', keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
           end
 
-          map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
-          map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
-          map('gI', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
-          map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
-          map('<localleader>D', require('telescope.builtin').lsp_type_definitions, 'Type [D]efinition')
+          map('gr', require('fzf-lua').lsp_references, '[G]oto [R]eferences')
+          map('gd', require('fzf-lua').lsp_definitions, '[G]oto [D]efinition')
+          -- map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+          map('gD', require('fzf-lua').lsp_declarations, '[G]oto [D]eclaration')
+          map('gI', require('fzf-lua').lsp_implementations, '[G]oto [I]mplementation')
+          -- map('<localleader>D', require('fzf-lua').lsp_type_definitions, 'Type [D]efinition')
 
           map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
           map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
 
           -- Fuzzy find all the symbols in your current document.
-          map('<localleader>ds', require('telescope.builtin').lsp_document_symbols, '[D]ocument [S]ymbols')
+          map('<localleader>ds', require('fzf-lua').lsp_document_symbols, '[D]ocument [S]ymbols')
 
           -- Fuzzy find all the symbols in your current workspace
-          map('<localleader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
+          map('<localleader>ws', require('fzf-lua').lsp_live_workspace_symbols, '[W]orkspace [S]ymbols')
 
           map('K', vim.lsp.buf.hover, 'Hover Documentation')
 
