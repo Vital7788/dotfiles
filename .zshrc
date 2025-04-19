@@ -23,4 +23,4 @@ source /usr/share/zsh/site-functions/zsh-syntax-highlighting.zsh
 source ~/.zsh/wezterm.sh
 
 # start keychain
-eval $(keychain --eval --quiet --noask ~/.ssh/id_rsa)
+eval $(keychain --eval --quiet --noask ~/.ssh/id_ed25519)
