@@ -121,4 +121,10 @@ return {
         colors = false,
       },
   },
+  {
+    "m4xshen/hardtime.nvim",
+    dependencies = { "MunifTanjim/nui.nvim" },
+    -- require("hardtime").setup() not needed if opts is set
+    opts = {}
+  },
 }

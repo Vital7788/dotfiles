@@ -18,7 +18,8 @@ return {
           end
 
           map('gr', require('fzf-lua').lsp_references, '[G]oto [R]eferences')
-          map('gd', require('fzf-lua').lsp_definitions, '[G]oto [D]efinition')
+          map('gd', vim.lsp.buf.definition, '[G]oto [D]eclaration')
+          -- map('gd', require('fzf-lua').lsp_definitions, '[G]oto [D]efinition')
           -- map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
           map('gD', require('fzf-lua').lsp_declarations, '[G]oto [D]eclaration')
           map('gI', require('fzf-lua').lsp_implementations, '[G]oto [I]mplementation')
