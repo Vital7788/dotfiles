@@ -95,14 +95,6 @@ config.keys = {
       end),
     },
   },
-  { key = 'i',
-    mods = 'CTRL',
-    action = wezterm.action_callback(function(window, pane)
-      local line = pane:get_logical_lines_as_text(3)
-      wezterm.log_info(line);
-      window:perform_action(wezterm.action.SendString(line), pane)
-    end),
-  },
   -- { key = 'PageUp', action = wezterm.action.ScrollToPrompt(-1) },
   -- { key = 'PageDown', action = wezterm.action.ScrollToPrompt(1) },
   { key = 'PageUp', action = wezterm.action.ScrollByPage(-1) },

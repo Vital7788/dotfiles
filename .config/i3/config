@@ -22,7 +22,7 @@ font pango:FiraCode Nerd Font 12px
 # The combination of xss-lock, nm-applet and pactl is a popular choice, so
 # they are included here as an example. Modify as you see fit.
 # xss-lock grabs a logind suspend inhibit lock and will use i3lock to lock the # screen before suspend. Use loginctl lock-session to lock your screen.
-exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
+# exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
 
 # Brightness controls
 bindsym XF86MonBrightnessUp exec --no-startup-id sudo /home/vital/.local/bin/brightness.sh 5
@@ -250,12 +250,13 @@ mode "$mode_exit" {
 #
 # Screen capture
 #
-set $screenshot a: selected, s: whole, d: selected clipboard, f: whole clipboard, g: swappy
+set $screenshot a: selected, s: current screen, d: selected clipboard, f: current screen clipboard, g: swappy
 mode "$screenshot" {
     bindsym a exec 'grim -g "$(slurp)" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png', mode "default"
-    bindsym s exec 'grim ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png', mode "default"
+    # bar is 22 pixels high on current screen, might differ between hardware
+    bindsym s exec 'grim -g "$(swaymsg -t get_outputs | jq -r '"'.[] | select(.focused).rect | .height = .height - 22 | .y = .y + 22 | "'"\(.x),\(.y) \(.width)x\(.height)"'"')"'" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png', mode "default"
     bindsym d exec 'grim -g "$(slurp)" - | wl-copy', mode "default"
-    bindsym f exec 'grim - | wl-copy', mode "default"
+    bindsym f exec 'grim -g "$(swaymsg -t get_outputs | jq -r '"'.[] | select(.focused).rect | .height = .height - 22 | .y = .y + 22 | "'"\(.x),\(.y) \(.width)x\(.height)"'"')"'" - | wl-copy', mode "default"
     bindsym g exec 'grim -g "$(slurp)" - | swappy -f -', mode "default"
 
 # back to normal: Enter or Escape
@@ -310,6 +311,10 @@ bar {
     position top
     font pango:FiraCode Nerd Font 12px
 
+    # unlearn habit of scrolling bar
+    bindsym button4 nop
+    bindsym button5 nop
+
     colors {
       background $nord1
       statusline $nord8
@@ -323,7 +328,8 @@ bar {
 }
 
 # assign workspaces to monitors
-workspace $ws2 output HDMI-A-1
+workspace $ws1 output HDMI-A-1
+# workspace $ws2 output HDMI-A-1
 
 # assign windows to workspaces
 for_window [class="PPSSPP"] floating enable resize set 960 544
@@ -349,6 +355,8 @@ for_window [class="Yad"] floating enable
 # matchable attributes: https://man.archlinux.org/man/sway.5.en#CRITERIA
 assign [app_id="SWT"] $ws3
 assign [app_id="java"] $ws3
+assign [app_id="Eclipse"] $ws3
+assign [class="Code"] $ws4
 
 exec --no-startup-id /usr/bin/dunst
 exec_always --no-startup-id "picom --config ~/.config/picom.conf"

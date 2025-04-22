@@ -6,6 +6,7 @@ return {
       'williamboman/mason-lspconfig.nvim',
     },
     ft = {"tex", "java", "python", "c", "cpp", "lua", "javascript", "typescript", "javascriptreact", "typescriptreact"},
+    -- cond = (function() return not vim.g.vscode end),
     cmd = { "Mason" },
     config = function()
       -- setup keymaps

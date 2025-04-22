@@ -15,8 +15,8 @@ eclipseaction findref org.eclipse.jdt.ui.edit.text.java.search.references.in.wor
 nmap gr :findref<enter>
 
 eclipseaction togglecomment org.eclipse.jdt.ui.edit.text.java.toggle.comment
-nmap gcc togglecomment
-vmap gc togglecomment
+nmap gcc :togglecomment<cr>
+vmap gc :togglecomment<cr>
 
 eclipseuiaction gotodefinition org.eclipse.jdt.ui.edit.text.java.open.editor
 nmap gd :gotodefinition<enter>
@@ -68,7 +68,7 @@ nnoremap <backspace> :eclipsequickfix<cr>
 vnoremap <backspace> :eclipsequickfix<cr>
 
 eclipseaction eclipseopenresource org.eclipse.ui.navigate.openResource
-nnoremap <C-p> :eclipseopenresource<cr>
+nnoremap ,r :eclipseopenresource<cr>
 
 " amazing 'omnibox' that searches buffers, commands, views, menus, preferences, etc.
 eclipseaction eclipsecmdsearch org.eclipse.ui.window.quickAccess
@@ -79,5 +79,8 @@ nnoremap ,a :eclipsecmdsearch<cr>
 "ctrl+3
 "ctrl+shift+r
 "<F4>
+
+"unbind ctrl+o and ctrl+p
+"rebind content assist from ctrl+space to ctrl+enter
 
 "vim: set filetype=vim

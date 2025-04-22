@@ -23,4 +23,7 @@ source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source ~/.zsh/wezterm.sh
 
 # start keychain
-eval $(keychain --eval --quiet --noask ~/.ssh/id_rsa)
+if command -v keychain 2>&1 >/dev/null
+then
+    eval $(keychain --eval --quiet --noask ~/.ssh/id_ed25519)
+fi
