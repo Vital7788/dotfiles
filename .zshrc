@@ -27,3 +27,5 @@ if command -v keychain 2>&1 >/dev/null
 then
     eval $(keychain --eval --quiet --noask ~/.ssh/id_ed25519)
 fi
+
+source ~/.zsh/local.zsh

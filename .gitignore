@@ -5,3 +5,5 @@
 .zsh/histfile
 .zsh/chpwd-recent-dirs
 .zsh/zcompdump
+.zsh/local.zsh
+.config/river/local.sh

@@ -134,3 +134,5 @@ riverctl spawn "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_
 riverctl spawn "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=river:wlroots XDG_CONFIG_HOME"
 
 riverctl send-layout-cmd rivertile "main-location bottom"
+
+riverctl spawn './local.sh'
