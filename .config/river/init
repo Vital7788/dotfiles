@@ -13,6 +13,8 @@ riverctl map normal Super h focus-output previous
 riverctl map normal Super l focus-output next
 riverctl map normal Super+Shift j swap next
 riverctl map normal Super+Shift k swap previous
+# riverctl map normal Super+Shift h send-to-output -current-tags previous
+# riverctl map normal Super+Shift l send-to-output -current-tags next
 riverctl map normal Super+Shift h send-to-output previous
 riverctl map normal Super+Shift l send-to-output next
 # riverctl map normal Super j focus-view down
@@ -29,25 +31,43 @@ riverctl map normal Super Up    send-layout-cmd rivertile "main-location top"
 riverctl map normal Super Right send-layout-cmd rivertile "main-location right"
 riverctl map normal Super Down  send-layout-cmd rivertile "main-location bottom"
 riverctl map normal Super Left  send-layout-cmd rivertile "main-location left"
-riverctl map normal Super Esc toggle-float
+riverctl map normal Super Comma toggle-float
 riverctl map normal Super f toggle-fullscreen
 riverctl map normal Super p spawn 'delegator -g'
 
-for i in $(seq 1 9)
+# for i in $(seq 1 9)
+# do
+#     tags=$((1 << ($i - 1)))
+#
+#     # Super+[1-9] to focus tag [0-8]
+#     riverctl map normal Super $i set-focused-tags $tags
+#
+#     # Super+Shift+[1-9] to tag focused view with tag [0-8]
+#     riverctl map normal Super+Shift $i set-view-tags $tags
+#
+#     # Super+Control+[1-9] to toggle focus of tag [0-8]
+#     riverctl map normal Super+Control $i toggle-focused-tags $tags
+#
+#     # Super+Shift+Control+[1-9] to toggle tag [0-8] of focused view
+#     riverctl map normal Super+Shift+Control $i toggle-view-tags $tags
+# done
+
+primary_tag_indices=(1 2)
+secondary_tag_indices=(3 4 5)
+
+for i in $(seq 3 5)
 do
     tags=$((1 << ($i - 1)))
-
-    # Super+[1-9] to focus tag [0-8]
-    riverctl map normal Super $i set-focused-tags $tags
-
-    # Super+Shift+[1-9] to tag focused view with tag [0-8]
+    riverctl map normal Super $i spawn "riverctl toggle-focused-tags $tags && riverctl rule-add tags $tags && riverctl focus-view left"
     riverctl map normal Super+Shift $i set-view-tags $tags
+done
 
-    # Super+Control+[1-9] to toggle focus of tag [0-8]
-    riverctl map normal Super+Control $i toggle-focused-tags $tags
-
-    # Super+Shift+Control+[1-9] to toggle tag [0-8] of focused view
-    riverctl map normal Super+Shift+Control $i toggle-view-tags $tags
+for i in $(seq 1 2)
+do
+    tags=$((1 << ($i - 1)))
+    # riverctl map normal Super $i spawn "riverctl set-focused-tags $tags && riverctl rule-add tags $tags"
+    riverctl map normal Super $i spawn "riverctl toggle-focused-tags 3 && riverctl rule-add tags $tags && riverctl focus-view left"
+    riverctl map normal Super+Shift $i set-view-tags $tags
 done
 
 riverctl map-pointer normal Super BTN_LEFT move-view
@@ -57,7 +77,7 @@ riverctl map-pointer normal Super BTN_MIDDLE toggle-float
 mode_exit="exit: loc[k], [l]ogout, s[u]spend, [r]eboot, [s]hutdown"
 riverctl declare-mode "$mode_exit"
 riverctl map normal Super x enter-mode "$mode_exit"
-riverctl map "$mode_exit" None k spawn 'swaylock -f -c 000000 && riverctl enter-mode normal'
+riverctl map "$mode_exit" None k spawn 'riverctl enter-mode normal && swaylock -f -c 000000'
 riverctl map "$mode_exit" None l exit
 riverctl map "$mode_exit" None u spawn 'loginctl suspend'
 # riverctl map "$mode_exit" None r spawn 'loginctl reboot'
@@ -72,10 +92,9 @@ screenshot="a: selected, s: current screen, d: selected clipboard, f: current sc
 riverctl declare-mode "$screenshot"
 riverctl map normal None Print enter-mode "$screenshot"
 riverctl map "$screenshot" None a spawn 'grim -g "$(slurp)" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png && riverctl enter-mode normal'
-# bar is 30 pixels high on current screen, might differ between hardware
-riverctl map "$screenshot" None s spawn 'grim -g "$(swaymsg -t get_outputs | jq -r '"'.[] | select(.focused).rect | .height = .height - 30 | .y = .y + 30 | "'"\(.x),\(.y) \(.width)x\(.height)"'"')"'" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png && riverctl enter-mode normal'
+riverctl map "$screenshot" None s spawn 'grim -o "$(/home/vital/.local/bin/river-bedload -print outputs | jq -r ".[] | select(.focused) | .name")" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png && riverctl enter-mode normal'
 riverctl map "$screenshot" None d spawn 'grim -g "$(slurp)" - | wl-copy && riverctl enter-mode normal'
-riverctl map "$screenshot" None f spawn 'grim -g "$(swaymsg -t get_outputs | jq -r '"'.[] | select(.focused).rect | .height = .height - 30 | .y = .y + 30 | "'"\(.x),\(.y) \(.width)x\(.height)"'"')"'" - | wl-copy && riverctl enter-mode normal'
+riverctl map "$screenshot" None f spawn 'grim -o "$(/home/vital/.local/bin/river-bedload -print outputs | jq -r ".[] | select(.focused) | .name")" - | wl-copy && riverctl enter-mode normal'
 riverctl map "$screenshot" None g spawn 'grim -g "$(slurp)" - | swappy -f - && riverctl enter-mode normal'
 riverctl map "$screenshot" None Escape enter-mode normal
 riverctl map "$screenshot" None Return enter-mode normal
@@ -84,7 +103,7 @@ riverctl map "$screenshot" None Print enter-mode normal
 riverctl border-color-focused 0xFF0000
 # riverctl focus-follows-cursor always
 # riverctl keyboard-layout -options compose:caps us
-riverctl set-cursor-warp on-focus-change
+# riverctl set-cursor-warp on-focus-change
 # riverctl input 'pointer-4120-4102-HID_1018:1006_Touchpad' middle-emulation enabled
 # riverctl input 'pointer-4120-4102-HID_1018:1006_Touchpad' tap enabled
 # riverctl input 'pointer-4120-4102-HID_1018:1006_Touchpad' tap-button-map left-middle-right
@@ -95,23 +114,23 @@ riverctl default-layout rivertile
 # riverctl rule-add -title skmenu float
 # riverctl rule-add -title rofi float
 riverctl rule-add ssd
-riverctl rule-add -app-id 'xdg-desktop-portal*' float
 
 # riverctl spawn 'dbus-run-session pipewire'
 # riverctl spawn 'swayidle timeout 300 waylock timeout 300 "wlopm --off \*" resume "wlopm --on \*"'
+riverctl spawn 'swayidle timeout 300 swaylock timeout 300 "wlopm --off \*" resume "wlopm --on \*"'
 # riverctl spawn "wbg '$(find -L /data/pictures/background-source/ -type f | sort -R | head -1)'"
 # riverctl spawn 'wlsunset -l 50.85 -L 4.35'
-riverctl spawn "swayidle -w timeout 300 'swaylock -f -c 000000' before-sleep 'swaylock -f -c 000000'"
-# swayidle -w timeout 300 'swaylock -f -c 000000' timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' before-sleep 'swaylock -f -c 000000'
 riverctl spawn "waybar"
 
 rivertile -view-padding 0 -outer-padding 0 -main-ratio 0.7 &
 
 # riverctl spawn "wlr-randr --output DP-1 --scale 1.5 --pos 1440,320"
 # riverctl spawn "wlr-randr --output HDMI-A-1 --scale 1.5 --transform 90 --pos 0,0"
-riverctl spawn "wlr-randr --output DP-1 --pos 2160,320"
+riverctl spawn "wlr-randr --output DP-1 --pos 2160,420"
 riverctl spawn "wlr-randr --output HDMI-A-1 --transform 90 --pos 0,0"
 
 # https://wiki.archlinux.org/title/XDG_Desktop_Portal#Portal_does_not_start
 riverctl spawn "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_CONFIG_HOME"
 riverctl spawn "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=river:wlroots XDG_CONFIG_HOME"
+
+riverctl send-layout-cmd rivertile "main-location bottom"
