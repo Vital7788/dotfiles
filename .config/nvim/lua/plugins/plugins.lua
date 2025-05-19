@@ -125,6 +125,13 @@ return {
     "m4xshen/hardtime.nvim",
     dependencies = { "MunifTanjim/nui.nvim" },
     -- require("hardtime").setup() not needed if opts is set
-    opts = {}
+    opts = {
+      disabled_keys = {
+        ["<Up>"] = {},
+        ["<Down>"] = {},
+        ["<Left>"] = {},
+        ["<Right>"] = {},
+      }
+    }
   },
 }
