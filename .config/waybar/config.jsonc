@@ -18,8 +18,8 @@
     // Choose the order of the modules
     "modules-left": ["custom/smallspacer","river/tags","custom/spacer","mpris","custom/spacer","river/mode"],
     "modules-center": ["custom/padd","custom/l_end","custom/r_end","river/window","custom/padd"],
-    "modules-right": ["custom/padd","custom/l_end","group/expand","network","group/expand-3","group/expand-2","group/expand-4","memory","cpu","clock","custom/notification","custom/padd"],
-    // "modules-right": ["custom/padd","custom/l_end","group/expand","network","group/expand-3","memory","cpu","clock","custom/notification","custom/padd"],
+    // "modules-right": ["custom/padd","custom/l_end","group/expand","network","group/expand-3","group/expand-2","group/expand-4","memory","cpu","clock","custom/notification","custom/padd"],
+    "modules-right": ["custom/padd","custom/l_end","group/expand","network","group/expand-3","memory","cpu","clock","custom/notification","custom/padd"],
 
     // Modules configuration
     // "sway/workspaces": {
@@ -105,7 +105,7 @@
         "rotate": 270,
         "format": "{icon}",
         "format-icons": ["󰝦","󰪞","󰪟","󰪠","󰪡","󰪢","󰪣","󰪤","󰪥"],
-        "max-length": 10
+        // "max-length": 10
     },
     "cpu": {
         "interval": 1,

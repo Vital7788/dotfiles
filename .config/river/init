@@ -114,6 +114,8 @@ riverctl default-layout rivertile
 # riverctl rule-add -title skmenu float
 # riverctl rule-add -title rofi float
 riverctl rule-add ssd
+riverctl rule-add -app-id Eclipse tags 2
+riverctl rule-add -app-id Eclipse output DP-1
 
 # riverctl spawn 'dbus-run-session pipewire'
 # riverctl spawn 'swayidle timeout 300 waylock timeout 300 "wlopm --off \*" resume "wlopm --on \*"'
@@ -135,4 +137,4 @@ riverctl spawn "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG
 
 riverctl send-layout-cmd rivertile "main-location bottom"
 
-riverctl spawn './local.sh'
+riverctl spawn '~/.config/river/local.sh'
