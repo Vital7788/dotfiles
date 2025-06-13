@@ -126,10 +126,12 @@ riverctl spawn "waybar"
 
 rivertile -view-padding 0 -outer-padding 0 -main-ratio 0.7 &
 
-# riverctl spawn "wlr-randr --output DP-1 --scale 1.5 --pos 1440,320"
-# riverctl spawn "wlr-randr --output HDMI-A-1 --scale 1.5 --transform 90 --pos 0,0"
-riverctl spawn "wlr-randr --output DP-1 --pos 2160,420"
-riverctl spawn "wlr-randr --output HDMI-A-1 --transform 90 --pos 0,0"
+# riverctl spawn "wlr-randr --output DP-1 --scale 1.5 --pos 1490,320"
+# riverctl spawn "wlr-randr --output HDMI-A-1 --scale 1.45 --transform 90 --pos 0,0"
+riverctl spawn "wlr-randr --output DP-1 --scale 1.5 --pos 1440,320"
+riverctl spawn "wlr-randr --output HDMI-A-1 --scale 1.5 --transform 90 --pos 0,0"
+# riverctl spawn "wlr-randr --output DP-1 --pos 2160,420"
+# riverctl spawn "wlr-randr --output HDMI-A-1 --transform 90 --pos 0,0"
 
 # https://wiki.archlinux.org/title/XDG_Desktop_Portal#Portal_does_not_start
 riverctl spawn "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_CONFIG_HOME"
