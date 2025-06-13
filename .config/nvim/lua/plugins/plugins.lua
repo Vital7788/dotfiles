@@ -102,17 +102,6 @@ return {
     end,
   },
   {
-    "OXY2DEV/markview.nvim",
-    ft = "markdown",
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter",
-      "nvim-tree/nvim-web-devicons", -- Used by the code blocks
-    },
-
-    -- opts = {
-    -- }
-  },
-  {
       "NvChad/nvim-colorizer.lua",
       event = "BufReadPre",
       ft = "css",

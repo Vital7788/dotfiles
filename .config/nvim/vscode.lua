@@ -4,6 +4,10 @@ local function action(cmd)
   return string.format("<cmd>lua require('vscode').action('%s')<CR>", cmd)
 end
 
+-- change VS Code keybindings:
+-- remove Tab to insert completion
+-- add Ctrl+Enter as Trigger Suggest if on keyboard where Ctrl+Space is hard to type
+
 -- list of potentially useful VS Code commands
 -- 'references-view.findReferences' -- language references
 -- 'workbench.actions.view.problems' -- language diagnostics
@@ -23,6 +27,9 @@ end
 -- 'editor.action.formatSelection'
 -- 'editor.action.refactor'
 -- 'workbench.action.showCommands'
+
+vim.keymap.set('n', 'u', action('undo'))
+vim.keymap.set('n', 'U', action('redo'))
 
 vim.keymap.set('n', '<Leader>rl', action('workbench.action.reloadWindow'))
 vim.keymap.set('n', '<Leader>fm', action('workbench.action.formatDocument'))
