@@ -78,3 +78,14 @@ open() {
 openn() {
     open $1 && exit
 }
+
+# shell wrapper around Yazi that changes current working directory when exiting
+# use q to quit and change current working directory
+# use Q to quit without changing current working directory
+function yazi_wrapper() {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+	/usr/bin/yazi "$@" --cwd-file="$tmp"
+	IFS= read -r -d '' cwd < "$tmp"
+	[ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
+	rm -f -- "$tmp"
+}

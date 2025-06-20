@@ -2,7 +2,8 @@
 riverctl map normal Super+Shift q exit
 riverctl map normal Super Return spawn wezterm
 # riverctl map normal Super r spawn 'exec "$(dmenu_path | skmenu)"'
-riverctl map normal Super Escape spawn "rofi -show drun -modi drun -lines 10 -width 30"
+# riverctl map normal Super Escape spawn "rofi -show drun -modi drun -lines 10 -width 30"
+riverctl map normal Super Escape spawn "fuzzel"
 riverctl map normal Super q close
 riverctl map normal Super d close
 riverctl map normal Super m focus-output next
@@ -13,10 +14,10 @@ riverctl map normal Super h focus-output previous
 riverctl map normal Super l focus-output next
 riverctl map normal Super+Shift j swap next
 riverctl map normal Super+Shift k swap previous
-# riverctl map normal Super+Shift h send-to-output -current-tags previous
-# riverctl map normal Super+Shift l send-to-output -current-tags next
-riverctl map normal Super+Shift h send-to-output previous
-riverctl map normal Super+Shift l send-to-output next
+riverctl map normal Super+Shift h send-to-output -current-tags previous
+riverctl map normal Super+Shift l send-to-output -current-tags next
+# riverctl map normal Super+Shift h send-to-output previous
+# riverctl map normal Super+Shift l send-to-output next
 # riverctl map normal Super j focus-view down
 # riverctl map normal Super k focus-view up
 # riverctl map normal Super h focus-view left
@@ -35,40 +36,40 @@ riverctl map normal Super Comma toggle-float
 riverctl map normal Super f toggle-fullscreen
 riverctl map normal Super p spawn 'delegator -g'
 
-# for i in $(seq 1 9)
+for i in $(seq 1 9)
+do
+    tags=$((1 << ($i - 1)))
+
+    # Super+[1-9] to focus tag [0-8]
+    riverctl map normal Super $i set-focused-tags $tags
+
+    # Super+Shift+[1-9] to tag focused view with tag [0-8]
+    riverctl map normal Super+Shift $i set-view-tags $tags
+
+    # Super+Control+[1-9] to toggle focus of tag [0-8]
+    riverctl map normal Super+Control $i toggle-focused-tags $tags
+
+    # Super+Shift+Control+[1-9] to toggle tag [0-8] of focused view
+    riverctl map normal Super+Shift+Control $i toggle-view-tags $tags
+done
+
+# primary_tag_indices=(1 2)
+# secondary_tag_indices=(3 4 5)
+#
+# for i in $(seq 3 5)
 # do
 #     tags=$((1 << ($i - 1)))
-#
-#     # Super+[1-9] to focus tag [0-8]
-#     riverctl map normal Super $i set-focused-tags $tags
-#
-#     # Super+Shift+[1-9] to tag focused view with tag [0-8]
+#     riverctl map normal Super $i spawn "riverctl toggle-focused-tags $tags && riverctl rule-add tags $tags && riverctl focus-view left"
 #     riverctl map normal Super+Shift $i set-view-tags $tags
-#
-#     # Super+Control+[1-9] to toggle focus of tag [0-8]
-#     riverctl map normal Super+Control $i toggle-focused-tags $tags
-#
-#     # Super+Shift+Control+[1-9] to toggle tag [0-8] of focused view
-#     riverctl map normal Super+Shift+Control $i toggle-view-tags $tags
 # done
-
-primary_tag_indices=(1 2)
-secondary_tag_indices=(3 4 5)
-
-for i in $(seq 3 5)
-do
-    tags=$((1 << ($i - 1)))
-    riverctl map normal Super $i spawn "riverctl toggle-focused-tags $tags && riverctl rule-add tags $tags && riverctl focus-view left"
-    riverctl map normal Super+Shift $i set-view-tags $tags
-done
-
-for i in $(seq 1 2)
-do
-    tags=$((1 << ($i - 1)))
-    # riverctl map normal Super $i spawn "riverctl set-focused-tags $tags && riverctl rule-add tags $tags"
-    riverctl map normal Super $i spawn "riverctl toggle-focused-tags 3 && riverctl rule-add tags $tags && riverctl focus-view left"
-    riverctl map normal Super+Shift $i set-view-tags $tags
-done
+#
+# for i in $(seq 1 2)
+# do
+#     tags=$((1 << ($i - 1)))
+#     # riverctl map normal Super $i spawn "riverctl set-focused-tags $tags && riverctl rule-add tags $tags"
+#     riverctl map normal Super $i spawn "riverctl toggle-focused-tags 3 && riverctl rule-add tags $tags && riverctl focus-view left"
+#     riverctl map normal Super+Shift $i set-view-tags $tags
+# done
 
 riverctl map-pointer normal Super BTN_LEFT move-view
 riverctl map-pointer normal Super BTN_RIGHT resize-view
@@ -99,6 +100,9 @@ riverctl map "$screenshot" None g spawn 'grim -g "$(slurp)" - | swappy -f - && r
 riverctl map "$screenshot" None Escape enter-mode normal
 riverctl map "$screenshot" None Return enter-mode normal
 riverctl map "$screenshot" None Print enter-mode normal
+
+# Screen recording
+riverctl map normal Shift Print spawn "toggle-screen-recorder.sh"
 
 riverctl border-color-focused 0xFF0000
 # riverctl focus-follows-cursor always

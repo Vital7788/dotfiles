@@ -10,6 +10,8 @@ alias vim='nvim'
 
 alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 
+alias y='yazi_wrapper'
+
 alias keychain="keychain --absolute --dir $XDG_RUNTIME_DIR/keychain $HOME/.ssh/id_*~$HOME/.ssh/id_*.pub"
 
 alias wget="wget --hsts-file=$XDG_STATE_HOME/wget-hsts"
