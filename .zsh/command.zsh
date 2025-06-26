@@ -50,7 +50,8 @@ open() {
 
     if [[ $# -lt 1 ]]
     then
-        file=$(fzf)
+        # file=$(fzf)
+        file=$(ls --sort time | head -n1)
         if [[ $file ]]
         then
             xdg-open $file & disown

@@ -33,3 +33,12 @@ bindkey '^F' history-incremental-search-forward
 # fix backspace in vi-mode
 bindkey '^?' backward-delete-char
 bindkey '^W' backward-kill-word
+
+# Yank to the system clipboard
+function vi-yank-xclip {
+    zle vi-yank
+   echo "$CUTBUFFER" | wl-copy
+}
+
+zle -N vi-yank-xclip
+bindkey -M vicmd 'y' vi-yank-xclip

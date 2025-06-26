@@ -1,6 +1,7 @@
 #!/bin/sh
 riverctl map normal Super+Shift q exit
-riverctl map normal Super Return spawn wezterm
+# riverctl map normal Super Return spawn wezterm
+riverctl map normal Super Return spawn foot
 # riverctl map normal Super r spawn 'exec "$(dmenu_path | skmenu)"'
 # riverctl map normal Super Escape spawn "rofi -show drun -modi drun -lines 10 -width 30"
 riverctl map normal Super Escape spawn "fuzzel"
@@ -89,20 +90,21 @@ riverctl map "$mode_exit" None Escape enter-mode normal
 riverctl map "$mode_exit" None Return enter-mode normal
 
 # Screen capture
-screenshot="a: selected, s: current screen, d: selected clipboard, f: current screen clipboard, g: swappy"
+screenshot="a: selected, s: current screen, d: selected clipboard, f: current screen clipboard, g: VS Code"
 riverctl declare-mode "$screenshot"
 riverctl map normal None Print enter-mode "$screenshot"
 riverctl map "$screenshot" None a spawn 'grim -g "$(slurp)" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png && riverctl enter-mode normal'
 riverctl map "$screenshot" None s spawn 'grim -o "$(/home/vital/.local/bin/river-bedload -print outputs | jq -r ".[] | select(.focused) | .name")" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png && riverctl enter-mode normal'
 riverctl map "$screenshot" None d spawn 'grim -g "$(slurp)" - | wl-copy && riverctl enter-mode normal'
 riverctl map "$screenshot" None f spawn 'grim -o "$(/home/vital/.local/bin/river-bedload -print outputs | jq -r ".[] | select(.focused) | .name")" - | wl-copy && riverctl enter-mode normal'
-riverctl map "$screenshot" None g spawn 'grim -g "$(slurp)" - | swappy -f - && riverctl enter-mode normal'
+# riverctl map "$screenshot" None g spawn 'grim -g "$(slurp)" - | swappy -f - && riverctl enter-mode normal'
+riverctl map "$screenshot" None g spawn 'grim -g "1524,470 2471x1286" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png && riverctl enter-mode normal'
 riverctl map "$screenshot" None Escape enter-mode normal
 riverctl map "$screenshot" None Return enter-mode normal
 riverctl map "$screenshot" None Print enter-mode normal
 
 # Screen recording
-riverctl map normal Shift Print spawn "toggle-screen-recorder.sh"
+riverctl map normal Shift Print spawn "/home/vital/.local/bin/toggle-screen-recorder.sh"
 
 riverctl border-color-focused 0xFF0000
 # riverctl focus-follows-cursor always
