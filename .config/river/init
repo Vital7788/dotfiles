@@ -1,4 +1,7 @@
 #!/bin/sh
+
+# dependencies: waybar, wlr-randr, fuzzel, river-bedload, slurp, grim, wf-recorder, wl-copy, waylock/swaylock, wlopm
+
 riverctl map normal Super+Shift q exit
 # riverctl map normal Super Return spawn wezterm
 riverctl map normal Super Return spawn foot
@@ -117,6 +120,7 @@ riverctl border-color-focused 0xFF0000
 
 riverctl default-layout rivertile
 
+# Use lswt to find app-ids and titles for rules
 # riverctl rule-add -title skmenu float
 # riverctl rule-add -title rofi float
 riverctl rule-add ssd
