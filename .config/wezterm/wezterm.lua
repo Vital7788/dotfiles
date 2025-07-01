@@ -12,8 +12,10 @@ config.font = wezterm.font {
 config.font_size = 11
 -- config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
+config.bold_brightens_ansi_colors = "No"
+
 --config.color_scheme = 'nord'
-config.color_scheme = 'Everforest Light (Gogh)'
+-- config.color_scheme = 'Everforest Light (Gogh)'
 config.window_frame = {
   font = wezterm.font { family = 'Roboto', weight = 'Bold' },
 
@@ -47,9 +49,48 @@ config.colors = {
     },
     inactive_tab_edge = '#939f91',
   },
-  cursor_fg = '#fdf6e3',
-  cursor_bg = '#5c6a72',
-  cursor_border = '#5c6a72',
+
+  -- The default text color
+  foreground = '#5C6A72',
+  -- The default background color
+  background = '#FDF6E3',
+
+  -- Overrides the cell background color when the current cell is occupied by the
+  -- cursor and the cursor style is set to Block
+  cursor_bg = '#93B259',
+  -- Overrides the text color when the current cell is occupied by the cursor
+  cursor_fg = '#FDF6E3',
+  -- Specifies the border color of the cursor when the cursor style is set to Block,
+  -- or the color of the vertical or horizontal bar when the cursor style is set to
+  -- Bar or Underline.
+  cursor_border = '#93B259',
+
+  -- the foreground color of selected text
+  selection_fg = '#5C6A72',
+  -- the background color of selected text
+  selection_bg = '#EAEDC8',
+
+  ansi = {
+    '#5C6A72',
+    '#F85552',
+    '#8DA101',
+    '#DFA000',
+    '#3A94C5',
+    '#DF69BA',
+    '#35A77C',
+    '#BDC3AF',
+  },
+  brights = {
+    '#5C6A72',
+    '#F85552',
+    '#8DA101',
+    '#DFA000',
+    '#3A94C5',
+    '#DF69BA',
+    '#35A77C',
+    '#BDC3AF',
+  },
+
 }
 
 config.keys = {
