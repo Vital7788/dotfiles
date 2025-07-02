@@ -28,8 +28,9 @@ end
 -- 'editor.action.refactor'
 -- 'workbench.action.showCommands'
 
-vim.keymap.set('n', 'u', action('undo'))
-vim.keymap.set('n', 'U', action('redo'))
+vim.keymap.set('n', '<Leader>u', action('undo'))
+vim.keymap.set('n', '<Leader>U', action('redo'))
+vim.keymap.set('n', '<C-r>', action('redo'))
 
 vim.keymap.set('n', '<Leader>rl', action('workbench.action.reloadWindow'))
 vim.keymap.set('n', '<Leader>fm', action('workbench.action.formatDocument'))

@@ -3,7 +3,7 @@
 # dependencies: waybar, wlr-randr, fuzzel, river-bedload, slurp, grim, wf-recorder, wl-copy, waylock/swaylock, wlopm
 
 riverctl map normal Super+Shift q exit
-riverctl map normal Super Return spawn 'wezterm && sleep 1.2 && riverctl focus-view next && riverctl focus-view previous'
+riverctl map normal Super Return spawn 'wezterm && sleep 1 && riverctl focus-view next && riverctl focus-view previous'
 # riverctl map normal Super Return spawn ghostty
 # riverctl map normal Super r spawn 'exec "$(dmenu_path | skmenu)"'
 # riverctl map normal Super Escape spawn "rofi -show drun -modi drun -lines 10 -width 30"

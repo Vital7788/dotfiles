@@ -102,13 +102,14 @@ return {
     end,
   },
   {
-      "NvChad/nvim-colorizer.lua",
-      event = "BufReadPre",
-      ft = "css",
-      opts = {
-        -- css = true,
-        colors = false,
-      },
+    "catgoose/nvim-colorizer.lua",
+    event = "BufReadPre",
+    opts = {
+      lazy_load = true,
+      user_default_options = {
+        names = false,
+      }
+    },
   },
   {
     "m4xshen/hardtime.nvim",
