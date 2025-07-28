@@ -41,8 +41,8 @@ bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOU
 #bindsym XF86AudioMute exec --no-startup-id amixer -c Generic -q sset Master toggle
 
 # Use flameshot to make screenshots
-# bindsym Print exec flameshot gui -p ~/media/screenshots
-# bindsym Shift+Print exec flameshot full -p ~/media/screenshots
+bindsym Print exec flameshot gui -p ~/media/screenshots
+bindsym Shift+Print exec flameshot full -p ~/media/screenshots
 
 # Use Mouse+$mod to drag floating windows to their wanted position
 floating_modifier $mod
@@ -159,8 +159,8 @@ bindsym Mod1+Shift+Tab workspace prev_on_output
 workspace_auto_back_and_forth yes
 
 # move workspace to next display
-# bindsym $mod+p move workspace to output next
-bindsym $mod+p exec "swaymsg -t get_outputs |jq '[.[] | select(.active == true)] | .[(map(.focused) | index(true) + 1) % length].name' |xargs swaymsg move workspace to"
+bindsym $mod+p move workspace to output next
+# bindsym $mod+p exec "swaymsg -t get_outputs |jq '[.[] | select(.active == true)] | .[(map(.focused) | index(true) + 1) % length].name' |xargs swaymsg move workspace to"
 
 # Make the currently focused window a scratchpad
 bindsym $mod+Shift+minus move scratchpad
@@ -234,15 +234,15 @@ set $mode_exit exit: loc[k], [l]ogout, s[u]spend, [r]eboot, [s]hutdown
 bindsym $mod+x mode "$mode_exit"
 
 mode "$mode_exit" {
-  # bindsym k exec i3lock, mode "default"
-  bindsym k exec swaylock -f -c 000000, mode "default"
-  # bindsym l exec i3-msg exit, mode "default"
-  bindsym l exec swaymsg exit, mode "default"
+  bindsym k exec i3lock, mode "default"
+  # bindsym k exec swaylock -f -c 000000, mode "default"
+  bindsym l exec i3-msg exit, mode "default"
+  # bindsym l exec swaymsg exit, mode "default"
   bindsym u exec loginctl suspend, mode "default"
-  # bindsym r exec loginctl reboot, mode "default"
-  bindsym r exec systemctl reboot, mode "default"
-  # bindsym s exec loginctl poweroff, mode "default"
-  bindsym s exec shutdown -h now, mode "default"
+  bindsym r exec loginctl reboot, mode "default"
+  # bindsym r exec systemctl reboot, mode "default"
+  bindsym s exec loginctl poweroff, mode "default"
+  # bindsym s exec shutdown -h now, mode "default"
   bindsym Escape mode "default"
   bindsym Return mode "default"
 }
@@ -250,32 +250,32 @@ mode "$mode_exit" {
 #
 # Screen capture
 #
-set $screenshot a: selected, s: current screen, d: selected clipboard, f: current screen clipboard, g: swappy
-mode "$screenshot" {
-    bindsym a exec 'grim -g "$(slurp)" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png', mode "default"
-    # bar is 22 pixels high on current screen, might differ between hardware
-    bindsym s exec 'grim -g "$(swaymsg -t get_outputs | jq -r '"'.[] | select(.focused).rect | .height = .height - 22 | .y = .y + 22 | "'"\(.x),\(.y) \(.width)x\(.height)"'"')"'" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png', mode "default"
-    bindsym d exec 'grim -g "$(slurp)" - | wl-copy', mode "default"
-    bindsym f exec 'grim -g "$(swaymsg -t get_outputs | jq -r '"'.[] | select(.focused).rect | .height = .height - 22 | .y = .y + 22 | "'"\(.x),\(.y) \(.width)x\(.height)"'"')"'" - | wl-copy', mode "default"
-    bindsym g exec 'grim -g "$(slurp)" - | swappy -f -', mode "default"
-
-# back to normal: Enter or Escape
-    bindsym Return mode "default"
-    bindsym Escape mode "default"
-    bindsym Print mode "default"
-}
-
-bindsym Print mode "$screenshot"
+# set $screenshot a: selected, s: current screen, d: selected clipboard, f: current screen clipboard, g: swappy
+# mode "$screenshot" {
+#     bindsym a exec 'grim -g "$(slurp)" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png', mode "default"
+#     # bar is 22 pixels high on current screen, might differ between hardware
+#     bindsym s exec 'grim -g "$(swaymsg -t get_outputs | jq -r '"'.[] | select(.focused).rect | .height = .height - 22 | .y = .y + 22 | "'"\(.x),\(.y) \(.width)x\(.height)"'"')"'" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png', mode "default"
+#     bindsym d exec 'grim -g "$(slurp)" - | wl-copy', mode "default"
+#     bindsym f exec 'grim -g "$(swaymsg -t get_outputs | jq -r '"'.[] | select(.focused).rect | .height = .height - 22 | .y = .y + 22 | "'"\(.x),\(.y) \(.width)x\(.height)"'"')"'" - | wl-copy', mode "default"
+#     bindsym g exec 'grim -g "$(slurp)" - | swappy -f -', mode "default"
+#
+# # back to normal: Enter or Escape
+#     bindsym Return mode "default"
+#     bindsym Escape mode "default"
+#     bindsym Print mode "default"
+# }
+#
+# bindsym Print mode "$screenshot"
 
 
 # This will lock your screen after 300 seconds of inactivity, then turn off
 # your displays after another 300 seconds, and turn your screens back on when
 # resumed. It will also lock your screen before your computer goes to sleep.
 
-exec swayidle -w \
-         timeout 300 'swaylock -f -c 000000' \
-         timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
-         before-sleep 'swaylock -f -c 000000'
+# exec swayidle -w \
+#          timeout 300 'swaylock -f -c 000000' \
+#          timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
+#          before-sleep 'swaylock -f -c 000000'
 
 # Nord theme colors
 set $nord0   #2E3440
@@ -308,13 +308,13 @@ client.background       $nord0
 bar {
     tray_output primary
     status_command i3blocks
-    swaybar_command waybar
+    # swaybar_command waybar
     position top
     font pango:FiraCode Nerd Font 12px
 
     # unlearn habit of scrolling bar
-    bindsym button4 nop
-    bindsym button5 nop
+    # bindsym button4 nop
+    # bindsym button5 nop
 
     colors {
       background $nord1
@@ -329,7 +329,7 @@ bar {
 }
 
 # assign workspaces to monitors
-workspace $ws1 output HDMI-A-1
+# workspace $ws1 output HDMI-A-1
 # workspace $ws2 output HDMI-A-1
 
 # assign windows to workspaces
@@ -348,21 +348,22 @@ assign [class="(?i)microsoft teams"] $ws4
 assign [class="jetbrains-idea"] $ws2
 assign [class="jetbrains-studio"] $ws2
 assign [class="keepassxc"] $ws9
-assign [class="(?i)steam"] $ws8
-assign [title="(?i)steam"] $ws8
+assign [class="(?i)steam"] $ws5
+assign [title="(?i)steam"] $ws5
 for_window [class="Yad"] floating enable
 
 # get properties using `swaymsg -t get_tree`
 # matchable attributes: https://man.archlinux.org/man/sway.5.en#CRITERIA
-assign [app_id="SWT"] $ws3
-assign [app_id="java"] $ws3
-assign [app_id="Eclipse"] $ws3
-assign [class="Code"] $ws4
+# assign [app_id="SWT"] $ws3
+# assign [app_id="java"] $ws3
+# assign [app_id="Eclipse"] $ws3
+# assign [class="Code"] $ws4
 
 exec --no-startup-id /usr/bin/dunst
 exec_always --no-startup-id "picom --config ~/.config/picom.conf"
 exec --no-startup-id /usr/bin/gentoo-pipewire-launcher
-exec --no-startup-id /usr/bin/lxpolkit
+# exec --no-startup-id /usr/bin/lxpolkit
+exec --no-startup-id /usr/bin/syncthing serve --no-browser --logfile=default
 
 # local settings
 include ~/.config/i3/local
