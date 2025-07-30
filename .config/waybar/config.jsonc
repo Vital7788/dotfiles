@@ -1,5 +1,5 @@
 {
-    "layer": "top",
+    "layer": "bottom",
     "position": "top",
     "height": 30,
     "spacing": 1,
@@ -148,7 +148,7 @@
     },
 
     "memory": {
-        "format": "󰍛 {}%",
+        "format": " {}%",
         "interval": 1,
         "on-click": "kitty -e htop"
     },
