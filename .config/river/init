@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# dependencies: waybar, wlr-randr, fuzzel, river-bedload, slurp, grim, wf-recorder/wl-screenrec, wl-copy, waylock/swaylock, wlopm, xdg-desktop-portals-wlr
-# wl-clipboard, fnott, lswt
+# dependencies: waybar, wlr-randr, fuzzel, river-bedload, slurp, grim, wf-recorder/wl-screenrec, wl-clipboard, waylock/swaylock, wlopm, xdg-desktop-portals-wlr
+# fnott, lswt
 
 # Check if we're running systemd or openrc
 init=$(ps --no-headers -o comm 1)
@@ -87,7 +87,8 @@ riverctl map "$screenshot" None Print enter-mode normal
 # Screen recording
 riverctl map normal Shift Print spawn "/home/vital/.local/bin/toggle-screen-recorder.sh"
 
-riverctl border-color-focused 0xFF0000
+riverctl border-color-focused 0x93B259
+# riverctl border-color-focused 0XE66868
 # riverctl keyboard-layout -options compose:caps us
 riverctl input pointer-13652-62758-compx_2.4G_Dual_Mode_Mouse accel-profile flat
 
@@ -114,7 +115,7 @@ rivertile -view-padding 0 -outer-padding 0 -main-ratio 0.65 &
 riverctl spawn "wlr-randr --output DP-4 --pos 0,0"
 riverctl spawn "wlr-randr --output HDMI-A-2 --pos 1920,100"
 
-riverctl send-layout-cmd rivertile "main-location bottom"
+# riverctl send-layout-cmd rivertile "main-location bottom"
 
 # https://wiki.archlinux.org/title/XDG_Desktop_Portal#Portal_does_not_start
 if [ "$init" = "systemd" ]
@@ -126,4 +127,4 @@ else
 fi
 
 riverctl spawn '~/.config/river/local.sh'
-riverctl spawn "gentoo-pipewire-launcher"
+riverctl spawn "gentoo-pipewire-launcher restart"
