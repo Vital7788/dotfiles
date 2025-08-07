@@ -10,6 +10,10 @@
 [credential]
 	helper = cache
 [core]
-    hooksPath = ~/.config/git/hooks/
+	hooksPath = ~/.config/git/hooks/
 [push]
 	autoSetupRemote = true
+[diff]
+	tool = nvimdiff
+[difftool]
+	prompt = false
