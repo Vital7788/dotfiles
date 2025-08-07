@@ -13,7 +13,8 @@ function kitty_scrollback_edit_command_line() {
 }
 zle -N kitty_scrollback_edit_command_line
 
-bindkey '^x^e' kitty_scrollback_edit_command_line
+# map insert to edit command using nvim
+bindkey '^[[2~' kitty_scrollback_edit_command_line
 
 # [optional] pass arguments to kitty-scrollback.nvim in command-line editing mode
 # by using the environment variable KITTY_SCROLLBACK_NVIM_EDIT_ARGS
