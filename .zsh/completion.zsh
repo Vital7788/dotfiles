@@ -80,9 +80,12 @@ zstyle ':completion:*:*:vim:*' file-patterns '^*.(class|pdf):source-files' '*:al
 zstyle ':completion:*:*:docker:*' option-stacking yes
 zstyle ':completion:*:*:docker-*:*' option-stacking yes
 
-# patch git switch completion to only complete local branches
-# https://unix.stackexchange.com/a/450133
-# _git 2>/dev/null
-# current="_alternative 'branches::__git_branch_names' 'remote-branch-names-noprefix::__git_remote_branch_names_noprefix' && ret=0"
-# replacement="__git_branch_names && ret=0"
-# functions[_git-switch]=${functions[_git-switch]/$current/$replacement}
+# override git completion
+fpath=(~/.zsh/completion $fpath)
+# disable remote branch completion if the --guess flag is not used
+export GIT_COMPLETION_CHECKOUT_NO_GUESS=1
+
+# map alt-, to complete files
+zle -C complete-files complete-word _generic
+zstyle ':completion:complete-files:*' completer _files
+bindkey '^[,' complete-files

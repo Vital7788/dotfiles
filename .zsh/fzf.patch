@@ -1,7 +1,7 @@
 Patch Ctrl-R to immediately run the command after selection
 Bind Ctrl-F to the old Ctrl-R
 
-@@ -106,7 +106,7 @@
+@@ -124,7 +124,7 @@
  fi
  
  # CTRL-R - Paste the selected command from history into the command line
@@ -9,18 +9,18 @@ Bind Ctrl-F to the old Ctrl-R
 +__fzf-history() {
    local selected
    setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases noglob nobash_rematch 2> /dev/null
-   # Ensure the associative history array, which maps event numbers to the full
-@@ -116,11 +116,32 @@
+   # Ensure the module is loaded if not already, and the required features, such
+@@ -135,11 +135,32 @@
        perl -0 -ne 'if (!$seen{(/^\s*[0-9]+\**\t(.*)/s, $1)}++) { s/\n/\n\t/g; print; }' |
        FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort --wrap-sign '\t↳ ' --highlight-line ${FZF_CTRL_R_OPTS-} --query=${(qqq)LBUFFER} +m --read0") \
        FZF_DEFAULT_OPTS_FILE='' $(__fzfcmd))"
-+    echo $selected
++      echo $selected
    else
-     selected="$(fc -rl 1 | awk '{ cmd=$0; sub(/^[ \t]*[0-9]+\**[ \t]+/, "", cmd); if (!seen[cmd]++) print $0 }' |
+     selected="$(fc -rl 1 | __fzf_exec_awk '{ cmd=$0; sub(/^[ \t]*[0-9]+\**[ \t]+/, "", cmd); if (!seen[cmd]++) print $0 }' |
        FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort --wrap-sign '\t↳ ' --highlight-line ${FZF_CTRL_R_OPTS-} --query=${(qqq)LBUFFER} +m") \
        FZF_DEFAULT_OPTS_FILE='' $(__fzfcmd))"
-+    echo $selected
-+  fi
++      echo $selected
+   fi
 +}
 +fzf-history-widget() {
 +  local selected
@@ -33,7 +33,7 @@ Bind Ctrl-F to the old Ctrl-R
 +      LBUFFER="$selected"
 +    fi
 +    zle accept-line
-   fi
++  fi
 +  zle reset-prompt
 +  return $ret
 +}
@@ -42,8 +42,8 @@ Bind Ctrl-F to the old Ctrl-R
 +  selected=$(__fzf-history)
    local ret=$?
    if [ -n "$selected" ]; then
-     if [[ $(awk '{print $1; exit}' <<< "$selected") =~ ^[1-9][0-9]* ]]; then
-@@ -136,6 +157,10 @@
+     if [[ $(__fzf_exec_awk '{print $1; exit}' <<< "$selected") =~ ^[1-9][0-9]* ]]; then
+@@ -155,6 +176,10 @@
  bindkey -M emacs '^R' fzf-history-widget
  bindkey -M vicmd '^R' fzf-history-widget
  bindkey -M viins '^R' fzf-history-widget
@@ -52,5 +52,3 @@ Bind Ctrl-F to the old Ctrl-R
 +bindkey -M vicmd '^F' fzf-history-widget2
 +bindkey -M viins '^F' fzf-history-widget2
  fi
- 
- } always {

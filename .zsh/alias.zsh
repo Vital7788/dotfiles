@@ -8,7 +8,7 @@ for index ({1..9}) alias "$index"="cd +${index}"; unset index
 
 alias vim='nvim'
 
-alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
+alias config="/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME"
 
 alias y='yazi_wrapper'
 
