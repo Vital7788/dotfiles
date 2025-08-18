@@ -1,0 +1,19 @@
+profile {
+    output "Samsung Electric Company C24FG7x HTNK801272" {
+        mode 1920x1080
+        position 0,0
+    }
+    output "Lenovo Group Limited LEN L24e-20 0x33545042" {
+        mode 1920x1080
+        position 1920,100
+    }
+    exec riverctl focus-output "DP-1" && riverctl send-layout-cmd rivertile "main-location right"
+}
+
+profile {
+    output DP-1 enable
+}
+
+profile {
+    output HDMI-A-1 enable
+}

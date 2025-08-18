@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# dependencies: waybar, wlr-randr, fuzzel, river-bedload, slurp, grim, wf-recorder/wl-screenrec, wl-clipboard, waylock/swaylock, wlopm, xdg-desktop-portals-wlr
-# fnott, lswt
+# dependencies: waybar, kanshi, fuzzel, river-bedload, slurp, grim, wf-recorder/wl-screenrec, wl-clipboard, waylock/swaylock, wlopm, xdg-desktop-portals-wlr
+# fnott, lswt, wbg
 
 # Check if we're running systemd or openrc
 init=$(ps --no-headers -o comm 1)
@@ -53,10 +53,12 @@ riverctl map-pointer normal Super BTN_LEFT move-view
 riverctl map-pointer normal Super BTN_RIGHT resize-view
 riverctl map-pointer normal Super BTN_MIDDLE toggle-float
 
+wallpaper=$(find -L /home/vital/Pictures/wallpaper/ -type f | sort -R | head -1)
+
 mode_exit="exit: loc[k], [l]ogout, s[u]spend, [r]eboot, [s]hutdown"
 riverctl declare-mode "$mode_exit"
 riverctl map normal Super x enter-mode "$mode_exit"
-riverctl map "$mode_exit" None k spawn 'riverctl enter-mode normal && swaylock -f -c 000000'
+riverctl map "$mode_exit" None k spawn "riverctl enter-mode normal && swaylock -f -i $wallpaper"
 riverctl map "$mode_exit" None l exit
 riverctl map "$mode_exit" None u spawn 'loginctl suspend'
 if [ "$init" = "systemd" ]
@@ -96,6 +98,7 @@ riverctl input pointer-13652-62758-compx_2.4G_Dual_Mode_Mouse accel-profile flat
 # riverctl xcursor-theme Oxygen_White
 
 riverctl default-layout rivertile
+rivertile -view-padding 0 -outer-padding 0 -main-ratio 0.65 &
 
 # Use lswt to find app-ids and titles for rules
 riverctl rule-add ssd
@@ -103,20 +106,11 @@ riverctl rule-add -app-id Eclipse tags 2
 riverctl rule-add -app-id Eclipse output DP-1
 
 # riverctl spawn 'dbus-run-session pipewire'
-# riverctl spawn 'swayidle timeout 300 waylock timeout 300 "wlopm --off \*" resume "wlopm --on \*"'
-riverctl spawn 'swayidle timeout 300 swaylock timeout 300 "wlopm --off \*" resume "wlopm --on \*"'
-# riverctl spawn "wbg '$(find -L /data/pictures/background-source/ -type f | sort -R | head -1)'"
-# riverctl spawn 'wlsunset -l 50.85 -L 4.35'
+riverctl spawn "gentoo-pipewire-launcher restart"
+riverctl spawn 'swayidle timeout 600 "swaylock -i '"$wallpaper"'" timeout 600 "wlopm --off \*" resume "wlopm --on \*"'
+riverctl spawn "wbg $wallpaper"
 riverctl spawn "waybar"
-
-rivertile -view-padding 0 -outer-padding 0 -main-ratio 0.65 &
-
-# riverctl spawn "wlr-randr --output DP-1 --scale 1.5 --pos 1440,320"
-# riverctl spawn "wlr-randr --output HDMI-A-1 --scale 1.5 --transform 90 --pos 0,0"
-riverctl spawn "wlr-randr --output DP-4 --pos 0,0"
-riverctl spawn "wlr-randr --output HDMI-A-2 --pos 1920,100"
-
-# riverctl send-layout-cmd rivertile "main-location bottom"
+riverctl spawn "kanshi"
 
 # https://wiki.archlinux.org/title/XDG_Desktop_Portal#Portal_does_not_start
 if [ "$init" = "systemd" ]
@@ -128,4 +122,3 @@ else
 fi
 
 riverctl spawn '~/.config/river/local.sh'
-riverctl spawn "gentoo-pipewire-launcher restart"
