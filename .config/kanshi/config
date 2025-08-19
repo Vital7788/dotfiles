@@ -11,6 +11,21 @@ profile {
 }
 
 profile {
+    output "LG Electronics LG ULTRAFINE 202NTGYBG639" {
+        mode 3840x2160
+        position 1440,300
+        scale 1.5
+    }
+    output "LG Electronics LG ULTRAFINE 202NTBKBG629" {
+        mode 3840x2160
+        position 0,0
+        scale 1.5
+        transform 90
+    }
+    exec riverctl focus-output "HDMI-A-1" && riverctl send-layout-cmd rivertile "main-location bottom" && riverctl focus-output "DP-1"
+}
+
+profile {
     output DP-1 enable
 }
 
