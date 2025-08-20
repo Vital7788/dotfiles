@@ -98,7 +98,7 @@ riverctl input pointer-13652-62758-compx_2.4G_Dual_Mode_Mouse accel-profile flat
 # riverctl xcursor-theme Oxygen_White
 
 riverctl default-layout rivertile
-rivertile -view-padding 0 -outer-padding 0 -main-ratio 0.65 &
+rivertile -view-padding 2 -outer-padding 2 -main-ratio 0.65 &
 
 # Use lswt to find app-ids and titles for rules
 riverctl rule-add ssd
@@ -108,7 +108,7 @@ riverctl rule-add -app-id Eclipse output DP-1
 # riverctl spawn 'dbus-run-session pipewire'
 riverctl spawn "gentoo-pipewire-launcher restart"
 riverctl spawn 'swayidle timeout 600 "swaylock -i '"$wallpaper"'" timeout 600 "wlopm --off \*" resume "wlopm --on \*"'
-riverctl spawn "wbg $wallpaper"
+riverctl spawn "wbg -s $wallpaper"
 riverctl spawn "waybar"
 riverctl spawn "kanshi"
 
