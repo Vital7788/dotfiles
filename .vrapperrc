@@ -74,6 +74,10 @@ nnoremap ,r :eclipseopenresource<cr>
 eclipseaction eclipsecmdsearch org.eclipse.ui.window.quickAccess
 nnoremap ,a :eclipsecmdsearch<cr>
 
+" navigate to open editor
+eclipseaction eclipseopeneditor org.eclipse.ui.window.openEditorDropDown
+nnoremap ,b :eclipseopeneditor<cr>
+
 "ctrl+<space>
 "ctrl+1
 "ctrl+3
