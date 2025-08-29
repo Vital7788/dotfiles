@@ -18,9 +18,10 @@ eclipseaction togglecomment org.eclipse.jdt.ui.edit.text.java.toggle.comment
 nmap gcc :togglecomment<cr>
 vmap gc :togglecomment<cr>
 
-autocmd "Java Editor" eclipseuiaction gotodefinition org.eclipse.jdt.ui.edit.text.java.open.editor
+eclipseuiaction gotodefinition org.eclipse.jdt.ui.edit.text.java.open.editor
 autocmd "Java Editor" nmap gd :gotodefinition<enter>
-autocmd "Xtext Editor" eclipseuiaction gotodefinitionxtext org.eclipse.xtext.ui.editor.hyperlinking.OpenDeclaration
+autocmd "Class File Viewer" nmap gd :gotodefinition<enter>
+eclipseuiaction gotodefinitionxtext org.eclipse.xtext.ui.editor.hyperlinking.OpenDeclaration
 autocmd "Xtext Editor" nmap gd :gotodefinitionxtext<enter>
 
 eclipseuiaction eclipsegotoimpl org.eclipse.jdt.ui.edit.text.java.open.implementation
