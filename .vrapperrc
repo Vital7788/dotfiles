@@ -18,8 +18,10 @@ eclipseaction togglecomment org.eclipse.jdt.ui.edit.text.java.toggle.comment
 nmap gcc :togglecomment<cr>
 vmap gc :togglecomment<cr>
 
-eclipseuiaction gotodefinition org.eclipse.jdt.ui.edit.text.java.open.editor
-nmap gd :gotodefinition<enter>
+autocmd "Java Editor" eclipseuiaction gotodefinition org.eclipse.jdt.ui.edit.text.java.open.editor
+autocmd "Java Editor" nmap gd :gotodefinition<enter>
+autocmd "Xtext Editor" eclipseuiaction gotodefinitionxtext org.eclipse.xtext.ui.editor.hyperlinking.OpenDeclaration
+autocmd "Xtext Editor" nmap gd :gotodefinitionxtext<enter>
 
 eclipseuiaction eclipsegotoimpl org.eclipse.jdt.ui.edit.text.java.open.implementation
 nnoremap gI :eclipsegotoimpl<cr>
@@ -87,4 +89,4 @@ nnoremap ,b :eclipseopeneditor<cr>
 "unbind ctrl+o and ctrl+p
 "rebind content assist from ctrl+space to ctrl+enter
 
-"vim: set filetype=vim
+" vim: set filetype=vim
