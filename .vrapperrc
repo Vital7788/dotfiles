@@ -19,8 +19,7 @@ nmap gcc :togglecomment<cr>
 vmap gc :togglecomment<cr>
 
 eclipseuiaction gotodefinition org.eclipse.jdt.ui.edit.text.java.open.editor
-autocmd "Java Editor" nmap gd :gotodefinition<enter>
-autocmd "Class File Viewer" nmap gd :gotodefinition<enter>
+nmap gd :gotodefinition<enter>
 eclipseuiaction gotodefinitionxtext org.eclipse.xtext.ui.editor.hyperlinking.OpenDeclaration
 autocmd "Xtext Editor" nmap gd :gotodefinitionxtext<enter>
 
