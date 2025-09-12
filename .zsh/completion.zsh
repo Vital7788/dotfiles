@@ -81,9 +81,13 @@ zstyle ':completion:*:*:docker:*' option-stacking yes
 zstyle ':completion:*:*:docker-*:*' option-stacking yes
 
 # override git completion
-fpath=(~/.zsh/completion $fpath)
+# fpath=(~/.zsh/completion $fpath)
 # disable remote branch completion if the --guess flag is not used
-export GIT_COMPLETION_CHECKOUT_NO_GUESS=1
+# export GIT_COMPLETION_CHECKOUT_NO_GUESS=1
+
+__git_files () {
+    _wanted files expl 'local files' _files
+}
 
 # map alt-, to complete files
 zle -C complete-files complete-word _generic
