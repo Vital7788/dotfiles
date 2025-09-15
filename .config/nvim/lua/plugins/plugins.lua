@@ -13,21 +13,27 @@ return {
       vim.cmd([[colorscheme everforest]])
     end,
   },
+
   "romainl/vim-cool",
+
   {
     "romainl/vim-qf",
     init = function()
       vim.g.qf_shorten_path = 3
     end,
   },
+
   "tpope/vim-abolish",
+
   "tpope/vim-sleuth",
+
   {
     "mbbill/undotree",
     keys = {
         { "<F5>", "<cmd>UndotreeToggle<CR>" }
     }
   },
+
   {
     'mikesmithgh/kitty-scrollback.nvim',
     enabled = true,
@@ -40,15 +46,26 @@ return {
       require('kitty-scrollback').setup()
     end,
   },
+
   {
     "dense-analysis/ale",
     event = { 'BufReadPre', 'BufNewFile' },
-    init = function()
+    config = function()
       vim.g.ale_use_neovim_diagnostics_api = 1
       -- vim.g.ale_disable_lsp = 0
       vim.g.ale_echo_cursor = 0
+      vim.g.ale_python_flake8_options = '--config=$HOME/.config/flake8'
+      vim.g.ale_c_clangd_options = "-I " .. vim.fn.getcwd()
+      vim.g.ale_cpp_clangd_options = "-I " .. vim.fn.getcwd()
+      vim.g.ale_linters = {
+        java = {},
+        c = {'clangcheck', 'clangd', 'clangtidy', 'cppcheck', 'cpplint'},
+        haskell = {'cabal_ghc', 'hdevtools', 'hie', 'hlint', 'stack_build', 'stack_ghc'},
+        tex = {'lacheck'}
+      }
     end
   },
+
   {
     'ibhagwan/fzf-lua',
     -- optional for icon support
@@ -78,6 +95,9 @@ return {
         { '<C-x><C-f>', function() require("fzf-lua").complete_path() end, mode = 'i'},
     },
   },
+
+  "sindrets/diffview.nvim",
+
   {
     "lervag/vimtex",
     ft = "tex",
@@ -91,28 +111,33 @@ return {
       }
     end
   },
+
   {
     "KeitaNakamura/tex-conceal.vim",
-    enabled = false,
+    ft = "tex",
     init = function()
       vim.opt.conceallevel = 1
       vim.g.tex_conceal = 'abdmg'
     end
   },
+
   {
     "SirVer/ultisnips",
+    ft = "tex",
     init = function()
       vim.g.UltiSnipsExpandTrigger = "<c-j>"
       vim.g.UltiSnipsJumpForwardTrigger = "<c-j>"
       vim.g.UltiSnipsJumpBackwardTrigger = "<c-k>"
     end
   },
+
   {
     "numToStr/Comment.nvim",
     config = function()
       require("Comment").setup()
     end,
   },
+
   {
     "catgoose/nvim-colorizer.lua",
     event = "BufReadPre",
@@ -123,6 +148,7 @@ return {
       }
     },
   },
+
   {
     "m4xshen/hardtime.nvim",
     dependencies = { "MunifTanjim/nui.nvim" },

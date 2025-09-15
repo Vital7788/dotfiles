@@ -6,8 +6,6 @@ else
     let b:undo_ftplugin .= ' | setlocal textwidth< formatoptions<'
 endif
 
-let b:ale_linters_ignore = ['lacheck']
-
 " compiler pdflatex
 
 "nnoremap <buffer> <Leader>r

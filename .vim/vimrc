@@ -79,6 +79,12 @@ if !has('nvim')
     let g:gutentags_add_ctrlp_root_markers = 0
     set tags=./.tags;,.tags;
     let g:ale_echo_msg_format = '%linter%: %s'
+    let b:ale_python_flake8_options = '--config=$HOME/.config/flake8'
+    let b:ale_c_clangd_options="-I " . getcwd()
+    let b:ale_linters = ['clangcheck', 'clangd', 'clangtidy', 'cppcheck', 'cpplint']
+    let b:ale_linters = ['cabal_ghc', 'hdevtools', 'hie', 'hlint', 'stack_build', 'stack_ghc']
+    let b:ale_linters_ignore = ['lacheck']
+    let b:ale_cpp_clangd_options="-I " . getcwd()
     set omnifunc=ale#completion#OmniFunc
 endif
 
@@ -193,6 +199,11 @@ if executable('rg')
     set grepprg=rg\ -S\ --vimgrep
     set grepformat=%f:%l:%c:%m
 endif
+
+""" Diff
+" uncomment when this is available
+" set diffopt+=inline:char
+" set diffopt+=anchor
 
 """ Fold
 set foldenable

@@ -5,7 +5,7 @@ return {
       'williamboman/mason.nvim',
       'williamboman/mason-lspconfig.nvim',
     },
-    ft = {"tex", "java", "python", "c", "cpp", "lua", "javascript", "typescript", "javascriptreact", "typescriptreact"},
+    ft = {"tex", "python", "c", "cpp", "lua", "javascript", "typescript", "javascriptreact", "typescriptreact"},
     -- cond = (function() return not vim.g.vscode end),
     cmd = { "Mason" },
     config = function()
