@@ -260,6 +260,9 @@ nnoremap <localleader>e :e <C-R>=fnameescape(expand('%:h')).'/'<CR><C-z>
 " list loaded buffers and populate prompt
 nnoremap gb :ls<CR>:b<Space>
 
+nnoremap gd <C-]>
+nnoremap gr :execute "grep " . expand("<cword>") <Bar> cwindow<CR>
+
 " don't add { and } motions to jumplist
 nnoremap <silent> } :<C-u>execute "keepjumps norm! " . v:count1 . "}"<CR>
 nnoremap <silent> { :<C-u>execute "keepjumps norm! " . v:count1 . "{"<CR>
