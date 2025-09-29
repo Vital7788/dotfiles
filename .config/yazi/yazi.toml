@@ -1,3 +1,11 @@
 [preview]
 max_width = 2000
 max_height = 4000
+
+[plugin]
+prepend_fetchers = [
+    { id = "mime", name = "*", run = "yazip", prio = "high" }
+]
+prepend_previewers = [
+    { mime = "yazip/*", run = "yazip" },
+]

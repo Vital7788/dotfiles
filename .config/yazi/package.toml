@@ -1,0 +1,7 @@
+[[plugin.deps]]
+use = "TKperson/yazip"
+rev = "2aca650"
+hash = "7c2adf394b5d2e1d984a7293148ea3c5"
+
+[flavor]
+deps = []

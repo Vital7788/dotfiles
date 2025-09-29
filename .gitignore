@@ -7,3 +7,4 @@
 .zsh/zcompdump
 .zsh/local.zsh
 .config/river/local.sh
+.config/yazi/plugins
