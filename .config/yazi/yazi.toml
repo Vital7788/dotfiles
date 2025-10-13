@@ -1,11 +1,13 @@
+[mgr]
+mouse_events = []
+
 [preview]
+wrap = "yes"
 max_width = 2000
 max_height = 4000
 
 [plugin]
-prepend_fetchers = [
-    { id = "mime", name = "*", run = "yazip", prio = "high" }
-]
 prepend_previewers = [
-    { mime = "yazip/*", run = "yazip" },
+    { name = "*.svg", run = "svg" },
+    { name = "*.zip", run = "archive" },
 ]
