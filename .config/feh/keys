@@ -1,0 +1,10 @@
+scroll_left Left h
+scroll_right Right l
+scroll_up Up k
+scroll_down Down j
+zoom_in plus J
+zoom_out minus K
+zoom_default equal
+zoom_fit slash
+next_img L
+prev_img H
