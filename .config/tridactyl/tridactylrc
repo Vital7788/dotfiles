@@ -40,6 +40,8 @@ seturl 0.0.0.0:8601 modeindicator false
 " Search engines
 set searchurls.sc https://scryfall.com/search?q=%s+game%3Apaper
 set searchurls.scc https://scryfall.com/search?q=legal%3Acommander+commander%3A%s1+%s[2:]
+set searchurls.i https://gitlab.sigasi.com/dev/sigasi/-/issues/
+set searchurls.mr https://gitlab.sigasi.com/dev/sigasi/-/merge_requests/
 
 " Autocmds
 autocmd DocStart www.overleaf.com/project mode ignore

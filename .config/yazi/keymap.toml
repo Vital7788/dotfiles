@@ -1,4 +1,7 @@
 [mgr]
 prepend_keymap = [
   { on = ["g", "c"], run = 'plugin git-files', desc = "Show Git file changes" },
+
+  { on = ["g", "s"], run = "cd /home/vital/sigasi-development-project-master/git/sigasi", desc = "Go to Sigasi git repo" },
+  { on = ["g", "v"], run = "cd /home/vital/sigasi-development-project-master/git/sigasi/com.sigasi.lsp.extension.vscode", desc = "Go to Sigasi VS Code folder" },
 ]
