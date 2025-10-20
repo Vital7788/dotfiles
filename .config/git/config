@@ -26,3 +26,4 @@
     sh = -c diff.external=difft show --ext-diff
     df = -c diff.external=difft diff
     pf = push --force-with-lease
+	claim = blame -M -C -C -C
