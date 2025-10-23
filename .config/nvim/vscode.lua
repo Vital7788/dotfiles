@@ -7,6 +7,7 @@ end
 -- change VS Code keybindings:
 -- remove Tab to insert completion
 -- add Ctrl+Enter as Trigger Suggest if on keyboard where Ctrl+Space is hard to type
+-- remove Ctrl+R neovim passthrough, so Ctrl+R maps to reload window
 
 -- list of potentially useful VS Code commands
 -- 'references-view.findReferences' -- language references
@@ -30,15 +31,16 @@ end
 
 vim.keymap.set('n', '<Leader>u', action('undo'))
 vim.keymap.set('n', '<Leader>U', action('redo'))
-vim.keymap.set('n', '<C-r>', action('redo'))
 
 vim.keymap.set('n', '<Leader>rl', action('workbench.action.reloadWindow'))
 vim.keymap.set('n', '<Leader>fm', action('workbench.action.formatDocument'))
 vim.keymap.set('n', ',f', action('workbench.action.quickOpen'))
 vim.keymap.set('n', ',s', action('workbench.action.findInFiles'))
+vim.keymap.set('n', 'gd', action('editor.action.revealDefinition'))
 vim.keymap.set('n', 'gr', action('editor.action.goToReferences'))
 vim.keymap.set('n', '<Leader>rn', action('editor.action.rename'))
 vim.keymap.set('n', ',b', action('workbench.action.quickOpenPreviousRecentlyUsedEditorInGroup'))
 vim.keymap.set('n', '[b', action('workbench.action.quickOpenPreviousRecentlyUsedEditorInGroup'))
 vim.keymap.set('n', ']b', action('workbench.action.quickOpenLeastRecentlyUsedEditorInGroup'))
 vim.keymap.set('n', ',o', action('outline.focus'))
+vim.keymap.set('n', ',e', action('workbench.action.files.openFolder'))
