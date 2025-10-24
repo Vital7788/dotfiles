@@ -19,8 +19,9 @@ profile {
     output "Microstep MPG321UX OLED 0x01010101" {
         mode 3840x2160
         position 1080,250
-        scale 2
+        scale 1.5
     }
+    exec riverctl focus-output "DP-1" && riverctl send-layout-cmd rivertile "main-location bottom" && exec riverctl focus-output "DP-2"
 }
 
 profile {
