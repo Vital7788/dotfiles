@@ -89,21 +89,23 @@ riverctl map "$screenshot" None Print enter-mode normal
 # Screen recording
 riverctl map normal Shift Print spawn "/home/vital/.local/bin/toggle-screen-recorder.sh"
 
-riverctl border-color-focused 0x93B259
+# riverctl border-width 3
+# riverctl border-color-focused 0x93B259
+riverctl border-color-focused 0xE66868
 riverctl border-color-unfocused 0x708089
-riverctl border-color-urgent 0XE66868
+riverctl border-color-urgent 0xE66868
 # riverctl keyboard-layout -options compose:caps us
 riverctl input pointer-13652-62758-compx_2.4G_Dual_Mode_Mouse accel-profile flat
 
 # riverctl xcursor-theme Oxygen_White
 
 riverctl default-layout rivertile
-rivertile -view-padding 2 -outer-padding 2 -main-ratio 0.65 &
+rivertile -view-padding 2 -outer-padding 2 -main-ratio 0.7 &
 
 # Use lswt to find app-ids and titles for rules
 riverctl rule-add ssd
 riverctl rule-add -app-id Eclipse tags 2
-riverctl rule-add -app-id Eclipse output DP-1
+# riverctl rule-add -app-id Eclipse output DP-1
 
 # riverctl spawn 'dbus-run-session pipewire'
 riverctl spawn "gentoo-pipewire-launcher restart"

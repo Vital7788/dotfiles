@@ -9,6 +9,10 @@
     hooksPath = ~/.config/git/hooks/
 [push]
     autoSetupRemote = true
+[merge]
+    conflictStyle = zdiff3
+[diff]
+    colorMoved = default
 
 [core]
     pager = delta
@@ -18,12 +22,16 @@
     navigate = true  # use n and N to move between diff sections
     light = true
     ; side-by-side = true
-[merge]
-    conflictStyle = zdiff3
+    map-styles = bold purple => syntax "#ffe0f0", bold cyan => syntax "#d0fff8"
+    minus-style = "syntax auto"
+    minus-emph-style = "syntax auto"
+    line-numbers = true
+    file-decoration-style = "green ul"
+    file-style = "green bold"
 
 [alias]
     lg = -c diff.external=difft log --ext-diff
     sh = -c diff.external=difft show --ext-diff
     df = -c diff.external=difft diff
     pf = push --force-with-lease
-	claim = blame -M -C -C -C
+    claim = blame -M -C -C -C
