@@ -25,6 +25,14 @@ profile {
 }
 
 profile {
+    output "Microstep MPG321UX OLED 0x01010101" {
+        mode 3840x2160
+        position 0,0
+        scale 1.5
+    }
+}
+
+profile {
     output "LG Electronics LG ULTRAFINE 202NTGYBG639" {
         mode 3840x2160
         position 1440,300
