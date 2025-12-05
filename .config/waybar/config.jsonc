@@ -84,9 +84,8 @@
 
     "custom/updates": {
         "format": "󰚰 {}",
-        "exec": "checkupdates | wc -l",
+        "exec": "timestamp=$(emerge --info | rg \"Timestamp of repository gentoo\"); seconds=$(date --date \"${timestamp#*: }\" +%s); echo \"$(( ($(date +%s) - $seconds) \/ 86400 ))d\"",
         "interval": 3600,
-        "on-click": "kitty -e sudo pacman -Syu",
         "signal": 8
     },
 
