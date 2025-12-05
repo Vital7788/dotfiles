@@ -55,3 +55,5 @@ function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
 end
 
 vim.keymap.set('n', '<space>e', vim.diagnostic.open_float)
+
+vim.cmd([[colorscheme dayfox]])

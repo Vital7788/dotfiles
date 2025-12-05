@@ -9,10 +9,50 @@ return {
       vim.g.everforest_background = 'medium'
       vim.g.everforest_better_performance = 1
     end,
-    config = function()
-      vim.cmd([[colorscheme everforest]])
-    end,
+    -- config = function()
+    --   vim.cmd([[colorscheme everforest]])
+    -- end,
   },
+
+  {
+    'everviolet/nvim',
+    name = 'evergarden',
+    priority = 1000, -- Colorscheme plugin is loaded first before any other plugins
+    opts = {
+      theme = {
+        variant = 'summer', -- 'winter'|'fall'|'spring'|'summer'
+        accent = 'green',
+      },
+    },
+  },
+
+  {
+    "EdenEast/nightfox.nvim",
+    lazy = false,
+    priority = 1000,
+    opts = {
+      -- Palettes are the base color defines of a colorscheme.
+      palettes = {
+      },
+      -- Spec's (specifications) are a mapping of palettes to logical groups that will be
+      -- used by the groups.
+      specs = {
+      },
+      -- Groups are the highlight group definitions. The keys of this table are the name of the highlight
+      -- groups that will be overridden. The value is a table with the following values:
+      --   - fg, bg, style, sp, link,
+      groups = {
+        all = {
+          -- If `link` is defined it will be applied over any other values defined
+          Label = { link = "Identifier" },
+          Conditional = { style = "bold" },
+          Statement = { style = "bold" }
+        },
+      },
+    },
+  },
+
+  { "catppuccin/nvim", name = "catppuccin", priority = 1000 },
 
   "romainl/vim-cool",
 
