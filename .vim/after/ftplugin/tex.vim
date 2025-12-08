@@ -1,5 +1,6 @@
 setlocal textwidth=80
 setlocal formatoptions+=aw
+setlocal conceallevel=1
 if !exists("b:undo_ftplugin")
     let b:undo_ftplugin = 'setlocal textwidth< formatoptions<'
 else

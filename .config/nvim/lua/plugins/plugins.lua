@@ -153,15 +153,6 @@ return {
   },
 
   {
-    "KeitaNakamura/tex-conceal.vim",
-    ft = "tex",
-    init = function()
-      vim.opt.conceallevel = 1
-      vim.g.tex_conceal = 'abdmg'
-    end
-  },
-
-  {
     "SirVer/ultisnips",
     ft = "tex",
     init = function()
