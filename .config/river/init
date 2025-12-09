@@ -101,7 +101,7 @@ riverctl input pointer-13652-62758-compx_2.4G_Dual_Mode_Mouse accel-profile flat
 # riverctl xcursor-theme Oxygen_White
 
 riverctl default-layout rivertile
-rivertile -view-padding 2 -outer-padding 2 -main-ratio 0.7 &
+rivertile -view-padding 2 -outer-padding 2 -main-ratio 0.65 &
 
 # Use lswt to find app-ids and titles for rules
 riverctl rule-add ssd
