@@ -53,6 +53,8 @@ return {
               buffer = event.buf,
               callback = vim.lsp.buf.document_highlight,
             })
+            -- quicker CursorHold events
+            vim.opt.updatetime=300
 
             vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
               buffer = event.buf,

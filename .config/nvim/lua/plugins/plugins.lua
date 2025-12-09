@@ -44,9 +44,9 @@ return {
       groups = {
         all = {
           -- If `link` is defined it will be applied over any other values defined
-          Label = { link = "Identifier" },
-          Conditional = { style = "bold" },
-          Statement = { style = "bold" }
+          Conditional = { fg = "palette.red" },
+          Statement = { link = "Conditional" },
+          Comment = { fg = "palette.green.bright" },
         },
       },
     },
@@ -114,6 +114,19 @@ return {
       -- calling `setup` is optional for customization
       require('fzf-lua').setup({
         fzf_colors = true,
+        hls = {
+          header_bind = "Identifier",
+          header_text = "Number",
+          buf_nr = "Identifier",
+          path_linenr = "Identifier",
+          path_colnr = "Identifier",
+          buf_flag_cur = "Number",
+          buf_flag_alt = "Identifier",
+          -- tab_title = "",
+          tab_marker = "CursorLineNr",
+          live_prompt = "FzfLuaPrompt",
+          live_sym = "FzfLuaPrompt",
+        },
         files = {
           fd_opts = [[--color=never --type f --hidden --follow --exclude .git --ignore-file ]]
             .. vim.fn.expand("$XDG_CONFIG_HOME/nvim/fd_ignore"),
