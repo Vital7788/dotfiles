@@ -52,8 +52,6 @@ return {
     },
   },
 
-  { "catppuccin/nvim", name = "catppuccin", priority = 1000 },
-
   "romainl/vim-cool",
 
   {
@@ -103,6 +101,10 @@ return {
         haskell = {'cabal_ghc', 'hdevtools', 'hie', 'hlint', 'stack_build', 'stack_ghc'},
         tex = {'lacheck'}
       }
+      vim.g.ale_linters_ignore = {
+        javascript = {'tsserver'},
+        typescript = {'tsserver'},
+      }
     end
   },
 
@@ -111,7 +113,6 @@ return {
     -- optional for icon support
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     config = function()
-      -- calling `setup` is optional for customization
       require('fzf-lua').setup({
         fzf_colors = true,
         hls = {
@@ -128,6 +129,8 @@ return {
           live_sym = "FzfLuaPrompt",
         },
         files = {
+          -- show filename first
+          formatter = "path.filename_first",
           fd_opts = [[--color=never --type f --hidden --follow --exclude .git --ignore-file ]]
             .. vim.fn.expand("$XDG_CONFIG_HOME/nvim/fd_ignore"),
         },

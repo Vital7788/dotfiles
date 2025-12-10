@@ -61,6 +61,11 @@ return {
               callback = vim.lsp.buf.clear_references,
             })
           end
+
+          if client:supports_method('textDocument/completion') then
+            -- Enable completion side effects, such as auto-imports
+            vim.lsp.completion.enable(true, client.id, event.buf, {autotrigger = false})
+          end
         end,
       })
 

@@ -174,9 +174,20 @@ endif
 set path-=/usr/include
 
 """ Completion
+" TODO Try out once merged in neovim
+"set complete=o,.,w,b,u,t
+"set autocomplete
+
 set completeopt=                "control completion menu
-set completeopt+=longest        "match longest common text
+set completeopt+=fuzzy          "enable fuzzy-matching
 set completeopt+=menuone        "show menu even if there's only 1 match
+set completeopt+=noinsert       "don't insert any text before a match was selected
+set completeopt+=popup          "show extra info in popup window
+
+set pumheight=7                 "max number of items shown in popup menu
+
+"inoremap <C-Space> <C-x><C-o>
+inoremap <expr> <C-Space> pumvisible() ? "\<lt>Down>" : "<C-x><C-o>"
 
 "enter to select highlighted menu item
 inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
