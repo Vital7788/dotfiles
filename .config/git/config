@@ -29,12 +29,11 @@
     ; minus-emph-style = "syntax auto"
 
     ; Dayfox color scheme
-    map-styles = bold purple => syntax "#d0aeba", bold cyan => syntax "#bbbcbf" ;blend bg2 with red and green at 0.2
-    ; map-styles = bold purple => syntax "#cdd0e0", bold cyan => syntax "#a4aed2" ;blend bg1 with blue at 0.2 and 0.4
-    minus-style = "syntax #e6c8c8" ;blend bg1 with red at 0.2
+    map-styles = bold purple => syntax "#e6cee3", bold cyan => syntax "#cddad8" ;blend bg1 with pink and cyan at 0.2
+    minus-style = "syntax #e6c8c8"      ;blend bg1 with red at 0.2
     minus-emph-style = "syntax #d69fa2" ;blend bg1 with red at 0.4
-    plus-style = "syntax #d0d6cd" ;blend bg1 with green at 0.2
-    plus-emph-style = "syntax #aabbab" ;blend bg1 with green at 0.4
+    plus-style = "syntax #d0d6cd"       ;blend bg1 with green at 0.2
+    plus-emph-style = "syntax #aabbab"  ;blend bg1 with green at 0.4
 
     line-numbers = true
     file-decoration-style = "green ul"
