@@ -53,7 +53,11 @@ riverctl map-pointer normal Super BTN_LEFT move-view
 riverctl map-pointer normal Super BTN_RIGHT resize-view
 riverctl map-pointer normal Super BTN_MIDDLE toggle-float
 
-wallpaper=$(find -L /home/vital/Pictures/wallpaper/ -type f | sort -R | head -1)
+
+wallpaper=$(for dir in ~/media/wallpaper ~/Pictures/wallpaper
+do
+    [ -d "$dir" ] && find -L "$dir" -type f
+done | sort -R | head -1)
 
 mode_exit="exit: loc[k], [l]ogout, s[u]spend, [r]eboot, [s]hutdown"
 riverctl declare-mode "$mode_exit"
@@ -73,15 +77,22 @@ riverctl map "$mode_exit" None Escape enter-mode normal
 riverctl map "$mode_exit" None Return enter-mode normal
 
 # Screen capture
+for dir in ~/media/screenshots ~/Pictures/screenshots ~/downloads ~/Downloads
+do
+    if [ -d "$dir" ]; then
+        screenshot_folder=$dir
+        break
+    fi
+done
 screenshot="a: selected, s: current screen, d: selected clipboard, f: current screen clipboard, g: VS Code"
 riverctl declare-mode "$screenshot"
 riverctl map normal None Print enter-mode "$screenshot"
-riverctl map "$screenshot" None a spawn 'grim -g "$(slurp)" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png && riverctl enter-mode normal'
-riverctl map "$screenshot" None s spawn 'grim -o "$(/home/vital/.local/bin/river-bedload -print outputs | jq -r ".[] | select(.focused) | .name")" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png && riverctl enter-mode normal'
+riverctl map "$screenshot" None a spawn 'grim -g "$(slurp)" '"$screenshot_folder"'/ps_$(date +"%Y%m%d%H%M%S").png && riverctl enter-mode normal'
+riverctl map "$screenshot" None s spawn 'grim -o "$(~/.local/bin/river-bedload -print outputs | jq -r ".[] | select(.focused) | .name")" '"$screenshot_folder"'/ps_$(date +"%Y%m%d%H%M%S").png && riverctl enter-mode normal'
 riverctl map "$screenshot" None d spawn 'grim -g "$(slurp)" - | wl-copy && riverctl enter-mode normal'
-riverctl map "$screenshot" None f spawn 'grim -o "$(/home/vital/.local/bin/river-bedload -print outputs | jq -r ".[] | select(.focused) | .name")" - | wl-copy && riverctl enter-mode normal'
+riverctl map "$screenshot" None f spawn 'grim -o "$(~/.local/bin/river-bedload -print outputs | jq -r ".[] | select(.focused) | .name")" - | wl-copy && riverctl enter-mode normal'
 # riverctl map "$screenshot" None g spawn 'grim -g "$(slurp)" - | swappy -f - && riverctl enter-mode normal'
-riverctl map "$screenshot" None g spawn 'grim -g "1524,470 2471x1286" ~/Pictures/Screenshots/ps_$(date +"%Y%m%d%H%M%S").png && riverctl enter-mode normal'
+riverctl map "$screenshot" None g spawn 'grim -g "1524,470 2471x1286" '"$screenshot_folder"'/ps_$(date +"%Y%m%d%H%M%S").png && riverctl enter-mode normal'
 riverctl map "$screenshot" None Escape enter-mode normal
 riverctl map "$screenshot" None Return enter-mode normal
 riverctl map "$screenshot" None Print enter-mode normal
