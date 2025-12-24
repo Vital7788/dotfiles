@@ -82,6 +82,8 @@ return {
     -- version = '^6.0.0', -- pin major version, include fixes and features that do not have breaking changes
     config = function()
       require('kitty-scrollback').setup()
+      vim.keymap.set('n', '{', '?^\\[[0-9]\\].*\\$<CR>:noh<CR>')
+      vim.keymap.set('n', '}', '/^\\[[0-9]\\].*\\$<CR>:noh<CR>')
     end,
   },
 
