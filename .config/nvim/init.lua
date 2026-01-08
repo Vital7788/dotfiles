@@ -8,7 +8,8 @@ end
 
 vim.opt.mousemodel="extend"
 vim.opt.smoothscroll = true
-vim.opt.signcolumn = "no"
+vim.opt.signcolumn = "yes"
+vim.opt.statuscolumn = "%l%s"
 vim.opt.inccommand = "split"
 
 -- plugins
@@ -35,7 +36,7 @@ require("lazy").setup("plugins", {
 vim.diagnostic.config({
   severity_sort = true,
   float = { border = 'rounded', source = true },
-  virtual_text = { source = 'if_many' },
+  virtual_text = { current_line = true },
   underline = { severity = vim.diagnostic.severity.WARNING },
   signs = {
     text = {

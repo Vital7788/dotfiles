@@ -91,8 +91,6 @@ return {
     "dense-analysis/ale",
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()
-      vim.g.ale_use_neovim_diagnostics_api = 1
-      -- vim.g.ale_disable_lsp = 0
       vim.g.ale_echo_cursor = 0
       vim.g.ale_python_flake8_options = '--config=$HOME/.config/flake8'
       vim.g.ale_c_clangd_options = "-I " .. vim.fn.getcwd()
