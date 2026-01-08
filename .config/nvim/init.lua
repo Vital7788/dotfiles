@@ -48,11 +48,11 @@ vim.diagnostic.config({
   },
 })
 
--- set max width of lsp/diagnostic floating windows to 80
+-- set max width of lsp/diagnostic floating windows to 120
 local orig_util_open_floating_preview = vim.lsp.util.open_floating_preview
 function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
   opts = opts or {}
-  opts.max_width= opts.max_width or 80
+  opts.max_width= opts.max_width or 120
   return orig_util_open_floating_preview(contents, syntax, opts, ...)
 end
 

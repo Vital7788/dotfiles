@@ -34,7 +34,9 @@ return {
           -- Fuzzy find all the symbols in your current workspace
           map('<localleader>ws', require('fzf-lua').lsp_live_workspace_symbols, '[W]orkspace [S]ymbols')
 
-          map('K', vim.lsp.buf.hover, 'Hover Documentation')
+          map('K', function()
+            vim.lsp.buf.hover { border = "rounded", max_width = 120 }
+          end, 'Hover Documentation')
 
           map('<leader>wa', vim.lsp.buf.add_workspace_folder, 'Add workspace folder')
           map('<leader>wr', vim.lsp.buf.remove_workspace_folder, 'Remove workspace folder')
