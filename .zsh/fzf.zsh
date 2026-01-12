@@ -6,6 +6,16 @@ then
   source <(patch -i ~/.zsh/fzf.patch -r - -o - =(fzf --zsh) 2>/dev/null)
   source ~/.zsh/fzf-git.sh
 
+  export FZF_CTRL_T_OPTS="
+    --style full
+    --preview '(cat {} || tree -C {}) 2> /dev/null | head -200'"
+  export FZF_CTRL_R_OPTS="
+    --no-sort --exact
+    --header 'Press CTRL-F to edit the command'"
+  export FZF_ALT_C_OPTS="
+    --style full
+    --preview 'tree -C {} | head -200'"
+
   # Use fd (https://github.com/sharkdp/fd) for listing path candidates.
   # - The first argument to the function ($1) is the base path to start traversal
   # - See the source code (completion.{bash,zsh}) for the details.
