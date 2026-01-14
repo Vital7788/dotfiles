@@ -311,6 +311,8 @@ nnoremap <leader>aa <cmd>$arge %<bar>argded<bar>args<cr>
 nnoremap <leader>ad <cmd>argd %<bar>args<cr>
 " Clear arglist
 nnoremap <leader>ac <cmd>%argd<cr><C-L>
+" Navigate to current file in arglist
+nnoremap <leader>a<Space> <cmd>argu<bar>args<cr>
 
 function! s:NavArglist(count)
     let arglen = argc()
