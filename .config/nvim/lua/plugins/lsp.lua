@@ -17,32 +17,19 @@ return {
             vim.keymap.set('n', keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
           end
 
-          map('gr', require('fzf-lua').lsp_references, '[G]oto [R]eferences')
-          map('gd', vim.lsp.buf.definition, '[G]oto [D]eclaration')
-          -- map('gd', require('fzf-lua').lsp_definitions, '[G]oto [D]efinition')
-          -- map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+          -- nowait is necessary to avoid waiting for the default lsp mappings, see :map gr
+          vim.keymap.set('n', 'gr', require('fzf-lua').lsp_references, { nowait = true, buffer = event.buf, desc = 'LSP: [G]oto [R]eferences'})
+          map('gd', require('fzf-lua').lsp_definitions, '[G]oto [D]efinition')
           map('gD', require('fzf-lua').lsp_declarations, '[G]oto [D]eclaration')
           map('gI', require('fzf-lua').lsp_implementations, '[G]oto [I]mplementation')
-          -- map('<localleader>D', require('fzf-lua').lsp_type_definitions, 'Type [D]efinition')
 
-          map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
-          map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
-
-          -- Fuzzy find all the symbols in your current document.
-          map('<localleader>ds', require('fzf-lua').lsp_document_symbols, '[D]ocument [S]ymbols')
-
-          -- Fuzzy find all the symbols in your current workspace
-          map('<localleader>ws', require('fzf-lua').lsp_live_workspace_symbols, '[W]orkspace [S]ymbols')
+          map('crn', vim.lsp.buf.rename, '[R]e[n]ame')
+          map('crr', vim.lsp.buf.code_action, 'Code Action')
+          map('cra', vim.lsp.buf.code_action, 'Code [A]ction')
 
           map('K', function()
             vim.lsp.buf.hover { border = "rounded", max_width = 120 }
           end, 'Hover Documentation')
-
-          map('<leader>wa', vim.lsp.buf.add_workspace_folder, 'Add workspace folder')
-          map('<leader>wr', vim.lsp.buf.remove_workspace_folder, 'Remove workspace folder')
-          map('<leader>wl', function()
-            print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-          end, 'List workspace folders')
 
           -- The following two autocommands are used to highlight references of the
           -- word under your cursor when your cursor rests there for a little while.

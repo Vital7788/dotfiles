@@ -4,6 +4,7 @@ if exists('g:loaded_statusline')
 endif
 let g:loaded_statusline = 1
 
+" Dayfox colorscheme, lualine b colors
 highlight StatusNormal guibg=#acb0c7
 highlight StatusInsert guibg=#b1b9aa
 highlight StatusVisual guibg=#c1a9d2
@@ -15,6 +16,7 @@ function ActiveStatus()
     let statusline=""
     " display all highlight groups with their color
     " :so $VIMRUNTIME/syntax/hitest.vim
+
     "let statusline.="%#DiffAdd#%{(mode()==#'n')?'\ \ NORMAL\ ':''}"
     "let statusline.="%#DiffChange#%{(mode()==#'i')?'\ \ INSERT\ ':''}"
     "let statusline.="%#DiffDelete#%{(mode()==#'v')?'\ \ VISUAL\ ':''}"
@@ -38,11 +40,10 @@ function ActiveStatus()
     let statusline.="%#StatusCommand#%{(mode()==#'c')?'\ \ COMMAND\ ':''}"
     let statusline.="%#StatusTerminal#%{(mode()==#'t')?'\ \ TERMINAL\ ':''}"
 
+    let statusline.="%#Directory#%a"                                " argument list status
     let statusline.="%#Statusline#"                                 " colour
-    let statusline.="\ \ %n\ "                                      " buffer number
-    let statusline.="%{fnamemodify(expand('%'), ':~:.')}"           " file name
-    "let statusline.="\ %f\ "                                        " file name
-    let statusline.="%r%m"                                          " flags
+    let statusline.="\ %{fnamemodify(expand('%'), ':~:.')}"         " file name
+    let statusline.="%r%m%w"                                          " flags
     let statusline.="%="                                            " right align
     let statusline.="\ %y"                                          " file type
     let statusline.="\ %{&fileencoding?&fileencoding:&encoding}"    " file encoding
@@ -54,10 +55,9 @@ endfunction
 
 function InactiveStatus()
     let statusline=""
-    let statusline.="\ \ "                                          " buffer number
-    let statusline.="\ %n\ "                                        " buffer number
-    let statusline.="\ %f\ "                                        " file name
-    let statusline.="%r%m"                                          " flags
+    let statusline.="%a"                                            " argument list status
+    let statusline.="\ %{fnamemodify(expand('%'), ':~:.')}"         " file name
+    let statusline.="%r%m%w"                                        " flags
     let statusline.="%="                                            " right align
     let statusline.="\ %y"                                          " file type
     let statusline.="\ %{&fileencoding?&fileencoding:&encoding}"    " file encoding

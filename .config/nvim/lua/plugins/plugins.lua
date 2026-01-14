@@ -144,6 +144,7 @@ return {
     keys = {
         { '<localleader>f', function() require('fzf-lua').files() end },
         { '<localleader>b', function() require('fzf-lua').buffers() end },
+        { '<localleader>a', function() require('fzf-lua').args() end },
         { '<localleader>s', function() require('fzf-lua').live_grep() end },
         { '<localleader>d', function() require('fzf-lua').diagnostics_document() end },
         { '<localleader>h', function() require('fzf-lua').helptags() end },

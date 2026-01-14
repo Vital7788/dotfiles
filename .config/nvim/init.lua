@@ -32,12 +32,17 @@ require("lazy").setup("plugins", {
   },
 })
 
+local virtual_lines_format = function(diagnostic)
+  return string.format("%s: %s [%s]", diagnostic.source, diagnostic.message, diagnostic.code)
+end
+
 -- diagnostics
 vim.diagnostic.config({
   severity_sort = true,
   float = { border = 'rounded', source = true },
   virtual_text = { current_line = true },
-  underline = { severity = vim.diagnostic.severity.WARNING },
+  virtual_lines = false,
+  underline = true,
   signs = {
     text = {
       [vim.diagnostic.severity.ERROR] = '󰅚 ',
@@ -56,6 +61,12 @@ function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
   return orig_util_open_floating_preview(contents, syntax, opts, ...)
 end
 
-vim.keymap.set('n', '<space>e', vim.diagnostic.open_float)
+vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
+vim.keymap.set('n', '<leader>d', function ()
+    vim.diagnostic.config {
+        virtual_lines = not vim.diagnostic.config().virtual_lines and { current_line = true, format = virtual_lines_format } or false,
+        virtual_text = not vim.diagnostic.config().virtual_text and { current_line = true } or false,
+     }
+end)
 
 vim.cmd([[colorscheme dayfox]])

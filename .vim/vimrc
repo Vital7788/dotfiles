@@ -281,8 +281,10 @@ nnoremap <silent> { :<C-u>execute "keepjumps norm! " . v:count1 . "{"<CR>
 nnoremap [[ [m
 nnoremap ]] ]m
 " Cycle through argument list
-nnoremap [a :previous<CR>
-nnoremap ]a :next<CR>
+"nnoremap [a :previous<bar>args<CR><esc>
+"nnoremap ]a :next<bar>args<CR><esc>
+nnoremap [a <cmd>call <SID>NavArglist(v:count1 * -1)<bar>args<CR><esc>
+nnoremap ]a <cmd>call <SID>NavArglist(v:count1)<bar>args<CR><esc>
 " Cycle through buffers
 nnoremap [b :bprevious<CR>
 nnoremap ]b :bnext<CR>
@@ -302,6 +304,25 @@ nnoremap ]t :tnext<CR>
 " Go to previous/next conflict marker
 nnoremap <silent> [x :<C-U>call <SID>Context(1)<CR>
 nnoremap <silent> ]x :<C-U>call <SID>Context(0)<CR>
+
+" Add current file to arglist
+nnoremap <leader>aa <cmd>$arge %<bar>argded<bar>args<cr>
+" Remove current file from arglist
+nnoremap <leader>ad <cmd>argd %<bar>args<cr>
+" Clear arglist
+nnoremap <leader>ac <cmd>%argd<cr><C-L>
+
+function! s:NavArglist(count)
+    let arglen = argc()
+    if arglen == 0
+        return
+    endif
+    let next = fmod(argidx() + a:count, arglen)
+    if next < 0
+        let next += arglen
+    endif
+    exe float2nr(next + 1) .. 'argu'
+endfunction
 
 function! s:Context(reverse) abort
   call search('^\(@@ .* @@\|[<=>|]\{7}[<=>|]\@!\)', a:reverse ? 'bW' : 'W')
