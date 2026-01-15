@@ -73,6 +73,16 @@ return {
   },
 
   {
+    'nvim-mini/mini.sessions',
+    version = '*',
+    config = function()
+      require('mini.sessions').setup({
+        autoread = true
+      })
+    end
+  },
+
+  {
     'mikesmithgh/kitty-scrollback.nvim',
     enabled = true,
     lazy = true,
