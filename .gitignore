@@ -1,6 +1,8 @@
-.vim/vim_plug
-.config/i3/local
 .cfg
+.vim/vim_plug
+.config/emacs/elpa
+.config/emacs/auto-save-list
+.config/i3/local
 .config/nvim/lazy-lock.json
 .zsh/histfile
 .zsh/chpwd-recent-dirs
