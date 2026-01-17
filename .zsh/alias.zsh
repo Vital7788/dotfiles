@@ -18,4 +18,4 @@ alias wget="wget --hsts-file=$XDG_STATE_HOME/wget-hsts"
 alias adb="HOME=$XDG_DATA_HOME/android adb"
 
 # fractional scaling for VS Code
-alias code="code --enable-ozone --ozone-platform=wayland"
+alias code="code --ozone-platform-hint=auto --enable-wayland-ime"
