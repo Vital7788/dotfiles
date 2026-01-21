@@ -32,11 +32,11 @@ nnoremap gzi :eclipsegotosuper<cr>
 
 "show refactor menu
 eclipseaction eclipserefactormenu org.eclipse.jdt.ui.edit.text.java.refactor.quickMenu
-nnoremap <space>rr :eclipserefactormenu<cr>
+nnoremap crr :eclipserefactormenu<cr>
 
 " rename current symbol
 eclipseaction eclipserename org.eclipse.jdt.ui.edit.text.java.rename.element
-nnoremap <space>rn :eclipserename<cr>
+nnoremap crn :eclipserename<cr>
 
 eclipseuiaction opentype org.eclipse.jdt.ui.navigate.open.type
 nmap ,f :opentype<enter>
