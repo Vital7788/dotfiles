@@ -31,7 +31,7 @@
 
     "custom/updates": {
         "format": "󰚰 {}",
-        "exec": "timestamp=$(emerge --info | rg \"Timestamp of repository gentoo\"); seconds=$(date --date \"${timestamp#*: }\" +%s); echo \"$(( ($(date +%s) - $seconds) \/ 86400 ))d\"",
+        "exec": "timestamp=$(command -v emerge >/dev/null 2>&1 && emerge --info | rg \"Timestamp of repository gentoo\" | awk -F ': ' '{print $2}' || dnf history list | rg \"dnf upgrade --refresh\" | head -n1 | awk '{print $(NF-2), $(NF-1)}'); echo \"$(( ($(date +%s) - $(date --date \"$timestamp\" +%s)) \/ 86400 ))d\"",
         "interval": 3600,
     },
 
