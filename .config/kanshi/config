@@ -13,15 +13,15 @@ profile {
 profile {
     output "Samsung Electric Company C24FG7x HTNK801272" {
         mode 1920x1080
-        position 0,0
+        position 2560,-200
         transform 90
     }
     output "Microstep MPG321UX OLED 0x01010101" {
         mode 3840x2160
-        position 1080,250
+        position 0,0
         scale 1.5
     }
-    exec riverctl focus-output "DP-1" && riverctl send-layout-cmd rivertile "main-location bottom" && exec riverctl focus-output "DP-2"
+    exec riverctl focus-output "DP-2" && riverctl send-layout-cmd rivertile "main-location bottom" && riverctl focus-output "DP-1" && riverctl send-layout-cmd rivertile "main-location right"
 }
 
 profile {

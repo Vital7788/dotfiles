@@ -48,7 +48,7 @@ then
     # shift once, since first arg is 'git'
     shift args
     case "$args[1]" in
-      (switch|diff)
+      (switch|diff|rebase)
         mode="branches"
         ;;
       (show)
