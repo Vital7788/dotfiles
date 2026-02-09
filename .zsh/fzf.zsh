@@ -48,14 +48,20 @@ then
     # shift once, since first arg is 'git'
     shift args
     case "$args[1]" in
-      (switch|diff|rebase)
+      (branch|switch|diff|log|rebase|merge|reset)
         mode="branches"
         ;;
-      (show)
+      (show|revert|cherry-pick)
         mode="hashes"
         ;;
-      (add)
-        mode="files"
+      (fetch|pull|push)
+        mode="remotes"
+        ;;
+      (tag)
+        mode="tags"
+        ;;
+      (worktree)
+        mode="worktrees"
         ;;
       (*)
         mode="files"
