@@ -19,6 +19,7 @@
 tags
 .vimrc
 .netrwhist
+Session.vim
 
 # intellij
 .idea/
