@@ -66,13 +66,6 @@ return {
   "tpope/vim-sleuth",
 
   {
-    "mbbill/undotree",
-    keys = {
-        { "<F5>", "<cmd>UndotreeToggle<CR>" }
-    }
-  },
-
-  {
     'nvim-mini/mini.sessions',
     version = '*',
     config = function()
@@ -158,6 +151,7 @@ return {
         { '<localleader>s', function() require('fzf-lua').live_grep() end },
         { '<localleader>d', function() require('fzf-lua').diagnostics_document() end },
         { '<localleader>h', function() require('fzf-lua').helptags() end },
+        { '<localleader>u', function() require('fzf-lua').undotree() end },
         { '<localleader><localleader>', function() require('fzf-lua').resume() end },
         { '<C-x><C-f>', function() require("fzf-lua").complete_path() end, mode = 'i'},
     },
