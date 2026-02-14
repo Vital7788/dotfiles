@@ -89,16 +89,22 @@ if [ ! -f ~/.zsh/fzf-tab/fzf-tab.plugin.zsh ]; then
     }
 else
     source ~/.zsh/fzf-tab/fzf-tab.plugin.zsh
-    FZF_GIT_DEFAULT_FLAGS=("--height=50%"
+
+    # remove files from git show completion (probably has other side effects)
+    __git_trees () {}
+
+    local fzf_git_flags=("--height=50%"
         "--layout=reverse" "--multi" "--min-height=20+" "--border"
         "--no-separator" "--header-border=horizontal"
         "--preview-window=right,50%" "--preview-border=line"
         "--bind=ctrl-/:change-preview-window(down,50%|hidden|)"
     )
 
-    GIT_PREVIEW_FILE='git -c core.quotePath=false diff --no-ext-diff --color=always -- $realpath | delta; bat --style=full --color=always --pager=never $realpath'
-    GIT_PREVIEW_HASH='git show --color=always --decorate $word | delta'
-    GIT_PREVIEW_BRANCH="git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' \$word"
+    local git_file_preview='git -c core.quotePath=false diff --no-ext-diff --color=always -- $realpath | delta; bat --style=full --color=always --pager=never $realpath'
+    local git_hash_preview='git show --color=always --decorate $word | delta'
+    local git_branch_preview="git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' \$word"
+
+    local git_branches=$'git branch --sort=-committerdate --sort=-HEAD --format=$\'%(HEAD) %(color:yellow)%(refname:short) %(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)\1%(refname:short)\' --color=never | column -ts"\t" | awk -F"\1" \'{print $2 "\1" $1}\''
 
     # set descriptions format to enable group support
     zstyle ':completion:*:descriptions' format '[%d]'
@@ -108,26 +114,42 @@ else
     zstyle ':fzf-tab:*' prefix ''
     zstyle ':fzf-tab:*' single-group header
 
-    zstyle ':fzf-tab:complete:git-*:*' fzf-flags "${FZF_GIT_DEFAULT_FLAGS[@]}"
+    zstyle ':fzf-tab:complete:git-*:*' fzf-flags "${fzf_git_flags[@]}"
     zstyle ':fzf-tab:complete:git-help:*' fzf-preview \
             'git help $word | bat -plman --color=always'
-    zstyle ':fzf-tab:complete:git-(add|diff|restore):*' fzf-preview "$GIT_PREVIEW_FILE"
-    zstyle ':fzf-tab:complete:git-show:*' fzf-flags "${FZF_GIT_DEFAULT_FLAGS[@]}"
-    zstyle ':fzf-tab:complete:git-show:*' fzf-preview \
-        "case \$group in
-        '[cached file]')
-            $GIT_PREVIEW_FILE
-            ;;
-        *)
-            $GIT_PREVIEW_HASH
-            ;;
-        esac"
+    zstyle ':fzf-tab:complete:git-(add|diff|restore):*' fzf-preview "$git_file_preview"
 
-    zstyle ':fzf-tab:complete:git-(log|switch|branch):*' fzf-preview "$GIT_PREVIEW_BRANCH"
+    zstyle ':completion:complete:git-switch:*' sort false
     zstyle ':fzf-tab:complete:git-switch:*' fzf-flags \
-        "${FZF_GIT_DEFAULT_FLAGS[@]}" \
+        "${fzf_git_flags[@]}" \
         --tiebreak begin \
         --preview-window down,border-top,40% \
         --color hl:underline,hl+:underline \
         --no-hscroll
+    zstyle ':fzf-tab:complete:git-(log|switch|branch):*' fzf-preview "$git_branch_preview"
+    zstyle ':fzf-tab:complete:git-switch:*' fzf-description $git_branches
+
+    zstyle ':completion:complete:git-show:*' sort false
+    zstyle ':fzf-tab:complete:git-show:*' fzf-flags "${fzf_git_flags[@]}"
+    zstyle ':fzf-tab:complete:git-show:*' fzf-preview \
+        "case \$group in
+        '[cached file]')
+            $git_file_preview
+            ;;
+        *)
+            $git_hash_preview
+            ;;
+        esac"
+    zstyle ':fzf-tab:complete:git-show:*' fzf-description \
+        "case \$1 in
+        '[local head]')
+            $git_branches
+            ;;
+        '[commit tag]'|'[head]')
+            return 1
+            ;;
+        *)
+            return 2
+            ;;
+        esac"
 fi

@@ -1,0 +1,50 @@
+diff --git a/fzf-tab.zsh b/fzf-tab.zsh
+index 2d0255c..850d339 100644
+--- a/fzf-tab.zsh
++++ b/fzf-tab.zsh
+@@ -111,16 +111,35 @@ builtin unalias -m '[^+]*'
+   else
+     # dscr - the string to show to users
+     # word - the string to be inserted
+-    local dscr word i
+-    for i in {1..$#__hits}; do
+-      word=$__hits[i] dscr=$__dscr[i]
+-      if [[ -n $dscr ]]; then
+-        dscr=${dscr//$'\n'}
+-      elif [[ -n $word ]]; then
+-        dscr=$word
+-      fi
+-      _ftb_compcap+=$dscr$'\2'$__tmp_value$'\0word\0'$word
+-    done
++    local dscr word i formatted_list mode=2
++
++    # fzf-description should evaluate to a list of completion entries
++    # each line should contain word and dscr seperated by \1
++    -ftb-zstyle -s fzf-description fzf_description
++    if (( $? != 1 )); then
++      formatted_list=$( () { eval "$fzf_description" } "$expl" )
++      mode=$?
++    fi
++    if [[ $mode == 0 ]]; then
++      while IFS= read -r line; do
++        word="${line%%$'\1'*}"
++        dscr="${line#*$'\1'}"
++        _ftb_compcap+=$dscr$'\2'$__tmp_value$'\0word\0'$word
++      done <<< "$formatted_list"
++    elif [[ $mode == 1 ]]; then
++      # remove the group if fzf-description returned 1
++      [[ -n $expl ]] && _ftb_groups=("${(@)_ftb_groups:#$expl}")
++    else
++      for i in {1..$#__hits}; do
++        word=$__hits[i] dscr=$__dscr[i]
++        if [[ -n $dscr ]]; then
++          dscr=${dscr//$'\n'}
++        elif [[ -n $word ]]; then
++          dscr=$word
++        fi
++        _ftb_compcap+=$dscr$'\2'$__tmp_value$'\0word\0'$word
++      done
++    fi
+   fi
+ 
+   # tell zsh that the match is successful
