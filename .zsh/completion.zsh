@@ -126,13 +126,30 @@ else
         --preview-window down,border-top,40% \
         --color hl:underline,hl+:underline \
         --no-hscroll
-    zstyle ':fzf-tab:complete:git-(log|switch|branch):*' fzf-preview "$git_branch_preview"
-    zstyle ':fzf-tab:complete:git-switch:*' fzf-description $git_branches
+    zstyle ':fzf-tab:complete:git-(log|switch|branch):*' fzf-preview \
+        "case \$group in
+        '[option]')
+            ;;
+        *)
+            $git_branch_preview
+            ;;
+        esac"
+    zstyle ':fzf-tab:complete:git-switch:*' fzf-description \
+        "case \$1 in
+        '[branches]')
+            $git_branches
+            ;;
+        *)
+            return 2
+            ;;
+        esac"
 
     zstyle ':completion:complete:git-show:*' sort false
     zstyle ':fzf-tab:complete:git-show:*' fzf-flags "${fzf_git_flags[@]}"
     zstyle ':fzf-tab:complete:git-show:*' fzf-preview \
         "case \$group in
+        '[option]')
+            ;;
         '[cached file]')
             $git_file_preview
             ;;
