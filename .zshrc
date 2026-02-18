@@ -25,12 +25,12 @@ if [ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
 elif [ -f /usr/share/zsh/site-functions/zsh-syntax-highlighting.zsh ]; then
     source /usr/share/zsh/site-functions/zsh-syntax-highlighting.zsh
 fi
-source ~/.zsh/wezterm.sh
+if [ -f ~/.zsh/local.zsh ]; then
+    source ~/.zsh/local.zsh
+fi
 
 # start keychain
 if command -v keychain 2>&1 >/dev/null
 then
     eval $(keychain --eval --quiet --noask ~/.ssh/id_ed25519)
 fi
-
-source ~/.zsh/local.zsh
