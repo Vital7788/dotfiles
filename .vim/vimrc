@@ -216,6 +216,9 @@ endif
 " set diffopt+=inline:char
 " set diffopt+=anchor
 
+" show diagonal lines in place of deleted lines
+set fillchars+=diff:╱
+
 """ Fold
 set foldenable
 set modeline
@@ -289,10 +292,10 @@ nnoremap ]a <cmd>call <SID>NavArglist(v:count1)<bar>args<CR><esc>
 nnoremap [b :bprevious<CR>
 nnoremap ]b :bnext<CR>
 " Cycle through quicklist/:helpgrep items
-"nnoremap [c :cprevious<CR>
-"nnoremap ]c :cnext<CR>
-nmap [c <Plug>(qf_qf_previous)
-nmap ]c  <Plug>(qf_qf_next)
+"nnoremap [q :cprevious<CR>
+"nnoremap ]q :cnext<CR>
+nmap [q <Plug>(qf_qf_previous)
+nmap ]q  <Plug>(qf_qf_next)
 " Cycle through location list items
 "nnoremap [l :lprevious<CR>
 "nnoremap ]l :lnext<CR>

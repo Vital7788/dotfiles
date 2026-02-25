@@ -45,3 +45,4 @@
     df = -c diff.external=difft diff
     pf = push --force-with-lease
     claim = blame -M -C -C -C
+    review = "!nvim -c \"DiffviewOpen origin/master... --imply-local\""
