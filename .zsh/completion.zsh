@@ -103,6 +103,7 @@ else
     local git_file_preview='git -c core.quotePath=false diff --no-ext-diff --color=always -- $realpath | delta; bat --style=full --color=always --pager=never $realpath'
     local git_hash_preview='git show --color=always --decorate $word | delta'
     local git_branch_preview="git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' \$word"
+    local git_remote_branch_preview="git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' \$(git branch -r | grep /\$word$ | head -n1)"
 
     local git_branches=$'git branch --sort=-committerdate --sort=-HEAD --format=$\'%(HEAD) %(color:yellow)%(refname:short) %(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)\1%(refname:short)\' --color=never | column -ts"\t" | awk -F"\1" \'{print $2 "\1" $1}\''
 
@@ -129,6 +130,9 @@ else
     zstyle ':fzf-tab:complete:git-(log|switch|branch):*' fzf-preview \
         "case \$group in
         '[option]')
+            ;;
+        '[remote branch name]')
+            $git_remote_branch_preview
             ;;
         *)
             $git_branch_preview
