@@ -115,6 +115,10 @@ else
     zstyle ':fzf-tab:*' prefix ''
     zstyle ':fzf-tab:*' single-group header
 
+    # no preview for options or subcommands
+    zstyle ':fzf-tab:complete:*:options' fzf-preview
+    zstyle ':fzf-tab:complete:*:argument-1' fzf-preview
+
     zstyle ':fzf-tab:complete:git-*:*' fzf-flags "${fzf_git_flags[@]}"
     zstyle ':fzf-tab:complete:git-help:*' fzf-preview \
             'git help $word | bat -plman --color=always'
@@ -149,7 +153,6 @@ else
         esac"
 
     zstyle ':completion:complete:git-show:*' sort false
-    zstyle ':fzf-tab:complete:git-show:*' fzf-flags "${fzf_git_flags[@]}"
     zstyle ':fzf-tab:complete:git-show:*' fzf-preview \
         "case \$group in
         '[option]')
