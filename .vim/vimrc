@@ -173,6 +173,10 @@ endif
 " set path in filetype specific settings
 set path-=/usr/include
 
+""" Keyword
+" treat - as part of words, like _
+set iskeyword+=-
+
 """ Completion
 " TODO Try out once merged in neovim
 "set complete=o,.,w,b,u,t
