@@ -227,6 +227,7 @@ set fillchars+=diff:╱
 set foldenable
 set modeline
 set modelineexpr
+set foldlevelstart=0
 
 """ Colorscheme + Font
 if !has('nvim')
@@ -339,5 +340,6 @@ endfunction
 
 nnoremap <leader>y :%y+<CR>
 
-"" vim:fdm=expr:fdl=0
-"" vim:fde=getline(v\:lnum)=~'^""'?'>'.(matchend(getline(v\:lnum),'""*')-2)\:'='
+""" Modeline
+" vim:fdm=expr
+" vim:fde=getline(v\:lnum)=~'^""'?'>'.(matchend(getline(v\:lnum),'""*')-2)\:'='

@@ -92,9 +92,9 @@ return {
 
   {
     "dense-analysis/ale",
-    event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       vim.g.ale_echo_cursor = 0
+      vim.g.ale_fix_on_save = 1
       vim.g.ale_python_flake8_options = '--config=$HOME/.config/flake8'
       vim.g.ale_c_clangd_options = "-I " .. vim.fn.getcwd()
       vim.g.ale_cpp_clangd_options = "-I " .. vim.fn.getcwd()
@@ -108,7 +108,27 @@ return {
         javascript = {'tsserver'},
         typescript = {'tsserver'},
       }
+      vim.g.ale_fixers = {
+        javascript = {'prettier'},
+        typescript = {'prettier'},
+      }
     end
+  },
+
+  {
+    'neovim/nvim-lspconfig',
+    config = function()
+      vim.lsp.enable({'clangd', 'texlab', 'pyright'})
+    end
+  },
+
+  {
+    "mason-org/mason-lspconfig.nvim",
+    opts = {},
+    dependencies = {
+      { "mason-org/mason.nvim", opts = {} },
+      "neovim/nvim-lspconfig",
+    },
   },
 
   {
@@ -194,3 +214,7 @@ return {
     },
   },
 }
+
+-- vim:fdm=expr
+-- vim:fdt=v\:folddashes.getline(v\:foldstart+1)
+-- vim:fde=getline(v\:lnum)=~'^\ \ {'?'>1'\:getline(v\:lnum)=~'^\ \ },'?'<1'\:'='

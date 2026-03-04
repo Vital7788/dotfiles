@@ -1,4 +1,4 @@
--- source vimrc
+---- Vimrc
 vim.cmd('source ~/.vim/vimrc')
 
 if vim.g.vscode then
@@ -12,7 +12,7 @@ vim.opt.signcolumn = "yes"
 vim.opt.statuscolumn = "%l%s"
 vim.opt.inccommand = "split"
 
--- plugins
+---- Plugins
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
   vim.fn.system({
@@ -32,11 +32,11 @@ require("lazy").setup("plugins", {
   },
 })
 
+---- Diagnostics
 local virtual_lines_format = function(diagnostic)
   return string.format("%s: %s [%s]", diagnostic.source, diagnostic.message, diagnostic.code)
 end
 
--- diagnostics
 vim.diagnostic.config({
   severity_sort = true,
   float = { border = 'rounded', source = true },
@@ -69,4 +69,58 @@ vim.keymap.set('n', '<leader>d', function ()
      }
 end)
 
+---- LSP
+vim.api.nvim_create_autocmd('LspAttach', {
+  group = vim.api.nvim_create_augroup('lsp-attach', { clear = true }),
+  callback = function(event)
+    local map = function(keys, func, desc)
+      vim.keymap.set('n', keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
+    end
+
+    -- nowait is necessary to avoid waiting for the default lsp mappings, see :map gr
+    vim.keymap.set('n', 'gr', require('fzf-lua').lsp_references, { nowait = true, buffer = event.buf, desc = 'LSP: [G]oto [R]eferences'})
+    map('gd', require('fzf-lua').lsp_definitions, '[G]oto [D]efinition')
+    map('gD', require('fzf-lua').lsp_declarations, '[G]oto [D]eclaration')
+    map('gI', require('fzf-lua').lsp_implementations, '[G]oto [I]mplementation')
+
+    map('crn', vim.lsp.buf.rename, '[R]e[n]ame')
+    map('crr', vim.lsp.buf.code_action, 'Code Action')
+    map('cra', vim.lsp.buf.code_action, 'Code [A]ction')
+
+    map('K', function()
+      vim.lsp.buf.hover { border = "rounded", max_width = 120 }
+    end, 'Hover Documentation')
+
+    -- The following two autocommands are used to highlight references of the
+    -- word under your cursor when your cursor rests there for a little while.
+    --    See `:help CursorHold` for information about when this is executed
+    --
+    -- When you move your cursor, the highlights will be cleared (the second autocommand).
+    local client = vim.lsp.get_client_by_id(event.data.client_id)
+    if client and client.server_capabilities.documentHighlightProvider then
+      vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+        buffer = event.buf,
+        callback = vim.lsp.buf.document_highlight,
+      })
+      -- quicker CursorHold events
+      vim.opt.updatetime=300
+
+      vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
+        buffer = event.buf,
+        callback = vim.lsp.buf.clear_references,
+      })
+    end
+
+    if client:supports_method('textDocument/completion') then
+      -- Enable completion side effects, such as auto-imports
+      vim.lsp.completion.enable(true, client.id, event.buf, {autotrigger = false})
+    end
+  end,
+})
+
+---- Colorscheme
 vim.cmd([[colorscheme dayfox]])
+
+---- Modeline
+-- vim:fdm=expr
+-- vim:fde=getline(v\:lnum)=~'^---'?'>'.(matchend(getline(v\:lnum),'---*')-3)\:'='
