@@ -13,9 +13,6 @@ highlight StatusReplace guibg=#d1a4a3
 highlight StatusTerminal guibg=#ccb7b2
 
 function! LspStatus(severity) abort
-  " Check if we are in Neovim and LSP is active
-  if !has('nvim') | return '' | endif
-
   " Get counts using luaeval for speed
   let l:count = luaeval('#vim.diagnostic.get(0, { severity = vim.diagnostic.severity.' . a:severity . ' })')
 
@@ -30,18 +27,6 @@ function ActiveStatus()
     let statusline=""
     " display all highlight groups with their color
     " :so $VIMRUNTIME/syntax/hitest.vim
-
-    "let statusline.="%#DiffAdd#%{(mode()==#'n')?'\ \ NORMAL\ ':''}"
-    "let statusline.="%#DiffChange#%{(mode()==#'i')?'\ \ INSERT\ ':''}"
-    "let statusline.="%#DiffDelete#%{(mode()==#'v')?'\ \ VISUAL\ ':''}"
-    "let statusline.="%#DiffDelete#%{(mode()==#'V')?'\ \ V-LINE\ ':''}"
-    "let statusline.="%#DiffDelete#%{(mode()==#'')?'\ \ V-BLOCK\ ':''}"
-    "let statusline.="%#DiffDelete#%{(mode()==#'s')?'\ \ SELECT\ ':''}"
-    "let statusline.="%#DiffDelete#%{(mode()==#'S')?'\ \ S-LINE\ ':''}"
-    "let statusline.="%#DiffDelete#%{(mode()==#'')?'\ \ S-BLOCK\ ':''}"
-    "let statusline.="%#DiffText#%{(mode()==#'R')?'\ \ REPLACE\ ':''}"
-    "let statusline.="%#TermCursor#%{(mode()==#'c')?'\ \ COMMAND\ ':''}"
-
     let statusline.="%#StatusNormal#%{(mode()==#'n')?'\ \ NORMAL\ ':''}"
     let statusline.="%#StatusInsert#%{(mode()==#'i')?'\ \ INSERT\ ':''}"
     let statusline.="%#StatusVisual#%{(mode()==#'v')?'\ \ VISUAL\ ':''}"
@@ -54,9 +39,11 @@ function ActiveStatus()
     let statusline.="%#StatusCommand#%{(mode()==#'c')?'\ \ COMMAND\ ':''}"
     let statusline.="%#StatusTerminal#%{(mode()==#'t')?'\ \ TERMINAL\ ':''}"
 
-    let statusline.="%#ErrorMsg#%{LspStatus('ERROR')}"
-    let statusline.="%#WarningMsg#%{LspStatus('WARNING')}"
-    let statusline.="%#InfoMsg#%{LspStatus('INFO')}"
+    if has('nvim')
+        let statusline.="%#ErrorMsg#%{LspStatus('ERROR')}"
+        let statusline.="%#WarningMsg#%{LspStatus('WARNING')}"
+        let statusline.="%#InfoMsg#%{LspStatus('INFO')}"
+    endif
 
     let statusline.="%#Directory#%a"                                " argument list status
     let statusline.="%#Statusline#"                                 " colour
@@ -87,5 +74,9 @@ endfunction
 
 autocmd WinEnter * setlocal statusline=%!ActiveStatus()
 autocmd WinLeave * setlocal statusline=%!InactiveStatus()
+
+if has('nvim')
+    autocmd DiagnosticChanged * setlocal statusline=%!ActiveStatus()
+endif
 
 set statusline=%!ActiveStatus()

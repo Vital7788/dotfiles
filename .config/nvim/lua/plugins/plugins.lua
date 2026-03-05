@@ -65,6 +65,8 @@ return {
 
   "tpope/vim-sleuth",
 
+  "tpope/vim-fugitive",
+
   {
     'nvim-mini/mini.sessions',
     version = '*',
