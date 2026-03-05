@@ -12,6 +12,20 @@ highlight StatusCommand guibg=#d3b395
 highlight StatusReplace guibg=#d1a4a3
 highlight StatusTerminal guibg=#ccb7b2
 
+function! LspStatus(severity) abort
+  " Check if we are in Neovim and LSP is active
+  if !has('nvim') | return '' | endif
+
+  " Get counts using luaeval for speed
+  let l:count = luaeval('#vim.diagnostic.get(0, { severity = vim.diagnostic.severity.' . a:severity . ' })')
+
+  if l:count > 0
+    let l:icons = { 'ERROR': '󰅚 ', 'WARNING': '󰀪 ', 'INFO': '󰋽 ' }
+    return '  ' . l:icons[a:severity] . l:count
+  endif
+  return ''
+endfunction
+
 function ActiveStatus()
     let statusline=""
     " display all highlight groups with their color
@@ -39,6 +53,10 @@ function ActiveStatus()
     let statusline.="%#StatusReplace#%{(mode()==#'R')?'\ \ REPLACE\ ':''}"
     let statusline.="%#StatusCommand#%{(mode()==#'c')?'\ \ COMMAND\ ':''}"
     let statusline.="%#StatusTerminal#%{(mode()==#'t')?'\ \ TERMINAL\ ':''}"
+
+    let statusline.="%#ErrorMsg#%{LspStatus('ERROR')}"
+    let statusline.="%#WarningMsg#%{LspStatus('WARNING')}"
+    let statusline.="%#InfoMsg#%{LspStatus('INFO')}"
 
     let statusline.="%#Directory#%a"                                " argument list status
     let statusline.="%#Statusline#"                                 " colour

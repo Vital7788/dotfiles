@@ -248,6 +248,11 @@ set guioptions-=m "menu bar
 set guioptions-=T "toolbar
 set guioptions-=r "scrollbar
 
+""" Window
+" resize splits when vim gets resized
+" might need to add more logic to preserve window length and width ratios
+autocmd VimResized * wincmd =
+
 """ Statusline
 set laststatus=2
 
@@ -285,6 +290,17 @@ nnoremap gr :execute "silent grep! \\\\b" . expand("<cword>") . "\\\\b" <Bar> cw
 " don't add { and } motions to jumplist
 nnoremap <silent> } :<C-u>execute "keepjumps norm! " . v:count1 . "}"<CR>
 nnoremap <silent> { :<C-u>execute "keepjumps norm! " . v:count1 . "{"<CR>
+
+" window navigation
+nnoremap <silent> <C-j> <C-w>j
+nnoremap <silent> <C-k> <C-w>k
+nnoremap <silent> <C-h> <C-w>h
+nnoremap <silent> <C-l> <C-w>l
+" window resizing
+nnoremap <silent> <A-j> :exe "resize " . (winheight(0) * 2/3)<CR>
+nnoremap <silent> <A-k> :exe "resize " . (winheight(0) * 3/2)<CR>
+nnoremap <silent> <A-h> :exe "vertical resize " . (winwidth(0) * 2/3)<CR>
+nnoremap <silent> <A-l> :exe "vertical resize " . (winwidth(0) * 3/2)<CR>
 
 nnoremap [[ [m
 nnoremap ]] ]m
