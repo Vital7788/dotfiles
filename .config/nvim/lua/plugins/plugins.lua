@@ -68,6 +68,12 @@ return {
   "tpope/vim-fugitive",
 
   {
+    "ray-x/lsp_signature.nvim",
+    event = "InsertEnter",
+    opts = {},
+  },
+
+  {
     'nvim-mini/mini.sessions',
     version = '*',
     config = function()
