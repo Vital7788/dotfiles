@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# dependencies: waybar, kanshi, fuzzel, river-bedload, slurp, grim, wf-recorder/wl-screenrec, wl-clipboard, waylock/swaylock, wlopm, xdg-desktop-portals-wlr
+# dependencies: waybar, kanshi, fuzzel, river-bedload, slurp, grim, wf-recorder/wl-screenrec, wl-clipboard, waylock/swaylock, wlr-dpms, xdg-desktop-portals-wlr
 # fnott, lswt, swaybg
 
 # Check if we're running systemd or openrc
@@ -122,7 +122,7 @@ riverctl rule-add -app-id Eclipse tags 2
 
 # riverctl spawn 'dbus-run-session pipewire'
 riverctl spawn "gentoo-pipewire-launcher restart"
-riverctl spawn 'swayidle timeout 300 "swaylock -i '"$wallpaper"'" timeout 300 "wlopm --off \*" resume "wlopm --on \*"'
+riverctl spawn 'swayidle timeout 300 "swaylock -i '"$wallpaper"'" timeout 300 "wlr-dpms off" resume "wlr-dpms on"'
 riverctl spawn "swaybg -m fill -i $wallpaper"
 riverctl spawn "waybar"
 riverctl spawn "kanshi"

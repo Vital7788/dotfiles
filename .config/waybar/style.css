@@ -146,7 +146,7 @@ window#waybar {
 #mode, #mpd, #custom-weather, #custom-recorder, #custom-playerctl,
 #clock, #cpu, #memory, #temperature, #battery, #network, #pulseaudio,
 #backlight, #disk, #custom-uptime, #custom-updates, #custom-quote,
-#idle_inhibitor, #tray {
+#custom-mode, #idle_inhibitor, #tray {
     padding: 0 10px;
     margin: 0 2px;
     border-bottom: 2px solid transparent;
@@ -203,6 +203,11 @@ window#waybar {
 
 /* Module-specific styling */
 #mode {
+    color: @mode-color;
+    border-bottom-color: @mode-color;
+}
+
+#custom-mode {
     color: @mode-color;
     border-bottom-color: @mode-color;
 }
