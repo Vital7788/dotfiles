@@ -4,9 +4,15 @@
     "height": 30,
     "spacing": 1,
     "margin": 0,
-    "modules-left": ["river/tags", "river/mode", "custom/recorder"],
+    // "modules-left": ["river/tags", "river/mode", "custom/recorder"],
+    "modules-left": ["ext/workspaces", "custom/mode", "custom/recorder"],
     "modules-center": ["clock"],
     "modules-right": ["pulseaudio", "backlight", "network", "cpu", "memory", "temperature", "battery", "disk", "custom/updates", "tray"],
+
+    "custom/mode": {
+        "exec": "mode=$(mmsg -b | head -n1 | cut -d ' ' -f 3); case $mode in exit) echo exit: loc[k], [l]ogout, s[u]spend, [r]eboot, [s]hutdown;; *) echo $mode;; esac",
+        "interval": 1,
+    },
 
     "river/tags": {
         "hide-vacant": true
