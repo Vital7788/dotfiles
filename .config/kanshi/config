@@ -7,7 +7,6 @@ profile {
         mode 1920x1080
         position 1920,100
     }
-    exec riverctl focus-output "DP-1" && riverctl send-layout-cmd rivertile "main-location right"
 }
 
 profile {
@@ -21,7 +20,6 @@ profile {
         position 0,0
         scale 1.5
     }
-    exec riverctl focus-output "DP-2" && riverctl send-layout-cmd rivertile "main-location bottom" && riverctl focus-output "DP-1" && riverctl send-layout-cmd rivertile "main-location right"
 }
 
 profile {
@@ -44,7 +42,6 @@ profile {
         scale 1.5
         transform 90
     }
-    exec riverctl focus-output "HDMI-A-1" && riverctl send-layout-cmd rivertile "main-location bottom" && riverctl focus-output "DP-1"
 }
 
 profile {
