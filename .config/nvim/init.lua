@@ -115,6 +115,21 @@ vim.api.nvim_create_autocmd('LspAttach', {
       -- Enable completion side effects, such as auto-imports
       vim.lsp.completion.enable(true, client.id, event.buf, {autotrigger = false})
     end
+
+    if client.name == "ts_ls" then
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        buffer = event.buf,
+        callback = function()
+          -- Executing this command dirties the buffer even if nothing changed,
+          -- so unfortunately we can't use client:exec_cmd
+          client:request_sync(
+            "workspace/executeCommand", {
+              command = "_typescript.organizeImports",
+              arguments = { vim.api.nvim_buf_get_name(event.buf) },
+            }, 1000, event.buf)
+        end,
+      })
+    end
   end,
 })
 
