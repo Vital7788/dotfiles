@@ -4,23 +4,9 @@
     "height": 30,
     "spacing": 1,
     "margin": 0,
-    // "modules-left": ["river/tags", "river/mode", "custom/recorder"],
-    "modules-left": ["ext/workspaces", "custom/mode", "dwl/window", "custom/recorder"],
+    "modules-left": ["river/tags", "river/mode", "custom/recorder"],
     "modules-center": ["clock"],
     "modules-right": ["pulseaudio", "backlight", "network", "cpu", "memory", "temperature", "battery", "disk", "custom/updates", "tray"],
-
-    "ext/workspaces": {
-        "format": "{icon}",
-        "ignore-hidden": true,
-        "on-click": "activate",
-        "on-click-right": "deactivate",
-        "sort-by-id": true
-    },
-
-    "custom/mode": {
-        "exec": "~/.config/mango/mode.sh",
-        "restart-interval": 1
-    },
 
     "river/tags": {
         "hide-vacant": true
