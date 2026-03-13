@@ -8,7 +8,7 @@ do
             echo "exit: loc[k], [l]ogout, s[u]spend, [r]eboot, [s]hutdown"
             ;;
         screenshot)
-            echo "a: selected, s: current screen, d: selected clipboard, f: current screen clipboard, g: satty"
+            echo "a:󰹑 , s:󰩭 , d:✎󰹑 , f:✎󰩭 , g:✎󰖯 , e: 󰹑 , r: 󰩭 "
             ;;
         default)
             echo ""

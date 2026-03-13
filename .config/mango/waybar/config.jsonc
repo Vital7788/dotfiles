@@ -1,0 +1,142 @@
+{
+    "layer": "bottom",
+    "position": "top",
+    "height": 30,
+    "spacing": 1,
+    "margin": 0,
+    "modules-left": ["ext/workspaces", "custom/mode", "custom/recorder", "dwl/window"],
+    "modules-center": ["clock"],
+    "modules-right": ["pulseaudio", "backlight", "network", "cpu", "memory", "temperature", "battery", "disk", "custom/updates", "tray"],
+
+    "ext/workspaces": {
+        "format": "{icon}",
+        "ignore-hidden": true,
+        "on-click": "activate",
+        "on-click-right": "deactivate",
+        "sort-by-id": true
+    },
+
+    "custom/mode": {
+        "exec": "~/.config/mango/mode.sh",
+        "restart-interval": 1
+    },
+
+    "river/tags": {
+        "hide-vacant": true
+    },
+
+    "custom/recorder": {
+        "format": "  {}",
+        "signal": 1,
+        "exec": "head -n1 /tmp/waybar-recorder-status 2>/dev/null || true"
+    },
+
+    "custom/playerctl": {
+        "format": " 󰐊 {}",
+        "return-type": "json",
+        "max-length": 40,
+        "exec": "playerctl -a metadata --format '{\"text\": \"{{artist}} - {{markup_escape(title)}}\", \"tooltip\": \"{{playerName}} : {{artist}} - {{markup_escape(title)}}\", \"alt\": \"{{status}}\", \"class\": \"{{status}}\"}' -F",
+        "on-click": "playerctl play-pause",
+        "on-click-right": "playerctl next",
+    },
+
+    "custom/updates": {
+        "format": "󰚰 {}",
+        "exec": "timestamp=$(command -v emerge >/dev/null 2>&1 && emerge --info | rg \"Timestamp of repository gentoo\" | awk -F ': ' '{print $2}' || dnf history list | rg \"dnf upgrade --refresh\" | head -n1 | awk '{print $(NF-2), $(NF-1)}'); echo \"$(( ($(date +%s) - $(date --date \"$timestamp\" +%s)) \/ 86400 ))d\"",
+        "interval": 3600,
+    },
+
+    "clock": {
+        // "locale": "nl_BE.utf8",
+        "locale": "zh_CN.utf8",
+        "timezone": "Europe/Brussels",
+        "format": "{:L%x %T}",
+        // "format": "󰥔 {:%H:%M:%S}",
+        // "format-alt": "󰃮 {:%Y-%m-%d}",
+        "interval": 1,
+        "tooltip": false,
+    },
+
+    "cpu": {
+        "format": "󰘚 {usage}%",
+        "tooltip": true,
+        "interval": 1,
+        "on-click": "kitty -e htop"
+    },
+
+    "memory": {
+        "format": " {}%",
+        "interval": 1,
+        "on-click": "kitty -e htop"
+    },
+
+    "temperature": {
+        "hwmon-path-abs": "/sys/devices/pci0000:00/0000:00:01.1/0000:01:00.0/0000:02:00.0/0000:03:00.0/hwmon",
+        "input-filename": "temp2_input",
+        "critical-threshold": 80,
+        "format": "{icon} {temperatureC}°C",
+        "format-icons": ["󱃃", "󰔏", "󱃂"],
+    },
+
+    "battery": {
+        "states": {
+            "good": 95,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{icon} {capacity}%",
+        "format-charging": "󰂄 {capacity}%",
+        "format-plugged": "󰚥 {capacity}%",
+        "format-alt": "{icon} {time}",
+        "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
+    },
+
+    "network": {
+        "format-wifi": "󰖩 {essid} ({signalStrength}%)",
+        "format-ethernet": "󰈀 {ifname}",
+        "format-linked": "󰈀 {ifname} (No IP)",
+        "format-disconnected": "󰖪 Disconnected",
+        "format-alt": "{ifname}: {ipaddr}/{cidr}",
+        "tooltip-format": "{ifname}: {ipaddr}",
+        "on-click": "kitty -e nmtui"
+    },
+
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-bluetooth": "󰂰 {volume}%",
+        "format-bluetooth-muted": "󰂲 {icon}",
+        "format-muted": "󰝟",
+        "format-icons": {
+            "headphone": "󰋋",
+            "hands-free": "󰥰",
+            "headset": "󰋎",
+            "phone": "󰏲",
+            "portable": "󰄝",
+            "car": "󰄋",
+            "default": ["󰕿", "󰖀", "󰕾"]
+        },
+        "on-click": "pavucontrol",
+        "on-click-right": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+        "on-scroll-up": "pactl set-sink-volume @DEFAULT_SINK@ +2%",
+        "on-scroll-down": "pactl set-sink-volume @DEFAULT_SINK@ -2%"
+    },
+
+    "backlight": {
+        "format": "{icon} {percent}%",
+        "format-icons": ["󰃞", "󰃟", "󰃠"],
+        "on-scroll-up": "brightnessctl set +5%",
+        "on-scroll-down": "brightnessctl set 5%-"
+    },
+
+    "disk": {
+        "interval": 30,
+        "format": "󰋊 {percentage_used}%",
+        "path": "/",
+        "on-click": "kitty -e ncdu /"
+    },
+
+    "tray": {
+        "icon-size": 18,
+        "spacing": 5
+    }
+}
