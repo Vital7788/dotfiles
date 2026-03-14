@@ -12,8 +12,8 @@ profile {
 profile {
     output "Samsung Electric Company C24FG7x HTNK801272" {
         mode 1920x1080
-        position 2560,-200
-        transform 90
+        position 2560,200
+        transform normal
     }
     output "Microstep MPG321UX OLED 0x01010101" {
         mode 3840x2160

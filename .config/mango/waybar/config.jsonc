@@ -21,6 +21,10 @@
         "restart-interval": 1
     },
 
+    "dwl/window": {
+        "tooltip": false,
+    },
+
     "river/tags": {
         "hide-vacant": true
     },
