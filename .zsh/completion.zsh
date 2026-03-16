@@ -107,6 +107,8 @@ else
 
     local git_branches=$'git branch --sort=-committerdate --sort=-HEAD --format=$\'%(HEAD) %(color:yellow)%(refname:short) %(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)\1%(refname:short)\' --color=never | column -ts"\t" | awk -F"\1" \'{print $2 "\1" $1}\''
 
+    # TODO sort ls suggestions by modified time
+
     # set descriptions format to enable group support
     zstyle ':completion:*:descriptions' format '[%d]'
     zstyle ':fzf-tab:*' fzf-flags --height=40%
