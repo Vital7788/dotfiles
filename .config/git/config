@@ -46,3 +46,4 @@
     pf = push --force-with-lease
     claim = blame -M -C -C -C
     review = "!nvim -c \"DiffviewOpen origin/master... --imply-local\""
+    s = "!emacs -nw --eval '(progn (magit-status) (delete-other-windows))'"
