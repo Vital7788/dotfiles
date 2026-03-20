@@ -9,7 +9,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages '(evil magit sly))
+ '(package-selected-packages '(evil evil-collection magit sly))
  '(sly-mrepl-history-file-name "/home/vital/.local/state/sly-mrepl-history"))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -22,11 +22,14 @@
   (package-install 'evil))
 
 ;; Enable Evil
+(setq evil-want-keybinding nil)
 (setq evil-want-Y-yank-to-eol 1)
 (require 'evil)
 (evil-mode 1)
 (evil-set-undo-system 'undo-redo)
 (define-key evil-normal-state-map  (kbd "U") 'evil-redo)
+(when (require 'evil-collection nil t)
+  (evil-collection-init))
 
 (load-theme 'modus-operandi-tinted)
 
