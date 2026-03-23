@@ -90,6 +90,18 @@ if [ ! -f ~/.zsh/fzf-tab/fzf-tab.plugin.zsh ]; then
 else
     source ~/.zsh/fzf-tab/fzf-tab.plugin.zsh
 
+    # set descriptions format to enable group support
+    zstyle ':completion:*:descriptions' format '[%d]'
+    zstyle ':fzf-tab:*' fzf-flags --height=40%
+    zstyle ':fzf-tab:*' use-fzf-default-opts yes
+    zstyle ':fzf-tab:*' switch-group '<' '>'
+    zstyle ':fzf-tab:*' prefix ''
+    zstyle ':fzf-tab:*' single-group header
+
+    # Fzf tab re-sorts already sorted completion items alphabetically, which leads to things like file-sort modification not working
+    # Unfortunately, the only way to circumvent this currently is to disable all sorting
+    zstyle ':completion:complete:*' sort false
+
     # remove files from git show completion (probably has other side effects)
     __git_trees () {}
 
@@ -99,23 +111,11 @@ else
         "--preview-window=right,50%" "--preview-border=line"
         "--bind=ctrl-/:change-preview-window(down,50%|hidden|)"
     )
-
     local git_file_preview='git -c core.quotePath=false diff --no-ext-diff --color=always -- $realpath | delta; bat --style=full --color=always --pager=never $realpath'
     local git_hash_preview='git show --color=always --decorate $word | delta'
     local git_branch_preview="git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' \$word"
     local git_remote_branch_preview="git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' \$(git branch -r | grep /\$word$ | head -n1)"
-
     local git_branches=$'git branch --sort=-committerdate --sort=-HEAD --format=$\'%(HEAD) %(color:yellow)%(refname:short) %(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)\1%(refname:short)\' --color=never | column -ts"\t" | awk -F"\1" \'{print $2 "\1" $1}\''
-
-    # TODO sort ls suggestions by modified time
-
-    # set descriptions format to enable group support
-    zstyle ':completion:*:descriptions' format '[%d]'
-    zstyle ':fzf-tab:*' fzf-flags --height=40%
-    zstyle ':fzf-tab:*' use-fzf-default-opts yes
-    zstyle ':fzf-tab:*' switch-group '<' '>'
-    zstyle ':fzf-tab:*' prefix ''
-    zstyle ':fzf-tab:*' single-group header
 
     # no preview for options or subcommands
     zstyle ':fzf-tab:complete:*:options' fzf-preview
@@ -126,7 +126,6 @@ else
             'git help $word | bat -plman --color=always'
     zstyle ':fzf-tab:complete:git-(add|diff|restore):*' fzf-preview "$git_file_preview"
 
-    zstyle ':completion:complete:git-switch:*' sort false
     zstyle ':fzf-tab:complete:git-switch:*' fzf-flags \
         "${fzf_git_flags[@]}" \
         --tiebreak begin \
@@ -154,7 +153,6 @@ else
             ;;
         esac"
 
-    zstyle ':completion:complete:git-show:*' sort false
     zstyle ':fzf-tab:complete:git-show:*' fzf-preview \
         "case \$group in
         '[option]')
