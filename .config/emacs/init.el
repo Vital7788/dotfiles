@@ -14,11 +14,11 @@
   (evil-set-undo-system 'undo-redo)
   (define-key evil-normal-state-map  (kbd "U") 'evil-redo))
 (use-package evil-collection
-  :ensure t)
-(use-package magit
   :ensure t
   :config
   (evil-collection-init))
+(use-package magit
+  :ensure t)
 (use-package sly
   :ensure nil
   :config
