@@ -1,6 +1,7 @@
 .cfg
 .vim/vim_plug
 .config/emacs/elpa
+.config/emacs/eln-cache
 .config/emacs/auto-save-list
 .config/i3/local
 .config/nvim/lazy-lock.json
