@@ -4,6 +4,8 @@
 (require 'package)
 (package-initialize)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(use-package dash
+  :ensure t)
 (use-package evil
   :ensure t
   :init
@@ -12,7 +14,24 @@
   :config
   (evil-mode 1)
   (evil-set-undo-system 'undo-redo)
-  (define-key evil-normal-state-map  (kbd "U") 'evil-redo))
+  (define-key evil-normal-state-map  (kbd "U") 'evil-redo)
+  (defun my/magit-process-environment (env)
+    "Detect and set git -bare repo env vars when in tracked dotfile directories."
+    (let* ((default (file-name-as-directory (expand-file-name default-directory)))
+           (git-dir (expand-file-name "~/.cfg"))
+           (work-tree (expand-file-name "~/"))
+           (dotfile-dirs
+            (-map (apply-partially 'concat work-tree)
+                  (-uniq (-keep #'file-name-directory (split-string (shell-command-to-string
+                  (format "/usr/bin/git --git-dir=%s --work-tree=%s ls-tree --full-tree --name-only -r HEAD"
+                          git-dir work-tree))))))))
+      (push work-tree dotfile-dirs)
+      (when (member default dotfile-dirs)
+        (push (format "GIT_WORK_TREE=%s" work-tree) env)
+        (push (format "GIT_DIR=%s" git-dir) env)))
+  env)
+ (advice-add 'magit-process-environment
+             :filter-return #'my/magit-process-environment))
 (use-package evil-collection
   :ensure t
   :config
