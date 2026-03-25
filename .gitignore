@@ -11,3 +11,4 @@
 .zsh/local.zsh
 .config/river/local.sh
 .config/mango/local.conf
+.config/kitty/local.conf
