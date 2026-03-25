@@ -31,6 +31,8 @@
   (set-face-attribute 'fixed-pitch nil :family mono-spaced-font :height 1.0)
   (set-face-attribute 'variable-pitch nil :family proportionately-spaced-font :height 1.0))
 
+(blink-cursor-mode 0)
+
 ;;; Evil
 
 (use-package dash
@@ -121,7 +123,9 @@
 
 ;;; Magit
 (use-package magit
-  :ensure t)
+  :ensure t
+  :config
+  (setq magit-list-refs-sortby "-committerdate"))
 
 ;;; Language specific
 (use-package sly
