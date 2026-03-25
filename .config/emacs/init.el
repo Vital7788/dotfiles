@@ -37,11 +37,13 @@
   :ensure t)
 
 (use-package evil
+  :after dash
   :ensure t
   :init
   (setq evil-want-keybinding nil)
   (setq evil-want-Y-yank-to-eol 1)
   :config
+  (evil-mode 1)
   (evil-set-undo-system 'undo-redo)
   (define-key evil-normal-state-map (kbd "U") 'evil-redo)
   (defun my/magit-process-environment (env)
@@ -61,13 +63,17 @@
     env)
   (advice-add 'magit-process-environment
 	      :filter-return #'my/magit-process-environment)
-  :hook (after-init . evil-mode))
+  (when (not (display-graphic-p))
+    (add-hook 'evil-insert-state-entry-hook (lambda () (send-string-to-terminal "\033[6 q")))
+    (add-hook 'evil-insert-state-exit-hook  (lambda () (send-string-to-terminal "\033[2 q")))))
 
 (use-package evil-collection
+  :after evil
   :ensure t
   :hook (after-init . evil-collection-init))
 
 (use-package evil-commentary
+  :after evil
   :ensure t
   :hook (after-init . evil-commentary-mode))
 
