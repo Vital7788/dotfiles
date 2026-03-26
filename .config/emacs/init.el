@@ -127,6 +127,10 @@
   :config
   (setq magit-list-refs-sortby "-committerdate"))
 
+(use-package keychain-environment
+  :ensure t
+  :hook (after-init . keychain-refresh-environment))
+
 ;;; Language specific
 (use-package sly
   :ensure nil
