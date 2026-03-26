@@ -127,6 +127,17 @@
   :config
   (setq magit-list-refs-sortby "-committerdate"))
 
+(use-package forge
+  :after magit
+  :ensure t
+  :config
+  (push '("gitlab.sigasi.com"
+	  "gitlab.sigasi.com/api/v4"
+	  "gitlab.sigasi.com"
+	  forge-gitlab-repository)
+	forge-alist)
+  (setq auth-sources '("~/.authinfo")))
+
 (use-package keychain-environment
   :ensure t
   :hook (after-init . keychain-refresh-environment))
