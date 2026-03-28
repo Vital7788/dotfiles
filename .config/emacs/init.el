@@ -83,6 +83,11 @@
   :ensure t
   :hook (after-init . evil-commentary-mode))
 
+(use-package xclip
+  :after evil
+  :ensure t
+  :hook (after-init . xclip-mode))
+
 ;;; Minibuffer
 ;; More advanced stuff here: https://protesilaos.com/codelog/2024-02-17-emacs-modern-minibuffer-packages/
 
