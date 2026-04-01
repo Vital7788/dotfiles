@@ -91,6 +91,10 @@
 ;;; Minibuffer
 ;; More advanced stuff here: https://protesilaos.com/codelog/2024-02-17-emacs-modern-minibuffer-packages/
 
+(use-package savehist
+  :ensure nil ; it is built-in
+  :hook (after-init . savehist-mode))
+
 (use-package vertico
   :ensure t
   :hook (after-init . vertico-mode))
@@ -106,9 +110,20 @@
   (setq completion-category-defaults nil)
   (setq completion-category-overrides nil))
 
-(use-package savehist
-  :ensure nil ; it is built-in
-  :hook (after-init . savehist-mode))
+(use-package consult
+  :after evil
+  :ensure t
+  :config
+  ;; A recursive grep
+  (define-key evil-normal-state-map (kbd ",g") 'consult-ripgrep)
+  ;; Search for files names recursively
+  (define-key evil-normal-state-map (kbd ",f") 'consult-fd)
+  ;; Search through the outline (headings) of the file
+  (define-key evil-normal-state-map (kbd ",o") 'consult-outline)
+  ;; Search the current buffer
+  (define-key evil-normal-state-map (kbd ",l") 'consult-line)
+  ;; Switch to another buffer, or bookmarked file, or recently opened file.
+  (define-key evil-normal-state-map (kbd ",b") 'consult-buffer))
 
 ;;; File manager (Dired)
 
@@ -133,6 +148,8 @@
 ;;; Magit
 (use-package magit
   :ensure t
+  :init
+  (setq magit-define-global-key-bindings 'recommended)
   :config
   (setq magit-list-refs-sortby "-committerdate"))
 
