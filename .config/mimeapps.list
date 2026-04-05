@@ -10,8 +10,8 @@ video/mpeg=mpv.desktop
 video/webm=mpv.desktop
 
 text/html=firefox.desktop;firefox-bin.desktop
-x-scheme-handler/http=firefox.desktop;firefox-bin.desktop
-x-scheme-handler/https=firefox.desktop;firefox-bin.desktop
+x-scheme-handler/http=firefox.desktop;firefox-esr.desktop;firefox-bin.desktop
+x-scheme-handler/https=firefox.desktop;firefox-esr.desktop;firefox-bin.desktop
 
 application/pdf=org.pwmt.zathura.desktop;org.kde.okular.desktop;firefox.desktop
 text/plain=nvim.desktop

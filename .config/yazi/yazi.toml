@@ -8,6 +8,14 @@ max_height = 4000
 
 [plugin]
 prepend_previewers = [
-    { name = "*.svg", run = "svg" },
-    { name = "*.zip", run = "archive" },
+  { name = "*.svg", run = "svg" },
+  { name = "*.zip", run = "archive" },
+]
+append_previewers = [
+  { url = "*", run = "code" },
+]
+
+[open]
+append_rules = [
+  { url = "*", use = ["edit", "open"] },
 ]
