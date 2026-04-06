@@ -14,4 +14,7 @@ then
     # Reload kanshi after a small delay, since it can't handle the monitor being forcefully enabled
     sleep 3
     pkill --signal SIGHUP -x kanshi
+
+    # Also reload waybar, since workspaces get messed up
+    pkill --signal SIGUSR2 -x waybar
 fi
