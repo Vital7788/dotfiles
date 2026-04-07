@@ -31,8 +31,8 @@
 
 (load-theme 'modus-operandi-tinted)
 
-(let ((mono-spaced-font "FiraCode Nerd Font")
-      (proportionately-spaced-font "FiraCode Nerd Font Propo"))
+(let ((mono-spaced-font "IBM Plex Mono")
+      (proportionately-spaced-font "IBM Plex Serif"))
   (set-face-attribute 'default nil :family mono-spaced-font :height 100 :weight 'light)
   (set-face-attribute 'fixed-pitch nil :family mono-spaced-font :height 1.0)
   (set-face-attribute 'variable-pitch nil :family proportionately-spaced-font :height 1.0))
@@ -191,7 +191,8 @@
   (add-hook 'org-mode-hook 'visual-line-mode) ; wrap lines
 
   (let* ((variable-tuple
-	  (cond ((x-list-fonts "ETBembo")         '(:font "ETBembo"))
+	  (cond ((x-list-fonts "IBM Plex Serif")  '(:font "IBM Plex Serif"))
+		((x-list-fonts "ETBembo")         '(:font "ETBembo"))
 		((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
 		((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
 		((x-list-fonts "Verdana")         '(:font "Verdana"))
