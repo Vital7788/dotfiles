@@ -8,8 +8,8 @@ max_height = 4000
 
 [plugin]
 prepend_previewers = [
-  { name = "*.svg", run = "svg" },
-  { name = "*.zip", run = "archive" },
+  { url = "*.svg", run = "svg" },
+  { url = "*.zip", run = "archive" },
 ]
 append_previewers = [
   { url = "*", run = "code" },

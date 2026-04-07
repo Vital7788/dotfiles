@@ -4,7 +4,7 @@
 -- initialize and cache the target paths
 local mtime_dirs = (function()
     local dirs = {}
-    local targets = { "PICTURES", "VIDEOS", "DOWNLOADS" }
+    local targets = { "PICTURES", "VIDEOS", "DOWNLOAD" }
 
     for _, name in ipairs(targets) do
         local handle = io.popen("xdg-user-dir " .. name)
