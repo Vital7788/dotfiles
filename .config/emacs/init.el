@@ -20,6 +20,8 @@
 (setq auto-save-file-name-transforms '((".*" "~/.local/state/emacs/autosave/\\1" t)))
 (make-directory "~/.local/state/autosave/" t)
 
+(setq tab-width 4)
+
 (show-paren-mode 1)
 
 (setq scroll-step 1)
@@ -52,6 +54,7 @@
   (evil-mode 1)
   (evil-set-undo-system 'undo-redo)
   (define-key evil-normal-state-map (kbd "U") 'evil-redo)
+
   (defun my/magit-process-environment (env)
     "Detect and set git -bare repo env vars when in tracked dotfile directories."
     (let* ((default (file-name-as-directory (expand-file-name default-directory)))
@@ -69,6 +72,7 @@
     env)
   (advice-add 'magit-process-environment
 	      :filter-return #'my/magit-process-environment)
+
   (when (not (display-graphic-p))
     (add-hook 'evil-insert-state-entry-hook (lambda () (send-string-to-terminal "\033[6 q")))
     (add-hook 'evil-insert-state-exit-hook  (lambda () (send-string-to-terminal "\033[2 q")))))
@@ -151,7 +155,14 @@
   :init
   (setq magit-define-global-key-bindings 'recommended)
   :config
-  (setq magit-list-refs-sortby "-committerdate"))
+  (setq magit-list-refs-sortby "-committerdate")
+  (defun my/magit-open-file-in-eclipse ()
+    "Open the file under the cursor in Eclipse"
+    (interactive)
+    (let* ((repo-path (magit-repository-local-repository))
+	   (command (format "%s../../eclipse/eclipse --launcher.openFile %s%s" repo-path repo-path (magit-current-file))))
+      (start-process-shell-command "eclipse-launcher" nil command)))
+  (evil-define-key 'normal magit-mode-map (kbd "gx") 'my/magit-open-file-in-eclipse))
 
 (use-package forge
   :after magit
@@ -167,6 +178,39 @@
 (use-package keychain-environment
   :ensure t
   :hook (after-init . keychain-refresh-environment))
+
+;;; Org
+(use-package org
+  :ensure nil
+  :config
+  ;; When a TODO is set to a done state, record a timestamp
+  (setq org-log-done 'time)
+  (setq org-return-follows-link t)
+  (setq org-hide-emphasis-markers t)
+  (add-hook 'org-mode-hook 'org-indent-mode)  ; nicer indentation
+  (add-hook 'org-mode-hook 'visual-line-mode) ; wrap lines
+
+  (let* ((variable-tuple
+	  (cond ((x-list-fonts "ETBembo")         '(:font "ETBembo"))
+		((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
+		((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
+		((x-list-fonts "Verdana")         '(:font "Verdana"))
+		((x-family-fonts "Sans Serif")    '(:family "Sans Serif"))
+		(nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
+	 (base-font-color     (face-foreground 'default nil 'default))
+	 (headline           `(:inherit default :weight bold :foreground ,base-font-color)))
+
+    (custom-theme-set-faces
+     'user
+     `(org-level-8 ((t (,@headline ,@variable-tuple))))
+     `(org-level-7 ((t (,@headline ,@variable-tuple))))
+     `(org-level-6 ((t (,@headline ,@variable-tuple))))
+     `(org-level-5 ((t (,@headline ,@variable-tuple))))
+     `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
+     `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.2))))
+     `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.3))))
+     `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.5))))
+     `(org-document-title ((t (,@headline ,@variable-tuple :height 1.6 :underline nil)))))))
 
 ;;; Language specific
 (use-package sly
