@@ -33,9 +33,9 @@
 
 (let ((mono-spaced-font "IBM Plex Mono")
       (proportionately-spaced-font "IBM Plex Serif"))
-  (set-face-attribute 'default nil :family mono-spaced-font :height 100 :weight 'light)
+  (set-face-attribute 'default nil :family mono-spaced-font :height 105 :weight 'light)
   (set-face-attribute 'fixed-pitch nil :family mono-spaced-font :height 1.0)
-  (set-face-attribute 'variable-pitch nil :family proportionately-spaced-font :height 1.0))
+  (set-face-attribute 'variable-pitch nil :family proportionately-spaced-font :height 1.0 :weight 'normal))
 
 (blink-cursor-mode 0)
 
@@ -54,6 +54,7 @@
   (evil-mode 1)
   (evil-set-undo-system 'undo-redo)
   (define-key evil-normal-state-map (kbd "U") 'evil-redo)
+  (define-key evil-normal-state-map (kbd "SPC e") 'eval-last-sexp)
 
   (defun my/magit-process-environment (env)
     "Detect and set git -bare repo env vars when in tracked dotfile directories."
@@ -189,6 +190,12 @@
   (setq org-hide-emphasis-markers t)
   (add-hook 'org-mode-hook 'org-indent-mode)  ; nicer indentation
   (add-hook 'org-mode-hook 'visual-line-mode) ; wrap lines
+  (add-hook 'org-mode-hook 'variable-pitch-mode) ; proportionally spaced font
+
+  ;; Substitute list markers ("-" -> "•")
+  (font-lock-add-keywords 'org-mode
+			  '(("^ *\\([-]\\) "
+			     (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
   (let* ((variable-tuple
 	  (cond ((x-list-fonts "IBM Plex Serif")  '(:font "IBM Plex Serif"))
@@ -200,7 +207,6 @@
 		(nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
 	 (base-font-color     (face-foreground 'default nil 'default))
 	 (headline           `(:inherit default :weight bold :foreground ,base-font-color)))
-
     (custom-theme-set-faces
      'user
      `(org-level-8 ((t (,@headline ,@variable-tuple))))
@@ -212,6 +218,20 @@
      `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.3))))
      `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.5))))
      `(org-document-title ((t (,@headline ,@variable-tuple :height 1.6 :underline nil)))))))
+
+     '(org-block ((t (:inherit (fixed-pitch) :weight light))))
+     '(org-block-begin-line ((t (:inherit fixed-pitch))))
+     '(org-code ((t (:inherit (shadow fixed-pitch)))))
+     '(org-document-info ((t (:foreground "dark orange"))))
+     '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
+     '(org-indent ((t (:inherit (org-hide fixed-pitch)))))
+     '(org-link ((t (:foreground "royal blue" :underline t))))
+     '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+     '(org-property-value ((t (:inherit fixed-pitch))) t)
+     '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+     '(org-table ((t (:inherit fixed-pitch :foreground "#83a598"))))
+     '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
+     '(org-verbatim ((t (:inherit (shadow fixed-pitch))))))))
 
 ;;; Language specific
 (use-package sly
