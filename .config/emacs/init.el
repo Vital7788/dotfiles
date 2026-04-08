@@ -199,12 +199,11 @@
 
   (let* ((variable-tuple
 	  (cond ((x-list-fonts "IBM Plex Serif")  '(:font "IBM Plex Serif"))
-		((x-list-fonts "ETBembo")         '(:font "ETBembo"))
-		((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
-		((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
-		((x-list-fonts "Verdana")         '(:font "Verdana"))
+		((x-list-fonts "IBM Plex Sans")   '(:font "IBM Plex Sans"))
+		((x-list-fonts "ET Book")         '(:font "ET Book"))
+		((x-list-fonts "Noto Sans")       '(:font "Noto Sans"))
 		((x-family-fonts "Sans Serif")    '(:family "Sans Serif"))
-		(nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
+		(nil (warn "Cannot find a Sans Serif Font."))))
 	 (base-font-color     (face-foreground 'default nil 'default))
 	 (headline           `(:inherit default :weight bold :foreground ,base-font-color)))
     (custom-theme-set-faces
