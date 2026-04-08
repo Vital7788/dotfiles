@@ -35,7 +35,8 @@
       (proportionately-spaced-font "IBM Plex Serif"))
   (set-face-attribute 'default nil :family mono-spaced-font :height 105 :weight 'light)
   (set-face-attribute 'fixed-pitch nil :family mono-spaced-font :height 1.0)
-  (set-face-attribute 'variable-pitch nil :family proportionately-spaced-font :height 1.0 :weight 'normal))
+  (set-face-attribute 'variable-pitch nil :family proportionately-spaced-font :height 1.0 :weight 'normal)
+  (set-fontset-font t 'unicode (font-spec :name "Symbols Nerd Font Mono") nil 'append))
 
 (blink-cursor-mode 0)
 

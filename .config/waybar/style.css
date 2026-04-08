@@ -70,7 +70,7 @@
     /* Base styling for all modules */
     border: none;
     border-radius: 0;
-    font-family: "IBM Plex Mono";
+    font-family: "IBM Plex Mono", sans-serif, "Symbols Nerd Font Mono";
     font-size: 13px;
     min-height: 0;
 }
