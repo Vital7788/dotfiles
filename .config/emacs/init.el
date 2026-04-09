@@ -27,6 +27,18 @@
 (setq scroll-step 1)
 (setq scroll-margin 1)
 
+(setq completion-cycle-threshold 5)
+
+;; Enable indentation+completion using the TAB key.
+(setq tab-always-indent 'complete)
+
+;; Emacs 30 and newer: Disable Ispell completion function.
+;; Try `cape-dict' as an alternative.
+;; (setq text-mode-ispell-word-completion nil)
+
+;; Hide commands in M-x which do not apply to the current mode.
+(setq read-extended-command-predicate #'command-completion-default-include-p)
+
 ;;; Appearance
 
 (load-theme 'modus-operandi-tinted)
@@ -39,6 +51,26 @@
   (set-fontset-font t 'unicode (font-spec :name "Symbols Nerd Font Mono") nil 'append))
 
 (blink-cursor-mode 0)
+
+(use-package nerd-icons
+  :ensure t)
+
+(use-package nerd-icons-completion
+  :ensure t
+  :after marginalia
+  :config
+  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
+
+(use-package nerd-icons-corfu
+  :ensure t
+  :after corfu
+  :config
+  (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
+
+(use-package nerd-icons-dired
+  :ensure t
+  :hook
+  (dired-mode . nerd-icons-dired-mode))
 
 ;;; Evil
 
@@ -56,6 +88,7 @@
   (evil-set-undo-system 'undo-redo)
   (define-key evil-normal-state-map (kbd "U") 'evil-redo)
   (define-key evil-normal-state-map (kbd "SPC e") 'eval-last-sexp)
+  (define-key evil-insert-state-map (kbd "C-SPC") 'completion-at-point)
 
   (defun my/magit-process-environment (env)
     "Detect and set git -bare repo env vars when in tracked dotfile directories."
@@ -94,8 +127,12 @@
   :ensure t
   :hook (after-init . xclip-mode))
 
-;;; Minibuffer
+;;; Minibuffer and Completions
 ;; More advanced stuff here: https://protesilaos.com/codelog/2024-02-17-emacs-modern-minibuffer-packages/
+
+(use-package which-key
+  :ensure nil
+  :hook (after-init . which-key-mode))
 
 (use-package savehist
   :ensure nil ; it is built-in
@@ -130,6 +167,32 @@
   (define-key evil-normal-state-map (kbd ",l") 'consult-line)
   ;; Switch to another buffer, or bookmarked file, or recently opened file.
   (define-key evil-normal-state-map (kbd ",b") 'consult-buffer))
+
+(use-package corfu
+  :ensure t
+  :hook (after-init . global-corfu-mode)
+  :config
+  (setq corfu-preview-current nil)
+  (setq corfu-min-width 20)
+  (setq corfu-popupinfo-delay '(1.25 . 0.5))
+  (corfu-popupinfo-mode 1) ; shows documentation after `corfu-popupinfo-delay'
+  ;; Sort by input history (no need to modify `corfu-sort-function').
+  (with-eval-after-load 'savehist
+    (corfu-history-mode 1)
+    (add-to-list 'savehist-additional-variables 'corfu-history)))
+
+(use-package cape
+  :ensure t
+  ;; Bind prefix keymap providing all Cape commands under a mnemonic key.
+  :bind ("M-SPC" . cape-prefix-map)
+  :init
+  ;; Add to the global default value of `completion-at-point-functions' which is
+  ;; used by `completion-at-point'.  The order of the functions matters, the
+  ;; first function returning a result wins.  Note that the list of buffer-local
+  ;; completion functions takes precedence over the global list.
+  (add-hook 'completion-at-point-functions #'cape-dabbrev)
+  (add-hook 'completion-at-point-functions #'cape-file)
+)
 
 ;;; File manager (Dired)
 
