@@ -30,12 +30,19 @@ local function is_in_mtime_dir(cwd)
 end
 
 local function setup()
+    local sorted = false
     ps.sub("ind-sort", function(opt)
         local cwd = cx.active.current.cwd
         if is_in_mtime_dir(cwd) then
-            opt.by, opt.reverse, opt.dir_first = "mtime", true, false
+            if not sorted then
+                sorted = true
+                opt.by, opt.reverse, opt.dir_first = "mtime", true, false
+            end
         else
-            opt.by, opt.reverse, opt.dir_first = "natural", false, true
+            if sorted then
+                sorted = false
+                opt.by, opt.reverse, opt.dir_first = "natural", false, true
+            end
         end
         return opt
     end)
