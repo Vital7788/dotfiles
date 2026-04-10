@@ -280,7 +280,7 @@
      `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.2))))
      `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.3))))
      `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.5))))
-     `(org-document-title ((t (,@headline ,@variable-tuple :height 1.6 :underline nil)))))))
+     `(org-document-title ((t (,@headline ,@variable-tuple :height 1.6 :underline nil))))
 
      '(org-block ((t (:inherit (fixed-pitch) :weight light))))
      '(org-block-begin-line ((t (:inherit fixed-pitch))))
