@@ -1,0 +1,26 @@
+* {
+  bg0: #f6f2ee;
+  bg1: #aab0ad;
+  fg0: #3d2b5a;
+  fg1: #3d2b5a;
+
+  red: #a5222f;
+  red-trans: #a5222f15;
+  green: #396847;
+  green-trans: #39684715;
+  yellow: #ac5402;
+  yellow-trans: #ac540215;
+  blue: #2848a9;
+  blue-trans: #2848a915;
+  purple: #6e33ce;
+  purple-trans: #6e33ce15;
+  cyan: #287980;
+  cyan-trans: #28798015;
+  orange: #955f61;
+  orange-trans: #955f6115;
+  pink: #a440b5;
+  pink-trans: #a440b515;
+
+  selected-fg: @purple;
+  selected-bg: @purple-trans;
+}

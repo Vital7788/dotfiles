@@ -1,0 +1,92 @@
+// inspired by https://github.com/Murzchnvok/rofi-collection
+
+@import "dayfox"
+
+* {
+  background-color: transparent;
+
+  border: 0;
+  margin: 0;
+  padding: 0;
+  spacing: 0;
+}
+
+configuration {
+  font: "IBM Plex Sans 12";
+  show-icons: true;
+
+  drun {
+    display-name: "";
+  }
+
+  run {
+    display-name: "";
+  }
+
+  window {
+    display-name: "";
+  }
+}
+
+element {
+  children: [element-icon, element-text];
+}
+
+element-icon {
+  padding: 0 10px 0 0;
+  size: 18px;
+}
+
+inputbar {
+  children: [prompt, entry];
+}
+
+prompt {
+  padding: 10px;
+  text-color: @fg0;
+}
+
+window {
+  background-color: @bg0;
+  border: 2px;
+  border-color: @bg1;
+  border-radius: 6px;
+  padding: 6px;
+  width: 30%;
+}
+
+mainbox {
+  children: [inputbar, listview];
+}
+
+inputbar {
+  margin: 0 0 6px 0;
+}
+
+entry {
+  padding: 10px;
+  text-color: @fg0;
+}
+
+listview {
+  lines: 10;
+}
+
+element {
+  border: 0 0 0 5px;
+  border-radius: 6px;
+  padding: 6px;
+}
+
+element selected {
+  background-color: @selected-bg;
+  border-color: @selected-fg;
+}
+
+element-text {
+  text-color: @fg1;
+}
+
+element-text selected {
+  text-color: @fg0;
+}
