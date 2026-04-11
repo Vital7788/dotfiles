@@ -28,15 +28,6 @@ configuration {
   }
 }
 
-element {
-  children: [element-icon, element-text];
-}
-
-element-icon {
-  padding: 0 10px 0 0;
-  size: 18px;
-}
-
 inputbar {
   children: [prompt, entry];
 }
@@ -73,6 +64,7 @@ listview {
 }
 
 element {
+  children: [element-icon, element-text];
   border: 0 0 0 5px;
   border-radius: 6px;
   padding: 6px;
@@ -84,9 +76,16 @@ element selected {
 }
 
 element-text {
+  highlight: bold;
   text-color: @fg1;
 }
 
 element-text selected {
   text-color: @fg0;
 }
+
+element-icon {
+  padding: 0 10px 0 0;
+  size: 18px;
+}
+
