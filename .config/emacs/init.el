@@ -9,9 +9,9 @@
 
 ;; Don't show byte compilation warnings after installing packages
 (add-to-list 'display-buffer-alist
-             '("\\`\\*\\(Warnings\\|Compile-Log\\)\\*\\'"
-               (display-buffer-no-window)
-               (allow-no-window . t)))
+	     '("\\`\\*\\(Warnings\\|Compile-Log\\)\\*\\'"
+	       (display-buffer-no-window)
+	       (allow-no-window . t)))
 
 ;;; Basic behavior
 
@@ -41,12 +41,18 @@
 
 ;;; Appearance
 
+;; More theme customizations: https://www.gnu.org/software/emacs/manual/html_node/modus-themes/DIY-Stylistic-variants-using-palette-overrides.html
+;; Suble underlines
+(setq modus-themes-common-palette-overrides
+      '((underline-link border)
+	(underline-link-visited border)
+	(underline-link-symbolic border)))
 (load-theme 'modus-operandi-tinted)
 
 (let ((mono-spaced-font "IBM Plex Mono")
       (proportionately-spaced-font "IBM Plex Serif"))
   (set-face-attribute 'default nil :family mono-spaced-font :height 105 :weight 'light)
-  (set-face-attribute 'fixed-pitch nil :family mono-spaced-font :height 1.0)
+  (set-face-attribute 'fixed-pitch nil :family mono-spaced-font :height 1.0 :weight 'light)
   (set-face-attribute 'variable-pitch nil :family proportionately-spaced-font :height 1.0 :weight 'normal)
   (set-fontset-font t 'unicode (font-spec :name "Symbols Nerd Font Mono") nil 'append))
 
@@ -191,8 +197,7 @@
   ;; first function returning a result wins.  Note that the list of buffer-local
   ;; completion functions takes precedence over the global list.
   (add-hook 'completion-at-point-functions #'cape-dabbrev)
-  (add-hook 'completion-at-point-functions #'cape-file)
-)
+  (add-hook 'completion-at-point-functions #'cape-file))
 
 ;;; File manager (Dired)
 
@@ -256,52 +261,43 @@
   (add-hook 'org-mode-hook 'visual-line-mode) ; wrap lines
   (add-hook 'org-mode-hook 'variable-pitch-mode) ; proportionally spaced font
 
-  ;; Substitute list markers ("-" -> "•")
-  (font-lock-add-keywords 'org-mode
-			  '(("^ *\\([-]\\) "
-			     (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+  (font-lock-add-keywords
+   'org-mode
+   '(("^ *\\([-]\\) " (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))    ; Substitute list markers ("-" -> "•")
+     ("^\\**\\(*\\) " (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "⁕"))))))  ; Substitute header markers ("*" -> "⁕")
 
-  ;; Substitute header markers ("*" -> "⁕")
-  (font-lock-add-keywords 'org-mode
-			  '(("^\\**\\(*\\)"
-			     (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "⁕"))))))
+  (let ((mono-spaced-font "IBM Plex Mono")
+	(proportionately-spaced-font "IBM Plex Serif")
+	(background-color    (face-background 'default nil 'default)))
+    (dolist (face '((org-level-1 . 1.3)
+		    (org-level-2 . 1.2)
+		    (org-level-3 . 1.15)
+		    (org-level-4 . 1.1)
+		    (org-level-5 . 1.1)
+		    (org-level-6 . 1.1)
+		    (org-level-7 . 1.1)
+		    (org-level-8 . 1.1)))
+      ;; box is a hack to get more line spacing for headlines
+      (set-face-attribute (car face) nil :font proportionately-spaced-font :height (cdr face) :box `(:line-width (1 . 4) :color ,background-color)))
+    (set-face-attribute 'org-level-1 nil :weight 'bold)
+    (set-face-attribute 'org-document-title nil :font proportionately-spaced-font :weight 'bold :height 1.3)
+    (set-face-attribute 'org-block nil            :foreground nil :inherit 'fixed-pitch :height 0.9)
+    (set-face-attribute 'org-block-begin-line nil :inherit '(font-lock-comment-face fixed-pitch) :height 0.9)
+    (set-face-attribute 'org-code nil             :font mono-spaced-font)
+    (set-face-attribute 'org-verbatim nil         :font mono-spaced-font)
+    (set-face-attribute 'org-checkbox nil         :font mono-spaced-font)
+    (set-face-attribute 'org-indent nil           :inherit '(org-hide fixed-pitch))
+    (set-face-attribute 'org-special-keyword nil  :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-meta-line nil        :inherit '(font-lock-comment-face fixed-pitch))))
 
-  (let* ((variable-tuple
-	  (cond ((x-list-fonts "IBM Plex Serif")  '(:font "IBM Plex Serif"))
-		((x-list-fonts "IBM Plex Sans")   '(:font "IBM Plex Sans"))
-		((x-list-fonts "ET Book")         '(:font "ET Book"))
-		((x-list-fonts "Noto Sans")       '(:font "Noto Sans"))
-		((x-family-fonts "Sans Serif")    '(:family "Sans Serif"))
-		(nil (warn "Cannot find a Sans Serif Font."))))
-	 (foreground-color    (face-foreground 'default nil 'default))
-	 (background-color    (face-background 'default nil 'default))
-	 ;; box is a hack to get more line spacing for headlines
-	 (headline           `(:inherit default :foreground ,foreground-color :box (:line-width (1 . 4) :color ,background-color))))
-    (custom-theme-set-faces
-     'user
-     `(org-level-8 ((t (,@headline ,@variable-tuple))))
-     `(org-level-7 ((t (,@headline ,@variable-tuple))))
-     `(org-level-6 ((t (,@headline ,@variable-tuple))))
-     `(org-level-5 ((t (,@headline ,@variable-tuple))))
-     `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
-     `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.2))))
-     `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.2))))
-     `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.3 :weight bold))))
-     `(org-document-title ((t (,@headline ,@variable-tuple :height 1.3 :weight bold :underline nil))))
-
-     '(org-block ((t (:inherit (fixed-pitch) :weight light))))
-     '(org-block-begin-line ((t (:inherit fixed-pitch))))
-     '(org-code ((t (:inherit (shadow fixed-pitch)))))
-     '(org-document-info ((t (:foreground "dark orange"))))
-     '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
-     '(org-indent ((t (:inherit (org-hide fixed-pitch)))))
-     '(org-link ((t (:foreground "royal blue" :underline t))))
-     '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-     '(org-property-value ((t (:inherit fixed-pitch))) t)
-     '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-     '(org-table ((t (:inherit fixed-pitch :foreground "#83a598"))))
-     '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
-     '(org-verbatim ((t (:inherit (shadow fixed-pitch))))))))
+(use-package org-appear
+  :ensure t
+  :commands (org-appear-mode)
+  :hook     (org-mode . org-appear-mode)
+  :config
+  (setq org-appear-autoemphasis   t   ; Show bold, italics, verbatim, etc.
+	org-appear-autolinks      t   ; Show links
+	org-appear-autosubmarkers t)) ; Show sub- and superscripts
 
 ;;; Language specific
 (use-package sly
