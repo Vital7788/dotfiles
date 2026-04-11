@@ -11,10 +11,24 @@ if ! wlr-randr --output "$1" &> /dev/null
 then
     sudo ~/.local/bin/hotplug-monitor.sh "$1"
 
-    # Reload kanshi after a small delay, since it can't handle the monitor being forcefully enabled
-    sleep 3
-    pkill --signal SIGHUP -x kanshi
+    # Start mmsg in the background, since the read loop hangs otherwise
+    exec 3< <(mmsg -w -O)
+    mmsg_pid=$!
 
-    # Also reload waybar, since workspaces get messed up
-    pkill --signal SIGUSR2 -x waybar
+    while read -r output <&3; do
+        if grep -q "$1" <<< "$output"; then
+            # Reload kanshi, since it can't handle the monitor being forcefully enabled
+            pkill --signal SIGHUP -x kanshi
+
+            # Also restart waybar, since workspaces get messed up
+            # Simply reloading with SIGUSR2 causes weird bugs unfortunately
+            killall waybar
+            waybar --config ~/.config/mango/waybar/config.jsonc
+
+            kill "$mmsg_pid"
+            break
+        fi
+    done
+
+    exec 3<&- # Close the file descriptor
 fi
