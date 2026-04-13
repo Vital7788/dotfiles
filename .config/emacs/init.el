@@ -18,7 +18,7 @@
 ;; Put autosave files (ie #foo#) and backup files (ie foo~) in ~/.local/state/emacs/
 (setq backup-directory-alist '(("." . "~/.local/state/emacs/backup")))
 (setq auto-save-file-name-transforms '((".*" "~/.local/state/emacs/autosave/\\1" t)))
-(make-directory "~/.local/state/autosave/" t)
+(make-directory "~/.local/state/emacs/autosave/" t)
 
 (setq tab-width 4)
 
@@ -284,14 +284,13 @@
 		    (org-level-8 . 1.1)))
       ;; box is a hack to get more line spacing for headlines
       (set-face-attribute (car face) nil :font proportionately-spaced-font :height (cdr face) :box `(:line-width (1 . 4) :color ,background-color)))
-    (set-face-attribute 'org-level-1 nil :weight 'bold)
-    (set-face-attribute 'org-document-title nil :font proportionately-spaced-font :weight 'bold :height 1.3)
-    (set-face-attribute 'org-block nil            :foreground nil :inherit 'fixed-pitch :height 0.9)
+    (set-face-attribute 'org-level-1 nil          :weight 'bold)
+    (set-face-attribute 'org-document-title nil   :font proportionately-spaced-font :weight 'bold :height 1.3)
+    (set-face-attribute 'org-block nil            :inherit 'fixed-pitch :height 0.9)
     (set-face-attribute 'org-block-begin-line nil :inherit '(font-lock-comment-face fixed-pitch) :height 0.9)
     (set-face-attribute 'org-code nil             :font mono-spaced-font)
     (set-face-attribute 'org-verbatim nil         :font mono-spaced-font)
     (set-face-attribute 'org-checkbox nil         :font mono-spaced-font)
-    (set-face-attribute 'org-indent nil           :inherit '(org-hide fixed-pitch))
     (set-face-attribute 'org-special-keyword nil  :inherit '(font-lock-comment-face fixed-pitch))
     (set-face-attribute 'org-meta-line nil        :inherit '(font-lock-comment-face fixed-pitch)))
 
