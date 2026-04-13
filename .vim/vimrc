@@ -16,6 +16,8 @@ set ttimeout ttimeoutlen=30     "timeout on keycodes
 
 set virtualedit=block,onemore   "move past end of line in v-block mode and 1 past end of line in normal mode
 
+set nrformats+=blank
+
 " cmd
 set showcmd
 set cmdheight=2
