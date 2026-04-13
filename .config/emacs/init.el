@@ -95,6 +95,9 @@
   (define-key evil-normal-state-map (kbd "U") 'evil-redo)
   (define-key evil-normal-state-map (kbd "SPC e") 'eval-last-sexp)
   (define-key evil-insert-state-map (kbd "C-SPC") 'completion-at-point)
+  (define-key evil-motion-state-map (kbd "RET") nil)
+  (define-key evil-motion-state-map (kbd "SPC") nil)
+  (define-key evil-motion-state-map (kbd "DEL") nil)
 
   (defun my/magit-process-environment (env)
     "Detect and set git -bare repo env vars when in tracked dotfile directories."
@@ -290,7 +293,10 @@
     (set-face-attribute 'org-checkbox nil         :font mono-spaced-font)
     (set-face-attribute 'org-indent nil           :inherit '(org-hide fixed-pitch))
     (set-face-attribute 'org-special-keyword nil  :inherit '(font-lock-comment-face fixed-pitch))
-    (set-face-attribute 'org-meta-line nil        :inherit '(font-lock-comment-face fixed-pitch))))
+    (set-face-attribute 'org-meta-line nil        :inherit '(font-lock-comment-face fixed-pitch)))
+
+  (org-babel-do-load-languages
+   'org-babel-load-languages '((shell . t))))
 
 (use-package org-appear
   :ensure t
