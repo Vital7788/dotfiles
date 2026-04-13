@@ -247,6 +247,8 @@
 
 (use-package keychain-environment
   :ensure t
+  :config
+  (set-face-attribute 'forge-pullreq-open nil :foreground (modus-themes-get-color-value 'green))
   :hook (after-init . keychain-refresh-environment))
 
 ;;; Org
