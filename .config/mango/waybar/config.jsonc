@@ -6,7 +6,7 @@
     "margin": 0,
     "modules-left": ["ext/workspaces", "custom/mode", "custom/recorder", "dwl/window"],
     "modules-center": ["clock"],
-    "modules-right": ["pulseaudio", "backlight", "network", "cpu", "memory", "temperature", "battery", "disk", "custom/updates", "tray"],
+    "modules-right": ["wireplumber", "wireplumber#source", "backlight", "network", "cpu", "memory", "temperature", "battery", "disk", "custom/updates", "tray"],
 
     "ext/workspaces": {
         "format": "{icon}",
@@ -23,10 +23,6 @@
 
     "dwl/window": {
         "tooltip": false,
-    },
-
-    "river/tags": {
-        "hide-vacant": true
     },
 
     "custom/recorder": {
@@ -105,24 +101,20 @@
         "on-click": "kitty -e nmtui"
     },
 
-    "pulseaudio": {
+    "wireplumber": {
         "format": "{icon} {volume}%",
-        "format-bluetooth": "󰂰 {volume}%",
-        "format-bluetooth-muted": "󰂲 {icon}",
         "format-muted": "󰝟",
-        "format-icons": {
-            "headphone": "󰋋",
-            "hands-free": "󰥰",
-            "headset": "󰋎",
-            "phone": "󰏲",
-            "portable": "󰄝",
-            "car": "󰄋",
-            "default": ["󰕿", "󰖀", "󰕾"]
-        },
+        "format-icons": ["󰕿", "󰖀", "󰕾"],
         "on-click": "pavucontrol",
-        "on-click-right": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
-        "on-scroll-up": "pactl set-sink-volume @DEFAULT_SINK@ +2%",
-        "on-scroll-down": "pactl set-sink-volume @DEFAULT_SINK@ -2%"
+        "on-click-right": "wpctl set-mute @DEFAULT_SINK@ toggle",
+    },
+
+    "wireplumber#source": {
+        "node-type": "Audio/Source",
+        "format": "󰍬 {volume}%",
+        "format-muted": "󰍭",
+        "on-click": "pavucontrol",
+        "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle",
     },
 
     "backlight": {

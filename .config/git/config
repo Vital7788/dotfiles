@@ -13,9 +13,9 @@
     colorMoved = default
 
 [core]
-    pager = delta
+    pager = "command -v delta >/dev/null 2>&1 && delta || less"
 [interactive]
-    diffFilter = delta --color-only
+    diffFilter = "command -v delta >/dev/null 2>&1 && delta --color-only || less"
 [delta]
     navigate = true  # use n and N to move between diff sections
     light = true
