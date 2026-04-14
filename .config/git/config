@@ -7,6 +7,8 @@
     helper = cache
 [push]
     autoSetupRemote = true
+[pull]
+    rebase = true
 [merge]
     conflictStyle = zdiff3
 [diff]
