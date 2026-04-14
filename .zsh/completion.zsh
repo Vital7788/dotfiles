@@ -75,7 +75,7 @@ zstyle ':completion:*:*:docker-*:*' option-stacking yes
 # replacement="__git_branch_names && ret=0"
 # functions[_git-switch]=${functions[_git-switch]/$current/$replacement}
 
-if [ ! -f ~/.zsh/fzf-tab/fzf-tab.plugin.zsh ]; then
+if [ ! -f ~/.zsh/fzf-tab/fzf-tab.plugin.zsh ] && [ ! -f /usr/share/zsh/site-functions/fzf-tab.zsh ]; then
     zstyle ':completion:*:*:*:*:corrections' format '%F{yellow}!- %d (errors: %e) -!%f'
     zstyle ':completion:*:*:*:*:descriptions' format '%F{blue}-- %D %d --%f'
     zstyle ':completion:*:*:*:*:messages' format ' %F{purple} -- %d --%f'
@@ -88,7 +88,11 @@ if [ ! -f ~/.zsh/fzf-tab/fzf-tab.plugin.zsh ]; then
         _wanted files expl 'local files' _files
     }
 else
-    source ~/.zsh/fzf-tab/fzf-tab.plugin.zsh
+    if [ -f ~/.zsh/fzf-tab/fzf-tab.plugin.zsh ]; then
+        source ~/.zsh/fzf-tab/fzf-tab.plugin.zsh
+    else
+        source /usr/share/zsh/site-functions/fzf-tab.zsh
+    fi
 
     # set descriptions format to enable group support
     zstyle ':completion:*:descriptions' format '[%d]'
