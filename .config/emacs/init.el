@@ -27,6 +27,9 @@
 (setq scroll-step 1)
 (setq scroll-margin 1)
 
+(setq window-combination-resize t)
+(setq help-window-select t)
+
 (setq completion-cycle-threshold 5)
 
 ;; Enable indentation+completion using the TAB key.
