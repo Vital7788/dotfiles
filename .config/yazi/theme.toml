@@ -1,55 +1,89 @@
 [which]
 mask            = { bg = "#e7d2be" }
 
+[mgr]
+find_keyword  = { fg = "yellow", bold = true, italic = true }
+find_position = { fg = "magenta" }
+
+[indicator]
+current = { bg = "#e7d2be", bold = true }
+parent = { bg = "#e7d2be", bold = true }
+
 [mode]
-normal_main = { fg = "white", bg = "blue", bold = true }
-select_main = { fg = "white", bg = "red", bold = true }
-unset_main = { fg = "white", bg = "red", bold = true }
+normal_main = { fg = "black", bg = "#cdd0e0" }
+select_main = { fg = "black", bg = "#e6c8c8" }
+unset_main = { fg = "black", bg = "#e6c8c8" }
+
+[filetype]
+rules = [
+  # Image
+  # { mime = "image/*", fg = "yellow" },
+  # Media
+  # { mime = "{audio,video}/*", fg = "magenta" },
+  # Archive
+  # { mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "magenta" },
+  # Document
+  # { mime = "application/{pdf,doc,rtf}", fg = "cyan" },
+  # Virtual file system
+  { mime = "vfs/{absent,stale}", fg = "darkgray" },
+
+  { url = "*", is = "orphan", fg = "red" },
+  { url = "*", is = "block", fg = "yellow" },
+  { url = "*", is = "char", fg = "yellow" },
+  { url = "*", is = "fifo", fg = "yellow" },
+  { url = "*", is = "sock", fg = "yellow" },
+  { url = "*", is = "dummy", fg = "red" },
+  { url = "*/", is = "dummy", fg = "red" },
+  { url = "*", is = "exec", fg = "green" },
+  { url = "*/", fg = "blue" },
+  { url = "*", fg = "black" }
+]
 
 [icon]
 dirs = [
-  { name = "documents", text = "󱧶", fg = "blue" },
-  { name = "downloads", text = "󰉍", fg = "blue" },
-  { name = "music", text = "󱍙", fg = "blue" },
-  { name = "pictures", text = "󰉏", fg = "blue" },
-  { name = "videos", text = "󱧺", fg = "blue" },
-  { name = "media", text = "󰉒", fg = "blue" },
-  { name = "mnt", text = "󰉒", fg = "blue" },
-  { name = "home", text = "󱂵", fg = "blue" },
-  { name = "etc", text = "󱁿", fg = "blue" },
-  { name = ".config", text = "󱂀", fg = "blue" },
+  { name = "documents", text = "󱧶" },
+  { name = "downloads", text = "󰉍" },
+  { name = "music", text = "󱍙" },
+  { name = "pictures", text = "󰉏" },
+  { name = "videos", text = "󱧺" },
+  { name = "media", text = "󰉒" },
+  { name = "mnt", text = "󰉒" },
+  { name = "home", text = "󱂵" },
+  { name = "etc", text = "󱁿" },
+  { name = ".config", text = "󱂀" },
 ]
 
 files = [
-  { name = ".bash_profile", text = "󱁼", fg = "black" },
-  { name = ".bashrc", text = "󱁼", fg = "black" },
-  { name = ".zprofile", text = "󱁼", fg = "black" },
-  { name = ".zshenv", text = "󱁼", fg = "black" },
-  { name = ".zshrc", text = "󱁼", fg = "black" },
-  { name = ".vimrc", text = "󱁼", fg = "black" },
-  { name = "vimrc", text = "󱁻", fg = "black" },
-  { name = "config", text = "󱁻", fg = "black" },
+  { name = ".bash_profile", text = "󱁼" },
+  { name = ".bashrc", text = "󱁼" },
+  { name = ".zprofile", text = "󱁼" },
+  { name = ".zshenv", text = "󱁼" },
+  { name = ".zshrc", text = "󱁼" },
+  { name = ".vimrc", text = "󱁼" },
+  { name = "vimrc", text = "󱁻" },
+  { name = "config", text = "󱁻" },
 ]
 
 exts = [
   # archives
-  { name = "7z", text = "󰛫" },
-  { name = "bz", text = "󰛫" },
-  { name = "bz2", text = "󰛫" },
-  { name = "bz3", text = "󰛫" },
-  { name = "gz", text = "󰛫" },
-  { name = "rar", text = "󰛫" },
-  { name = "tar", text = "󰛫" },
-  { name = "tgz", text = "󰛫" },
-  { name = "txz", text = "󰛫" },
-  { name = "xz", text = "󰛫" },
-  { name = "zip", text = "󰛫" },
-  { name = "zst", text = "󰛫" },
+  { name = "7z", text = "󰛫", fg = "cyan" },
+  { name = "bz", text = "󰛫", fg = "cyan" },
+  { name = "bz2", text = "󰛫", fg = "cyan" },
+  { name = "bz3", text = "󰛫", fg = "cyan" },
+  { name = "gz", text = "󰛫", fg = "cyan" },
+  { name = "rar", text = "󰛫", fg = "cyan" },
+  { name = "tar", text = "󰛫", fg = "cyan" },
+  { name = "tgz", text = "󰛫", fg = "cyan" },
+  { name = "txz", text = "󰛫", fg = "cyan" },
+  { name = "xz", text = "󰛫", fg = "cyan" },
+  { name = "zip", text = "󰛫", fg = "cyan" },
+  { name = "zst", text = "󰛫", fg = "cyan" },
 
   # documents
-  { name = "md", text = "󰈙", fg = "black" },
-  { name = "txt", text = "󰈙" , fg = "black"  },
-  { name = "org", text = "󰈙" , fg = "black"  },
+  { name = "md", text = "󰈙" },
+  { name = "txt", text = "󰈙" },
+  { name = "org", text = "󰈙" },
+  { name = "pdf", text = "󰈙", fg = "red" },
 
   # music, images, videos
   { name = "3gp", text = "󰈫" },
@@ -63,37 +97,38 @@ exts = [
   { name = "flac", text = "󰈣" },
   { name = "gif", text = "󰈟" },
   { name = "ico", text = "󰈟" },
-  { name = "jpeg", text = "󰈟" },
-  { name = "jpg", text = "󰈟" },
+  { name = "jpeg", text = "󰈟", fg = "yellow" },
+  { name = "jpg", text = "󰈟", fg = "yellow" },
   { name = "jxl", text = "󰈟" },
   { name = "m4a", text = "󰈣" },
   { name = "m4v", text = "󰈫" },
   { name = "mkv", text = "󰈫" },
   { name = "mov", text = "󰈫" },
   { name = "mp3", text = "󰈣" },
-  { name = "mp4", text = "󰈫" },
+  { name = "mp4", text = "󰈫", fg = "magenta" },
   { name = "oga", text = "󰈣" },
   { name = "ogg", text = "󰈣" },
   { name = "ogv", text = "󰈫" },
   { name = "ogx", text = "󰈫" },
   { name = "opus", text = "󰈣" },
   { name = "pcm", text = "󰈣" },
-  { name = "png", text = "󰈟" },
+  { name = "png", text = "󰈟", fg = "yellow" },
   { name = "spx", text = "󰈣" },
   { name = "wav", text = "󰈣" },
   { name = "webm", text = "󰈫" },
-  { name = "webp", text = "󰈟" },
+  { name = "webp", text = "󰈟", fg = "yellow" },
   { name = "wma", text = "󰈣" },
   { name = "wmv", text = "󰈫" },
   { name = "wv", text = "󰈣" },
   { name = "wvc", text = "󰈣" },
 
   # config files
-  { name = "cfg", text = "󱁻", fg = "black" },
-  { name = "conf", text = "󱁻", fg = "black" },
-  { name = "ini", text = "󱁻", fg = "black" },
-  { name = "yaml", text = "󱁻", fg = "black" },
-  { name = "yml", text = "󱁻", fg = "black" },
+  { name = "cfg", text = "󱁻" },
+  { name = "conf", text = "󱁻" },
+  { name = "ini", text = "󱁻" },
+  { name = "toml", text = "󱁻" },
+  { name = "yaml", text = "󱁻" },
+  { name = "yml", text = "󱁻" },
 
   # code
   { name = "ada", text = "󰈮" },
@@ -233,19 +268,19 @@ exts = [
 
 prepend_conds = [
   # Special files
-  { if = "orphan", text = "󰷆", fg = "black" },
-  { if = "link", text = "󰬲", fg = "darkgray" },
+  { if = "orphan", text = "󰷆" },
+  { if = "link", text = "󰬲" },
   { if = "block", text = "󰘓", fg = "yellow" },
   { if = "char", text = "󰘓", fg = "yellow" },
   { if = "fifo", text = "󰘓", fg = "yellow" },
   { if = "sock", text = "󰘓", fg = "yellow" },
-  { if = "sticky", text = "", fg = "yellow" },
-  { if = "dummy", text = "󰮘", fg = "red" },
+  { if = "sticky", text = "" },
+  { if = "dummy", text = "󰮘" },
 
   # Fallback
-  { if = "dir & hidden", text = "󰉖", fg = "blue" },
-  { if = "dir", text = "󰉋", fg = "blue" },
-  { if = "exec", text = "󰈮", fg = "green" },
-  { if = "!dir & hidden", text = "󰈤", fg = "black" },
-  { if = "!dir", text = "󰈔", fg = "black" },
+  { if = "dir & hidden", text = "󰉖" },
+  { if = "dir", text = "󰉋" },
+  { if = "exec", text = "󰈮" },
+  { if = "!dir & hidden", text = "󰈤" },
+  { if = "!dir", text = "󰈔" },
 ]

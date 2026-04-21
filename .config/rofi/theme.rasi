@@ -12,7 +12,7 @@
 }
 
 configuration {
-  font: "IBM Plex Sans 12";
+  font: "IBM Plex Sans,Symbols Nerd Font,12";
   show-icons: true;
 
   drun {
@@ -33,7 +33,7 @@ inputbar {
 }
 
 prompt {
-  padding: 10px;
+  padding: 12px 6px 0 12px;
   text-color: @fg0;
 }
 

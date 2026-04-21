@@ -232,6 +232,7 @@
   (setq magit-define-global-key-bindings 'recommended)
   :config
   (setq magit-list-refs-sortby "-committerdate")
+  (setq magit-diff-refine-hunk 'all)
   (defun my/magit-open-file-in-eclipse ()
     "Open the file under the cursor in Eclipse"
     (interactive)
