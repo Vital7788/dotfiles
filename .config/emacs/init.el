@@ -239,7 +239,7 @@
     (let* ((repo-path (magit-repository-local-repository))
 	   (command (format "%s../../eclipse/eclipse --launcher.openFile %s%s" repo-path repo-path (magit-current-file))))
       (start-process-shell-command "eclipse-launcher" nil command)))
-  (evil-define-key 'normal magit-mode-map (kbd "gx") 'my/magit-open-file-in-eclipse))
+  (evil-define-key 'normal magit-mode-map (kbd "gf") 'my/magit-open-file-in-eclipse))
 
 (use-package forge
   :after magit
