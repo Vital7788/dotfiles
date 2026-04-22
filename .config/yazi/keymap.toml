@@ -1,7 +1,9 @@
 [mgr]
 prepend_keymap = [
-  { on = "d",         run = "remove --permanently",        desc = "Permanently delete selected files" },
-  { on = "D",         run = "remove",                      desc = "Trash selected files" },
+  { on = "d",         run = "remove --permanently",       desc = "Permanently delete selected files" },
+  { on = "D",         run = "remove",                     desc = "Trash selected files" },
+  { on = "M",         run = "plugin mount",               desc = "Mount, unmount and eject disks" },
+
   { on = ["g", "s"], run = "cd /home/vital/sigasi/git/sigasi", desc = "Go to Sigasi git repo" },
   { on = ["g", "v"], run = "cd /home/vital/sigasi/git/sigasi/com.sigasi.lsp.extension.vscode", desc = "Go to Sigasi VS Code folder" },
 ]
