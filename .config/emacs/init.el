@@ -292,6 +292,8 @@
     (set-face-attribute 'org-document-title nil   :font proportionately-spaced-font :weight 'bold :height 1.3)
     (set-face-attribute 'org-block nil            :inherit 'fixed-pitch :height 0.9)
     (set-face-attribute 'org-block-begin-line nil :inherit '(font-lock-comment-face fixed-pitch) :height 0.9)
+    (set-face-attribute 'org-table nil            :font mono-spaced-font :height 0.9)
+    (set-face-attribute 'org-formula nil          :font mono-spaced-font :height 0.9)
     (set-face-attribute 'org-code nil             :font mono-spaced-font)
     (set-face-attribute 'org-verbatim nil         :font mono-spaced-font)
     (set-face-attribute 'org-checkbox nil         :font mono-spaced-font)
