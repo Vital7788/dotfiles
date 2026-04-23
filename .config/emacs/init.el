@@ -318,3 +318,5 @@
   :config
   (setq sly-mrepl-history-file-name "/home/vital/.local/state/sly-mrepl-history")
   (setq inferior-lisp-program "sbcl"))
+
+(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
