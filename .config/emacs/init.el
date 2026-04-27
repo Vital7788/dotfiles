@@ -168,9 +168,13 @@
 (use-package consult
   :after evil
   :ensure t
+  :init
+  ;; Use Consult to select xref locations with preview
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
   :config
   ;; A recursive grep
-  (define-key evil-normal-state-map (kbd ",g") 'consult-ripgrep)
+  (define-key evil-normal-state-map (kbd ",s") 'consult-ripgrep)
   ;; Search for files names recursively
   (define-key evil-normal-state-map (kbd ",f") 'consult-fd)
   ;; Search through the outline (headings) of the file
@@ -231,6 +235,8 @@
   :init
   (setq magit-define-global-key-bindings 'recommended)
   :config
+  (keymap-global-set "<f5>" (lambda () (interactive) (magit-status "~/sigasi/git/sigasi")))
+  (setq magit-repository-directories '(("~/sigasi/git/sigasi" . 0)))
   (setq magit-list-refs-sortby "-committerdate")
   (setq magit-diff-refine-hunk 'all)
   (defun my/magit-open-file-in-eclipse ()
@@ -240,17 +246,6 @@
 	   (command (format "%s../../eclipse/eclipse --launcher.openFile %s%s" repo-path repo-path (magit-current-file))))
       (start-process-shell-command "eclipse-launcher" nil command)))
   (evil-define-key 'normal magit-mode-map (kbd "gf") 'my/magit-open-file-in-eclipse))
-
-(use-package forge
-  :after magit
-  :ensure t
-  :config
-  (push '("gitlab.sigasi.com"
-	  "gitlab.sigasi.com/api/v4"
-	  "gitlab.sigasi.com"
-	  forge-gitlab-repository)
-	forge-alist)
-  (setq auth-sources '("~/.authinfo")))
 
 (use-package keychain-environment
   :ensure t
@@ -278,7 +273,7 @@
   (let ((mono-spaced-font "IBM Plex Mono")
 	(proportionately-spaced-font "IBM Plex Serif")
 	(background-color    (face-background 'default nil 'default)))
-    (dolist (face '((org-level-1 . 1.3)
+    (dolist (face '((org-level-1 . 1.25)
 		    (org-level-2 . 1.2)
 		    (org-level-3 . 1.15)
 		    (org-level-4 . 1.1)
@@ -311,6 +306,18 @@
   (setq org-appear-autoemphasis   t   ; Show bold, italics, verbatim, etc.
 	org-appear-autolinks      t   ; Show links
 	org-appear-autosubmarkers t)) ; Show sub- and superscripts
+
+;;; LSP
+(use-package eglot
+  :ensure nil
+  :config
+  (set-face-attribute 'eglot-highlight-symbol-face nil :weight 'normal)
+  (define-key evil-normal-state-map (kbd "<SPC>rn") 'eglot-rename)
+  (define-key evil-normal-state-map (kbd "<SPC>ra") 'eglot-code-actions)
+  (define-key evil-normal-state-map (kbd "<SPC>rf") 'eglot-format)
+  (define-key evil-normal-state-map (kbd "<SPC>ro") 'eglot-code-action-organize-imports)
+  :hook
+  (typescript-ts-mode . eglot-ensure))
 
 ;;; Language specific
 (use-package sly
