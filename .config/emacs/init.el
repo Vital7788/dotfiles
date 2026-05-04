@@ -239,6 +239,12 @@
   (setq magit-repository-directories '(("~/sigasi/git/sigasi" . 0)))
   (setq magit-list-refs-sortby "-committerdate")
   (setq magit-diff-refine-hunk 'all)
+  (setq magit-display-buffer-function #'display-buffer)
+  (add-to-list 'display-buffer-alist
+	       `((derived-mode . magit-mode)
+		 (display-buffer-reuse-mode-window
+		  display-buffer-below-selected)
+		 (mode magit-mode)))
   (defun my/magit-open-file-in-eclipse ()
     "Open the file under the cursor in Eclipse"
     (interactive)
