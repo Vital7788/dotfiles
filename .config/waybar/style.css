@@ -190,6 +190,7 @@ window#waybar {
 }
 
 #clock {
+    font-family: "LXGW WenKai", sans-serif, "Symbols Nerd Font Mono";
     color: @clock-color;
     border-bottom-color: @clock-color;
 }
