@@ -42,6 +42,13 @@
 ;; Hide commands in M-x which do not apply to the current mode.
 (setq read-extended-command-predicate #'command-completion-default-include-p)
 
+;; Custom project folder
+(defun project-find-vscode (path)
+  (when-let* ((folder "com.sigasi.lsp.extension.vscode")
+	      (index (string-match folder path)))
+    (cons 'transient (substring path 0 (+ index (length folder))))))
+(add-to-list 'project-find-functions #'project-find-vscode)
+
 ;;; Appearance
 
 ;; More theme customizations: https://www.gnu.org/software/emacs/manual/html_node/modus-themes/DIY-Stylistic-variants-using-palette-overrides.html
@@ -82,7 +89,6 @@
   (dired-mode . nerd-icons-dired-mode))
 
 ;;; Evil
-
 (use-package dash
   :ensure t)
 
@@ -183,6 +189,22 @@
   (define-key evil-normal-state-map (kbd ",l") 'consult-line)
   ;; Switch to another buffer, or bookmarked file, or recently opened file.
   (define-key evil-normal-state-map (kbd ",b") 'consult-buffer))
+
+(use-package embark
+  :ensure t
+  :bind (("C-." . embark-act) ; find relevant commands while over something
+         :map minibuffer-local-map
+         ("C-c C-c" . embark-collect)
+         ("C-c C-e" . embark-export)))
+
+(use-package embark-consult
+  :ensure t)
+
+(unless (>= emacs-major-version 31)
+  (use-package wgrep
+    :ensure t
+    :config
+    (setq wgrep-auto-save-buffer t)))
 
 (use-package corfu
   :ensure t
