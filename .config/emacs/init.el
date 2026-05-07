@@ -42,13 +42,6 @@
 ;; Hide commands in M-x which do not apply to the current mode.
 (setq read-extended-command-predicate #'command-completion-default-include-p)
 
-;; Custom project folder
-(defun project-find-vscode (path)
-  (when-let* ((folder "com.sigasi.lsp.extension.vscode")
-	      (index (string-match folder path)))
-    (cons 'transient (substring path 0 (+ index (length folder))))))
-(add-to-list 'project-find-functions #'project-find-vscode)
-
 ;;; Appearance
 
 ;; More theme customizations: https://www.gnu.org/software/emacs/manual/html_node/modus-themes/DIY-Stylistic-variants-using-palette-overrides.html
@@ -144,6 +137,17 @@
   :after evil
   :ensure t
   :hook (after-init . xclip-mode))
+
+;;; Project
+(use-package project
+  :ensure nil
+  :config
+  ;; Custom project folder
+  (defun project-find-vscode (path)
+    (when-let* ((folder "com.sigasi.lsp.extension.vscode")
+		(index (string-match folder path)))
+      (cons 'transient (substring path 0 (+ index (length folder))))))
+  (add-to-list 'project-find-functions #'project-find-vscode))
 
 ;;; Minibuffer and Completions
 ;; More advanced stuff here: https://protesilaos.com/codelog/2024-02-17-emacs-modern-minibuffer-packages/
@@ -261,12 +265,7 @@
   (setq magit-repository-directories '(("~/sigasi/git/sigasi" . 0)))
   (setq magit-list-refs-sortby "-committerdate")
   (setq magit-diff-refine-hunk 'all)
-  (setq magit-display-buffer-function #'display-buffer)
-  (add-to-list 'display-buffer-alist
-	       `((derived-mode . magit-mode)
-		 (display-buffer-reuse-mode-window
-		  display-buffer-below-selected)
-		 (mode magit-mode)))
+  (setq magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)
   (defun my/magit-open-file-in-eclipse ()
     "Open the file under the cursor in Eclipse"
     (interactive)
