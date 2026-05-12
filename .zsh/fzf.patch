@@ -1,27 +1,39 @@
 Patch Ctrl-R to immediately run the command after selection
 Pressing Ctrl-F while the menu is open edits the prompt
 
-@@ -134,17 +134,20 @@
+@@ -136,19 +136,23 @@
    if zmodload -F zsh/parameter p:{commands,history} 2>/dev/null && (( ${+commands[perl]} )); then
      selected="$(printf '%s\t%s\000' "${(kv)history[@]}" |
        perl -0 -ne 'if (!$seen{(/^\s*[0-9]+\**\t(.*)/s, $1)}++) { s/\n/\n\t/g; print; }' |
--      FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort,alt-r:toggle-raw --wrap-sign '\t↳ ' --highlight-line ${FZF_CTRL_R_OPTS-} --query=${(qqq)LBUFFER} +m --read0") \
-+      FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort,alt-r:toggle-raw --wrap-sign '\t↳ ' --highlight-line ${FZF_CTRL_R_OPTS-} --query=${(qqq)LBUFFER} --expect=ctrl-f +m --read0") \
+-      FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort,alt-r:toggle-raw --wrap-sign '\t↳ ' --highlight-line --multi ${FZF_CTRL_R_OPTS-} --query=${(qqq)LBUFFER} --read0") \
++      FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort,alt-r:toggle-raw --wrap-sign '\t↳ ' --highlight-line --multi ${FZF_CTRL_R_OPTS-} --query=${(qqq)LBUFFER} --expect=ctrl-f --read0") \
        FZF_DEFAULT_OPTS_FILE='' $(__fzfcmd))"
+       extracted_with_perl=1
    else
      selected="$(fc -rl 1 | __fzf_exec_awk '{ cmd=$0; sub(/^[ \t]*[0-9]+\**[ \t]+/, "", cmd); if (!seen[cmd]++) print $0 }' |
--      FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort,alt-r:toggle-raw --wrap-sign '\t↳ ' --highlight-line ${FZF_CTRL_R_OPTS-} --query=${(qqq)LBUFFER} +m") \
-+      FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort,alt-r:toggle-raw --wrap-sign '\t↳ ' --highlight-line ${FZF_CTRL_R_OPTS-} --query=${(qqq)LBUFFER} --expect=ctrl-f +m") \
+-      FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort,alt-r:toggle-raw --wrap-sign '\t↳ ' --highlight-line --multi ${FZF_CTRL_R_OPTS-} --query=${(qqq)LBUFFER}") \
++      FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort,alt-r:toggle-raw --wrap-sign '\t↳ ' --highlight-line --multi ${FZF_CTRL_R_OPTS-} --query=${(qqq)LBUFFER} --expect=ctrl-f") \
        FZF_DEFAULT_OPTS_FILE='' $(__fzfcmd))"
    fi
    local ret=$?
+   local -a cmds
+   # Avoid leaking auto assigned values when using backreferences '(#b)'
+   local -a mbegin mend match
++  local key
    if [ -n "$selected" ]; then
--    if [[ $(__fzf_exec_awk '{print $1; exit}' <<< "$selected") =~ ^[1-9][0-9]* ]]; then
-+    if [[ $(__fzf_exec_awk 'NR==2{print $1; exit}' <<< "$selected") =~ ^[1-9][0-9]* ]]; then
-       zle vi-fetch-history -n $MATCH
-+      if [[ $(__fzf_exec_awk 'NR==1{print $1; exit}' <<< "$selected") != "ctrl-f" ]]; then
-+        zle accept-line
-+      fi
++    # Extract the key line injected by --expect (first line of output)
++    key="${selected%%$'\n'*}"
++    selected="${selected#*$'\n'}"
+     # Heuristic to check if the selected value is from history or a custom query
+     if ((( extracted_with_perl )) && [[ $selected == <->$'\t'* ]]) ||
+     ((( ! extracted_with_perl )) && [[ $selected == [[:blank:]]#<->(  |\* )* ]]); then
+@@ -173,6 +177,9 @@
+         # Join by newline after stripping trailing newlines from each command
+         BUFFER="${(pj:\n:)${(@)cmds%%$'\n'#}}"
+         CURSOR=${#BUFFER}
++        if [[ $key != "ctrl-f" ]]; then
++          zle accept-line
++        fi
+       fi
      else # selected is a custom query, not from history
        LBUFFER="$selected"
-     fi
