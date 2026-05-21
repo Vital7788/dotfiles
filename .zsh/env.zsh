@@ -1,4 +1,4 @@
-path+=("${HOME}/.local/bin")
+path+=("${HOME}/.local/bin" "${HOME}/.local/share/nvim/mason/bin")
 export PATH
 
 export XDG_CONFIG_HOME="${HOME}/.config"

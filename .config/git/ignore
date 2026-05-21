@@ -47,3 +47,6 @@ pylintrc
 *.log
 *.out
 *.pdf
+
+# claude
+.claude
