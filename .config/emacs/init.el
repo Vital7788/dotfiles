@@ -261,7 +261,7 @@
   :init
   (setq magit-define-global-key-bindings 'recommended)
   :config
-  (keymap-global-set "<f5>" (lambda () (interactive) (magit-status "~/sigasi/git/sigasi")))
+  ;; (keymap-global-set "<f5>" (lambda () (interactive) (magit-status "~/sigasi/git/sigasi")))
   (setq magit-repository-directories '(("~/sigasi/git/sigasi" . 0)))
   (setq magit-list-refs-sortby "-committerdate")
   (setq magit-diff-refine-hunk 'all)
@@ -345,6 +345,47 @@
   (define-key evil-normal-state-map (kbd "<SPC>ro") 'eglot-code-action-organize-imports)
   :hook
   (typescript-ts-mode . eglot-ensure))
+
+;;; Debugger (DAP)
+(use-package dape
+  :ensure t
+  :config
+  (add-to-list 'dape-configs
+               `(sigasi-extension
+                 modes nil
+                 ensure (lambda (_)
+                          (let ((adapter (expand-file-name "js-debug/src/dapDebugServer.js" dape-adapter-dir)))
+                            (unless (file-exists-p adapter)
+                              (user-error "js-debug not found"))))
+                 command "node"
+                 command-args (,(expand-file-name "js-debug/src/dapDebugServer.js" dape-adapter-dir) :autoport)
+                 port :autoport
+                 :type "pwa-node"
+                 :request "attach"
+                 :port 9229
+                 :cwd dape-cwd-fn
+                 :sourceMaps t
+                 :resolveSourceMapLocations ["${workspaceFolder}/**" "!**/node_modules/**"]))
+
+  (defun my/sigasi-debug ()
+    "Start VS Code extension-development host and attach dape."
+    (interactive)
+    (bookmark-maybe-load-default-file)
+    (let ((vscode-dir (expand-file-name (bookmark-get-filename "vscode"))))
+      (unless (cl-some (lambda (buf)
+                         (when-let* ((file (buffer-file-name buf)))
+                           (string-prefix-p vscode-dir (expand-file-name file))))
+                       (buffer-list))
+        (bookmark-jump "vscode"))
+      (start-process "sigasi-debug-host" nil "/opt/vscode/bin/code"
+                     "--ozone-platform-hint=auto"
+                     "--enable-wayland-ime"
+                     "--extensionDevelopmentPath"
+                     vscode-dir
+                     "--inspect-extensions" "9229"))
+    (dape (dape--config-eval 'sigasi-extension nil))))
+
+  (define-key evil-normal-state-map (kbd "<f5>") #'my/sigasi-debug))
 
 ;;; Language specific
 (use-package sly
