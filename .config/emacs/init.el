@@ -276,8 +276,6 @@
 
 (use-package keychain-environment
   :ensure t
-  :config
-  (set-face-attribute 'forge-pullreq-open nil :foreground (modus-themes-get-color-value 'green))
   :hook (after-init . keychain-refresh-environment))
 
 ;;; Org
@@ -383,7 +381,7 @@
                      "--extensionDevelopmentPath"
                      vscode-dir
                      "--inspect-extensions" "9229"))
-    (dape (dape--config-eval 'sigasi-extension nil))))
+    (dape (dape--config-eval 'sigasi-extension nil)))
 
   (define-key evil-normal-state-map (kbd "<f5>") #'my/sigasi-debug))
 
@@ -394,4 +392,15 @@
   (setq sly-mrepl-history-file-name "/home/vital/.local/state/sly-mrepl-history")
   (setq inferior-lisp-program "sbcl"))
 
+(setq treesit-language-source-alist
+      '((typescript "https://github.com/tree-sitter/tree-sitter-typescript"
+                    "master" "typescript/src")
+        (tsx "https://github.com/tree-sitter/tree-sitter-typescript"
+             "master" "tsx/src")))
+
+(dolist (lang treesit-language-source-alist)
+  (unless (treesit-language-available-p (car lang))
+    (treesit-install-language-grammar (car lang))))
+
 (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
