@@ -15,6 +15,8 @@
 
 ;;; Basic behavior
 
+(setq inhibit-startup-screen t)
+
 ;; Put autosave files (ie #foo#) and backup files (ie foo~) in ~/.local/state/emacs/
 (setq backup-directory-alist '(("." . "~/.local/state/emacs/backup")))
 (setq auto-save-file-name-transforms '((".*" "~/.local/state/emacs/autosave/\\1" t)))
