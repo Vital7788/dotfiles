@@ -247,15 +247,17 @@
    (dired-mode . hl-line-mode))
   :config
   (setq dired-recursive-copies 'always)
-  (setq dired-recursive-deletes 'always))
+  (setq dired-recursive-deletes 'always)
+  (evil-define-key 'normal dired-mode-map
+    (kbd "h") #'dired-up-directory
+    (kbd "l") #'dired-find-file))
 
-(use-package dired-subtree
+(use-package dired-preview
   :ensure t
   :after dired
-  :bind
-  ( :map dired-mode-map
-    ("<tab>" . dired-subtree-toggle)
-    ("TAB" . dired-subtree-toggle)))
+  :hook (after-init . dired-preview-global-mode)
+  :config
+  (setq dired-preview-delay 0))
 
 ;;; Magit
 (use-package magit
@@ -377,15 +379,41 @@
                            (string-prefix-p vscode-dir (expand-file-name file))))
                        (buffer-list))
         (bookmark-jump "vscode"))
-      (start-process "sigasi-debug-host" nil "/opt/vscode/bin/code"
-                     "--ozone-platform-hint=auto"
-                     "--enable-wayland-ime"
+      (start-process "sigasi-debug-host" nil "code"
                      "--extensionDevelopmentPath"
                      vscode-dir
                      "--inspect-extensions" "9229"))
     (dape (dape--config-eval 'sigasi-extension nil)))
 
-  (define-key evil-normal-state-map (kbd "<f5>") #'my/sigasi-debug))
+  (define-key evil-normal-state-map (kbd "<f5>") #'my/sigasi-debug)
+
+  (transient-define-prefix my/dape-transient ()
+    "Dape debug commands."
+    [["Session"
+      ("d" "launch"   dape)
+      ("r" "restart"  dape-restart)
+      ("Q" "stop"     dape-quit)]
+     ["Step"
+      ("c" "continue" dape-continue        :transient t)
+      ("n" "next"     dape-next            :transient t)
+      ("i" "step-in"  dape-step-in         :transient t)
+      ("o" "step-out" dape-step-out        :transient t)
+      ("p" "pause"    dape-pause           :transient t)
+      ("u" "until"    dape-until           :transient t)]
+     ["Breakpoints"
+      ("b" "toggle"     dape-breakpoint-toggle)
+      ("B" "condition"  dape-breakpoint-expression)
+      ("l" "log"        dape-breakpoint-log)
+      ("h" "hits"       dape-breakpoint-hits)
+      ("x" "remove all" dape-breakpoint-remove-all)]
+     ["Inspect"
+      ("e" "eval"       dape-evaluate-expression)
+      ("w" "watch"      dape-watch-dwim)
+      ("s" "stack"      dape-select-stack)
+      ("S-k" "frame up"   dape-stack-select-up   :transient t)
+      ("S-j" "frame down" dape-stack-select-down :transient t)]])
+
+  (define-key evil-normal-state-map (kbd "<SPC>d") #'my/dape-transient))
 
 ;;; Language specific
 (use-package sly
