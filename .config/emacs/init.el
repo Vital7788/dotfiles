@@ -145,11 +145,11 @@
   :ensure nil
   :config
   ;; Custom project folder
-  (defun project-find-vscode (path)
+  (defun my/project-find-vscode (path)
     (when-let* ((folder "com.sigasi.lsp.extension.vscode")
 		(index (string-match folder path)))
       (cons 'transient (substring path 0 (+ index (length folder))))))
-  (add-to-list 'project-find-functions #'project-find-vscode))
+  (add-to-list 'project-find-functions #'my/project-find-vscode))
 
 ;;; Minibuffer and Completions
 ;; More advanced stuff here: https://protesilaos.com/codelog/2024-02-17-emacs-modern-minibuffer-packages/
@@ -369,9 +369,39 @@
                  :sourceMaps t
                  :resolveSourceMapLocations ["${workspaceFolder}/**" "!**/node_modules/**"]))
 
+  (defvar my/sigasi-auto-reconnect nil)
+  (defvar my/sigasi-reconnect-timer nil)
+
+  (defun my/sigasi-cancel-reconnect ()
+    (when (timerp my/sigasi-reconnect-timer)
+      (cancel-timer my/sigasi-reconnect-timer))
+    (setq my/sigasi-reconnect-timer nil))
+
+  (defun my/sigasi-check-reconnect ()
+    "Schedule a dape reconnect when the session terminates unexpectedly."
+    (when (and my/sigasi-auto-reconnect (not dape--connections))
+      (my/sigasi-cancel-reconnect)
+      (setq my/sigasi-reconnect-timer
+            (run-with-timer 2 nil
+                            (lambda ()
+                              (when my/sigasi-auto-reconnect
+                                (condition-case err
+                                    (dape (dape--config-eval 'sigasi-extension nil))
+                                  (error (message "Sigasi auto-reconnect failed: %s" err)))))))))
+
+  (add-hook 'dape-update-ui-hook #'my/sigasi-check-reconnect)
+
+  (advice-add 'dape-quit :before
+              (lambda (&rest _)
+                (setq my/sigasi-auto-reconnect nil)
+                (my/sigasi-cancel-reconnect)
+                (when-let* ((proc (get-process "sigasi-compile-watch")))
+                  (delete-process proc))))
+
   (defun my/sigasi-debug ()
     "Start VS Code extension-development host and attach dape."
     (interactive)
+    (setq my/sigasi-auto-reconnect t)
     (bookmark-maybe-load-default-file)
     (let ((vscode-dir (expand-file-name (bookmark-get-filename "vscode"))))
       (unless (cl-some (lambda (buf)
@@ -379,10 +409,16 @@
                            (string-prefix-p vscode-dir (expand-file-name file))))
                        (buffer-list))
         (bookmark-jump "vscode"))
-      (start-process "sigasi-debug-host" nil "code"
-                     "--extensionDevelopmentPath"
-                     vscode-dir
-                     "--inspect-extensions" "9229"))
+      (unless (get-process "sigasi-compile-watch")
+        (let ((default-directory vscode-dir))
+          (start-process "sigasi-compile-watch"
+                         (get-buffer-create "*sigasi-compile-watch*")
+                         "yarn" "compile:watch")))
+      (let ((process-environment (cons "RELOAD_ON_WATCH=true" process-environment)))
+        (start-process "sigasi-debug-host" nil "code"
+                       "--extensionDevelopmentPath"
+                       vscode-dir
+                       "--inspect-extensions" "9229")))
     (dape (dape--config-eval 'sigasi-extension nil)))
 
   (define-key evil-normal-state-map (kbd "<f5>") #'my/sigasi-debug)
@@ -421,6 +457,12 @@
   :config
   (setq sly-mrepl-history-file-name "/home/vital/.local/state/sly-mrepl-history")
   (setq inferior-lisp-program "sbcl"))
+
+(defun lisp-word-syntax ()
+  (modify-syntax-entry ?- "w")
+  (modify-syntax-entry ?/ "w"))
+(dolist (hook '(emacs-lisp-mode-hook lisp-mode-hook))
+  (add-hook hook 'lisp-word-syntax))
 
 (setq treesit-language-source-alist
       '((typescript "https://github.com/tree-sitter/tree-sitter-typescript"
