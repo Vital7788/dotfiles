@@ -12,11 +12,11 @@ then
     sudo ~/.local/bin/hotplug-monitor.sh "$1"
 
     # Start mmsg in the background, since the read loop hangs otherwise
-    exec 3< <(mmsg -w -O)
+    exec 3< <(mmsg watch all-monitors)
     mmsg_pid=$!
 
     while read -r output <&3; do
-        if grep -q "$1" <<< "$output"; then
+        if echo "$output" | jq -e ".monitors | any(.name == \"$1\")" >/dev/null; then
             # Reload kanshi, since it can't handle the monitor being forcefully enabled
             pkill --signal SIGHUP -x kanshi
 
