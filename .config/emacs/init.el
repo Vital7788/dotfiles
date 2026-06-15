@@ -44,6 +44,11 @@
 ;; Hide commands in M-x which do not apply to the current mode.
 (setq read-extended-command-predicate #'command-completion-default-include-p)
 
+(use-package exec-path-from-shell
+  :ensure t
+  :config
+  (exec-path-from-shell-initialize))
+
 ;;; Appearance
 
 ;; More theme customizations: https://www.gnu.org/software/emacs/manual/html_node/modus-themes/DIY-Stylistic-variants-using-palette-overrides.html
