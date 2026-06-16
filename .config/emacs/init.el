@@ -9,9 +9,9 @@
 
 ;; Don't show byte compilation warnings after installing packages
 (add-to-list 'display-buffer-alist
-	     '("\\`\\*\\(Warnings\\|Compile-Log\\)\\*\\'"
-	       (display-buffer-no-window)
-	       (allow-no-window . t)))
+             '("\\`\\*\\(Warnings\\|Compile-Log\\)\\*\\'"
+               (display-buffer-no-window)
+               (allow-no-window . t)))
 
 ;;; Basic behavior
 
@@ -22,7 +22,15 @@
 (setq auto-save-file-name-transforms '((".*" "~/.local/state/emacs/autosave/\\1" t)))
 (make-directory "~/.local/state/emacs/autosave/" t)
 
+(setq-default indent-tabs-mode nil)
 (setq tab-width 4)
+
+(use-package whitespace
+  :ensure nil
+  :config
+  (setq whitespace-style '(face tabs tab-mark trailing))
+  (setq whitespace-display-mappings '((tab-mark ?\t [?» ?\t])))
+  (global-whitespace-mode 1))
 
 (show-paren-mode 1)
 
@@ -55,8 +63,8 @@
 ;; Suble underlines
 (setq modus-themes-common-palette-overrides
       '((underline-link border)
-	(underline-link-visited border)
-	(underline-link-symbolic border)))
+        (underline-link-visited border)
+        (underline-link-symbolic border)))
 (load-theme 'modus-operandi-tinted)
 
 (let ((mono-spaced-font "IBM Plex Mono")
@@ -111,20 +119,20 @@
   (defun my/magit-process-environment (env)
     "Detect and set git -bare repo env vars when in tracked dotfile directories."
     (let* ((default (file-name-as-directory (expand-file-name default-directory)))
-	   (git-dir (expand-file-name "~/.cfg"))
-	   (work-tree (expand-file-name "~/"))
-	   (dotfile-dirs
-	    (-map (apply-partially 'concat work-tree)
-		  (-uniq (-keep #'file-name-directory (split-string (shell-command-to-string
-								     (format "/usr/bin/git --git-dir=%s --work-tree=%s ls-tree --full-tree --name-only -r HEAD"
-									     git-dir work-tree))))))))
+           (git-dir (expand-file-name "~/.cfg"))
+           (work-tree (expand-file-name "~/"))
+           (dotfile-dirs
+            (-map (apply-partially 'concat work-tree)
+                  (-uniq (-keep #'file-name-directory (split-string (shell-command-to-string
+                                                                     (format "/usr/bin/git --git-dir=%s --work-tree=%s ls-tree --full-tree --name-only -r HEAD"
+                                                                             git-dir work-tree))))))))
       (push work-tree dotfile-dirs)
       (when (member default dotfile-dirs)
-	(push (format "GIT_WORK_TREE=%s" work-tree) env)
-	(push (format "GIT_DIR=%s" git-dir) env)))
+        (push (format "GIT_WORK_TREE=%s" work-tree) env)
+        (push (format "GIT_DIR=%s" git-dir) env)))
     env)
   (advice-add 'magit-process-environment
-	      :filter-return #'my/magit-process-environment)
+              :filter-return #'my/magit-process-environment)
 
   (when (not (display-graphic-p))
     (add-hook 'evil-insert-state-entry-hook (lambda () (send-string-to-terminal "\033[6 q")))
@@ -152,7 +160,7 @@
   ;; Custom project folder
   (defun my/project-find-vscode (path)
     (when-let* ((folder "com.sigasi.lsp.extension.vscode")
-		(index (string-match folder path)))
+                (index (string-match folder path)))
       (cons 'transient (substring path 0 (+ index (length folder))))))
   (add-to-list 'project-find-functions #'my/project-find-vscode))
 
@@ -279,7 +287,7 @@
     "Open the file under the cursor in Eclipse"
     (interactive)
     (let* ((repo-path (magit-repository-local-repository))
-	   (command (format "%s../../eclipse/eclipse --launcher.openFile %s%s" repo-path repo-path (magit-current-file))))
+           (command (format "%s../../eclipse/eclipse --launcher.openFile %s%s" repo-path repo-path (magit-current-file))))
       (start-process-shell-command "eclipse-launcher" nil command)))
   (evil-define-key 'normal magit-mode-map (kbd "gf") 'my/magit-open-file-in-eclipse))
 
@@ -305,16 +313,16 @@
      ("^\\**\\(*\\) " (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "⁕"))))))  ; Substitute header markers ("*" -> "⁕")
 
   (let ((mono-spaced-font "IBM Plex Mono")
-	(proportionately-spaced-font "IBM Plex Serif")
-	(background-color    (face-background 'default nil 'default)))
+        (proportionately-spaced-font "IBM Plex Serif")
+        (background-color    (face-background 'default nil 'default)))
     (dolist (face '((org-level-1 . 1.25)
-		    (org-level-2 . 1.2)
-		    (org-level-3 . 1.15)
-		    (org-level-4 . 1.1)
-		    (org-level-5 . 1.1)
-		    (org-level-6 . 1.1)
-		    (org-level-7 . 1.1)
-		    (org-level-8 . 1.1)))
+                    (org-level-2 . 1.2)
+                    (org-level-3 . 1.15)
+                    (org-level-4 . 1.1)
+                    (org-level-5 . 1.1)
+                    (org-level-6 . 1.1)
+                    (org-level-7 . 1.1)
+                    (org-level-8 . 1.1)))
       ;; box is a hack to get more line spacing for headlines
       (set-face-attribute (car face) nil :font proportionately-spaced-font :height (cdr face) :box `(:line-width (1 . 4) :color ,background-color)))
     (set-face-attribute 'org-level-1 nil          :weight 'bold)
@@ -338,8 +346,8 @@
   :hook     (org-mode . org-appear-mode)
   :config
   (setq org-appear-autoemphasis   t   ; Show bold, italics, verbatim, etc.
-	org-appear-autolinks      t   ; Show links
-	org-appear-autosubmarkers t)) ; Show sub- and superscripts
+        org-appear-autolinks      t   ; Show links
+        org-appear-autosubmarkers t)) ; Show sub- and superscripts
 
 ;;; LSP
 (use-package eglot
