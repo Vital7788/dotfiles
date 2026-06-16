@@ -357,9 +357,24 @@
   (define-key evil-normal-state-map (kbd "<SPC>rn") 'eglot-rename)
   (define-key evil-normal-state-map (kbd "<SPC>ra") 'eglot-code-actions)
   (define-key evil-normal-state-map (kbd "<SPC>rf") 'eglot-format)
-  (define-key evil-normal-state-map (kbd "<SPC>ro") 'eglot-code-action-organize-imports)
-  :hook
-  (typescript-ts-mode . eglot-ensure))
+  (define-key evil-normal-state-map (kbd "<SPC>ro") 'eglot-code-action-organize-imports))
+
+(use-package flycheck
+  :ensure t
+  :config
+  (advice-add 'flycheck-eslint-config-exists-p :override #'always))
+
+(defun my/flycheck-use-local-eslint ()
+  (when-let* ((root (locate-dominating-file buffer-file-name "node_modules"))
+              (eslint (expand-file-name "node_modules/.bin/eslint" root)))
+    (when (file-executable-p eslint)
+      (setq-local flycheck-javascript-eslint-executable eslint))))
+
+(add-hook 'flycheck-mode-hook #'my/flycheck-use-local-eslint)
+
+(use-package apheleia
+  :ensure t
+  :hook (after-init . apheleia-global-mode))
 
 ;;; Debugger (DAP)
 (use-package dape
@@ -487,5 +502,12 @@
   (unless (treesit-language-available-p (car lang))
     (treesit-install-language-grammar (car lang))))
 
-(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
-(add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
+(use-package typescript-ts-mode
+  :ensure nil
+  :config
+  (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
+  (setq typescript-ts-mode-indent-offset 4)
+  :hook (typescript-ts-mode . (lambda ()
+                                (eglot-ensure)
+                                (flycheck-mode 1))))
