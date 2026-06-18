@@ -30,7 +30,12 @@
   :config
   (setq whitespace-style '(face tabs tab-mark trailing))
   (setq whitespace-display-mappings '((tab-mark ?\t [?» ?\t])))
+  ;; don't show whitespace in read-only buffers
+  (advice-add 'whitespace-turn-on :before-while
+              (lambda (&rest _) (not buffer-read-only)))
   (global-whitespace-mode 1))
+
+(add-hook 'prog-mode-hook 'display-line-numbers-mode)
 
 (show-paren-mode 1)
 
@@ -115,24 +120,6 @@
   (define-key evil-motion-state-map (kbd "RET") nil)
   (define-key evil-motion-state-map (kbd "SPC") nil)
   (define-key evil-motion-state-map (kbd "DEL") nil)
-
-  (defun my/magit-process-environment (env)
-    "Detect and set git -bare repo env vars when in tracked dotfile directories."
-    (let* ((default (file-name-as-directory (expand-file-name default-directory)))
-           (git-dir (expand-file-name "~/.cfg"))
-           (work-tree (expand-file-name "~/"))
-           (dotfile-dirs
-            (-map (apply-partially 'concat work-tree)
-                  (-uniq (-keep #'file-name-directory (split-string (shell-command-to-string
-                                                                     (format "/usr/bin/git --git-dir=%s --work-tree=%s ls-tree --full-tree --name-only -r HEAD"
-                                                                             git-dir work-tree))))))))
-      (push work-tree dotfile-dirs)
-      (when (member default dotfile-dirs)
-        (push (format "GIT_WORK_TREE=%s" work-tree) env)
-        (push (format "GIT_DIR=%s" git-dir) env)))
-    env)
-  (advice-add 'magit-process-environment
-              :filter-return #'my/magit-process-environment)
 
   (when (not (display-graphic-p))
     (add-hook 'evil-insert-state-entry-hook (lambda () (send-string-to-terminal "\033[6 q")))
@@ -278,11 +265,41 @@
   :init
   (setq magit-define-global-key-bindings 'recommended)
   :config
-  ;; (keymap-global-set "<f5>" (lambda () (interactive) (magit-status "~/sigasi/git/sigasi")))
-  (setq magit-repository-directories '(("~/sigasi/git/sigasi" . 0)))
   (setq magit-list-refs-sortby "-committerdate")
   (setq magit-diff-refine-hunk 'all)
   (setq magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)
+
+  (defun my/magit-process-environment (env)
+    "Detect and set git -bare repo env vars when in tracked dotfile directories."
+    (let* ((default (file-name-as-directory (expand-file-name default-directory)))
+           (git-dir (expand-file-name "~/.cfg"))
+           (work-tree (expand-file-name "~/"))
+           (dotfile-dirs
+            (-map (apply-partially 'concat work-tree)
+                  (-uniq (-keep #'file-name-directory (split-string (shell-command-to-string
+                                                                     (format "/usr/bin/git --git-dir=%s --work-tree=%s ls-tree --full-tree --name-only -r HEAD"
+                                                                             git-dir work-tree))))))))
+      (push work-tree dotfile-dirs)
+      (when (member default dotfile-dirs)
+        (push (format "GIT_WORK_TREE=%s" work-tree) env)
+        (push (format "GIT_DIR=%s" git-dir) env)))
+    env)
+  (advice-add 'magit-process-environment
+              :filter-return #'my/magit-process-environment)
+
+  ;; Populate repo list from all file bookmarks
+  (bookmark-maybe-load-default-file)
+  (setq magit-repository-directories
+        (delq nil (mapcar (lambda (bm)
+                            (when-let* ((file (bookmark-get-filename bm)))
+                              (cons file 0)))
+                          (bookmark-all-names))))
+  ;; Add dotfiles bare repo to repo list
+  (advice-add 'magit-list-repos :filter-return
+              (lambda (repos)
+                (cl-adjoin (expand-file-name "~/") repos :test #'equal)))
+  (define-key evil-normal-state-map (kbd ",g") 'magit-list-repositories)
+
   (defun my/magit-open-file-in-eclipse ()
     "Open the file under the cursor in Eclipse"
     (interactive)
@@ -431,7 +448,8 @@
     (interactive)
     (setq my/sigasi-auto-reconnect t)
     (bookmark-maybe-load-default-file)
-    (let ((vscode-dir (expand-file-name (bookmark-get-filename "vscode"))))
+    (when-let* ((vscode-bm  (bookmark-get-bookmark "vscode" t))
+                (vscode-dir (expand-file-name (bookmark-get-filename vscode-bm))))
       (unless (cl-some (lambda (buf)
                          (when-let* ((file (buffer-file-name buf)))
                            (string-prefix-p vscode-dir (expand-file-name file))))
