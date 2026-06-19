@@ -30,10 +30,8 @@
   :config
   (setq whitespace-style '(face tabs tab-mark trailing))
   (setq whitespace-display-mappings '((tab-mark ?\t [?» ?\t])))
-  ;; don't show whitespace in read-only buffers
-  (advice-add 'whitespace-turn-on :before-while
-              (lambda (&rest _) (not buffer-read-only)))
-  (global-whitespace-mode 1))
+  :hook
+  (prog-mode-hook . whitespace-mode))
 
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
 
@@ -194,7 +192,29 @@
   ;; Search the current buffer
   (define-key evil-normal-state-map (kbd ",l") 'consult-line)
   ;; Switch to another buffer, or bookmarked file, or recently opened file.
-  (define-key evil-normal-state-map (kbd ",b") 'consult-buffer))
+  (define-key evil-normal-state-map (kbd ",b") 'consult-buffer)
+
+  (defvar my/consult-source-magit-repos
+    (list :name     "Git Repositories"
+          :narrow   ?g
+          :category 'file
+          :face     'consult-file
+          :action   'magit-status
+          :items    (lambda () (when (fboundp 'magit-list-repos) (magit-list-repos)))))
+  (add-to-list 'consult-buffer-sources 'my/consult-source-magit-repos 'append)
+
+  (defun my/consult-magit-repos ()
+    "Select a git repository with consult and open it in magit."
+    (interactive)
+    (magit-status
+     (consult--read
+      (magit-list-repos)
+      :prompt "Repository: "
+      :category 'file
+      :sort nil
+      :require-match t
+      :state (consult--file-preview))))
+  (define-key evil-normal-state-map (kbd ",g") #'my/consult-magit-repos))
 
 (use-package embark
   :ensure t
@@ -298,8 +318,6 @@
   (advice-add 'magit-list-repos :filter-return
               (lambda (repos)
                 (cl-adjoin (expand-file-name "~/") repos :test #'equal)))
-  (define-key evil-normal-state-map (kbd ",g") 'magit-list-repositories)
-
   (defun my/magit-open-file-in-eclipse ()
     "Open the file under the cursor in Eclipse"
     (interactive)
