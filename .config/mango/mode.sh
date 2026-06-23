@@ -12,7 +12,7 @@ do
             echo "layout [$current_layout]: [c]enter_tile, [t]ile, [r]ight_tile, [s]croller, [d]eck, [v]ertical_deck, [n]ext layout"
             ;;
         screencopy)
-            echo "copy screen: a:󰹑 , s:󰩭 , d:✎󰹑 , f:✎󰩭 , g:✎󰖯 , e: 󰹑 , r: 󰩭 "
+            echo "s:selection, d:screen, f:window, w: selection, e: screen, r: window, c:󰶐 headless, v:󰍺 headless"
             ;;
         default)
             echo ""
