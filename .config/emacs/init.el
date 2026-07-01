@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (setq custom-file (locate-user-emacs-file "custom.el"))
 (load custom-file :no-error-if-file-is-missing)
 
@@ -194,26 +195,35 @@
   ;; Switch to another buffer, or bookmarked file, or recently opened file.
   (define-key evil-normal-state-map (kbd ",b") 'consult-buffer)
 
-  (defvar my/consult-source-magit-repos
-    (list :name     "Git Repositories"
-          :narrow   ?g
-          :category 'file
-          :face     'consult-file
-          :action   'magit-status
-          :items    (lambda () (when (fboundp 'magit-list-repos) (magit-list-repos)))))
-  (add-to-list 'consult-buffer-sources 'my/consult-source-magit-repos 'append)
+  (defvar my/consult-git-repos-cache
+    (progn
+      (bookmark-maybe-load-default-file)
+      (cons (cons "dotfiles" (expand-file-name "~/"))
+            (delq nil (mapcar (lambda (name)
+                                (let ((dir (bookmark-get-filename name)))
+                                  (when (and dir (file-exists-p (expand-file-name ".git" dir)))
+                                    (cons name dir))))
+                              (bookmark-all-names)))))
+    "Alist of (BOOKMARK-NAME . DIR)")
+
+  (defvar my/consult-source-git-repos
+    (list :name   "Git Repositories"
+          :narrow ?g
+          :items  (lambda () (mapcar #'car my/consult-git-repos-cache))
+          :action (lambda (name)
+                    (magit-status (cdr (assoc name my/consult-git-repos-cache))))))
+  (add-to-list 'consult-buffer-sources 'my/consult-source-git-repos 'append)
 
   (defun my/consult-magit-repos ()
-    "Select a git repository with consult and open it in magit."
+    "Select a git repository (from bookmarks) with consult and open it in magit."
     (interactive)
     (magit-status
-     (consult--read
-      (magit-list-repos)
-      :prompt "Repository: "
-      :category 'file
-      :sort nil
-      :require-match t
-      :state (consult--file-preview))))
+     (cdr (assoc (consult--read
+                  (mapcar #'car my/consult-git-repos-cache)
+                  :prompt "Repository: "
+                  :sort nil
+                  :require-match t)
+                 my/consult-git-repos-cache))))
   (define-key evil-normal-state-map (kbd ",g") #'my/consult-magit-repos))
 
 (use-package embark
@@ -262,6 +272,8 @@
 (use-package dired
   :ensure nil
   :commands (dired)
+  :bind
+  ("C-x C-d" . dired-jump)
   :hook
   ((dired-mode . dired-hide-details-mode)
    (dired-mode . hl-line-mode))
@@ -307,17 +319,6 @@
   (advice-add 'magit-process-environment
               :filter-return #'my/magit-process-environment)
 
-  ;; Populate repo list from all file bookmarks
-  (bookmark-maybe-load-default-file)
-  (setq magit-repository-directories
-        (delq nil (mapcar (lambda (bm)
-                            (when-let* ((file (bookmark-get-filename bm)))
-                              (cons file 0)))
-                          (bookmark-all-names))))
-  ;; Add dotfiles bare repo to repo list
-  (advice-add 'magit-list-repos :filter-return
-              (lambda (repos)
-                (cl-adjoin (expand-file-name "~/") repos :test #'equal)))
   (defun my/magit-open-file-in-eclipse ()
     "Open the file under the cursor in Eclipse"
     (interactive)
