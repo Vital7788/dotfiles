@@ -548,3 +548,6 @@
   :hook (typescript-ts-mode . (lambda ()
                                 (eglot-ensure)
                                 (flycheck-mode 1))))
+
+(custom-set-variables
+ '(markdown-command "/usr/bin/pandoc"))
