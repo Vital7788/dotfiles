@@ -23,6 +23,9 @@
 (setq auto-save-file-name-transforms '((".*" "~/.local/state/emacs/autosave/\\1" t)))
 (make-directory "~/.local/state/emacs/autosave/" t)
 
+(use-package recentf
+  :hook (after-init . recentf-mode))
+
 (setq-default indent-tabs-mode nil)
 (setq tab-width 4)
 
@@ -194,6 +197,8 @@
   (define-key evil-normal-state-map (kbd ",l") 'consult-line)
   ;; Switch to another buffer, or bookmarked file, or recently opened file.
   (define-key evil-normal-state-map (kbd ",b") 'consult-buffer)
+
+  (consult-customize consult-fd :state (consult--file-preview))
 
   (defvar my/consult-git-repos-cache
     (progn
