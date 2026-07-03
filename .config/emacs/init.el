@@ -301,6 +301,16 @@
   (setq magit-diff-refine-hunk 'all)
   (setq magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)
 
+  (defun my/magit-diff-origin-master (&optional args files)
+    "Diff the current branch against origin's default branch."
+    (interactive (magit-diff-arguments))
+    (let ((main (or (magit-git-string "symbolic-ref" "--short"
+                                      "refs/remotes/origin/HEAD")
+                    "origin/master")))
+      (magit-diff-setup-buffer (concat main "...") nil args files 'committed)))
+  (transient-append-suffix 'magit-diff "r"
+    '("o" "Diff origin/master..." my/magit-diff-origin-master))
+
   (defun my/magit-process-environment (env)
     "Detect and set git -bare repo env vars when in tracked dotfile directories."
     (let* ((default (file-name-as-directory (expand-file-name default-directory)))
@@ -326,6 +336,13 @@
            (command (format "%s../../eclipse/eclipse --launcher.openFile %s%s" repo-path repo-path (magit-current-file))))
       (start-process-shell-command "eclipse-launcher" nil command)))
   (evil-define-key 'normal magit-mode-map (kbd "gf") 'my/magit-open-file-in-eclipse))
+
+(use-package magit-delta
+  :ensure t
+  :after magit
+  :hook (magit-mode . magit-delta-mode)
+  :config
+  (setq magit-delta-default-light-theme "ansi"))
 
 (use-package keychain-environment
   :ensure t
