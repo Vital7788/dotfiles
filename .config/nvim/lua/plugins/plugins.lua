@@ -104,11 +104,9 @@ return {
       vim.g.ale_echo_cursor = 0
       vim.g.ale_fix_on_save = 1
       vim.g.ale_python_flake8_options = '--config=$HOME/.config/flake8'
-      vim.g.ale_c_clangd_options = "-I " .. vim.fn.getcwd()
-      vim.g.ale_cpp_clangd_options = "-I " .. vim.fn.getcwd()
       vim.g.ale_linters = {
         java = {},
-        c = {'clangcheck', 'clangd', 'clangtidy', 'cppcheck', 'cpplint'},
+        c = {'clangcheck', 'clangtidy', 'cppcheck', 'cpplint'},
         haskell = {'cabal_ghc', 'hdevtools', 'hie', 'hlint', 'stack_build', 'stack_ghc'},
         tex = {'lacheck'}
       }
