@@ -551,6 +551,11 @@
 (dolist (hook '(emacs-lisp-mode-hook lisp-mode-hook))
   (add-hook hook 'lisp-word-syntax))
 
+(defun c-word-syntax ()
+  (modify-syntax-entry ?_ "w"))
+(dolist (hook '(c-mode-hook c++-mode-hook))
+  (add-hook hook 'c-word-syntax))
+
 (setq treesit-language-source-alist
       '((typescript "https://github.com/tree-sitter/tree-sitter-typescript"
                     "master" "typescript/src")
