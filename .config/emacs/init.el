@@ -199,6 +199,10 @@
 
   (consult-customize consult-fd :state (consult--file-preview))
 
+  (add-to-list 'consult-buffer-filter "\\`\\*scratch\\*\\'")
+  (add-to-list 'consult-buffer-filter "\\`\\*Messages\\*\\'")
+  (add-to-list 'consult-buffer-filter "\\`\\*Async-native-compile-log\\*\\'")
+
   (defvar my/consult-git-repos-cache
     (progn
       (bookmark-maybe-load-default-file)
@@ -216,7 +220,12 @@
           :items  (lambda () (mapcar #'car my/consult-git-repos-cache))
           :action (lambda (name)
                     (magit-status (cdr (assoc name my/consult-git-repos-cache))))))
-  (add-to-list 'consult-buffer-sources 'my/consult-source-git-repos 'append)
+  (setq consult-buffer-sources
+        (let (result)
+          (dolist (source consult-buffer-sources (nreverse result))
+            (when (eq source 'consult-source-bookmark)
+              (push 'my/consult-source-git-repos result))
+            (push source result))))
 
   (defun my/consult-magit-repos ()
     "Select a git repository (from bookmarks) with consult and open it in magit."
