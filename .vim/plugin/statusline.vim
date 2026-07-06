@@ -1,5 +1,5 @@
 " load guard
-if exists('g:loaded_statusline')
+if exists('g:loaded_statusline') || exists('g:vscode')
     finish
 endif
 let g:loaded_statusline = 1
