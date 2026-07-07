@@ -117,7 +117,6 @@
   (evil-mode 1)
   (evil-set-undo-system 'undo-redo)
   (define-key evil-normal-state-map (kbd "U") 'evil-redo)
-  (define-key evil-normal-state-map (kbd "SPC e") 'eval-last-sexp)
   (define-key evil-insert-state-map (kbd "C-SPC") 'completion-at-point)
   (define-key evil-motion-state-map (kbd "RET") nil)
   (define-key evil-motion-state-map (kbd "SPC") nil)
@@ -201,6 +200,7 @@
 
   (add-to-list 'consult-buffer-filter "\\`\\*scratch\\*\\'")
   (add-to-list 'consult-buffer-filter "\\`\\*Messages\\*\\'")
+  (add-to-list 'consult-buffer-filter "\\`\\*Warnings\\*\\'")
   (add-to-list 'consult-buffer-filter "\\`\\*Async-native-compile-log\\*\\'")
 
   (defvar my/consult-git-repos-cache
@@ -223,9 +223,10 @@
   (setq consult-buffer-sources
         (let (result)
           (dolist (source consult-buffer-sources (nreverse result))
-            (when (eq source 'consult-source-bookmark)
-              (push 'my/consult-source-git-repos result))
-            (push source result))))
+            (unless (eq source 'my/consult-source-git-repos)
+              (when (eq source 'consult-source-bookmark)
+                (push 'my/consult-source-git-repos result))
+              (push source result)))))
 
   (defun my/consult-magit-repos ()
     "Select a git repository (from bookmarks) with consult and open it in magit."
@@ -485,12 +486,12 @@
 
   (add-hook 'dape-update-ui-hook #'my/sigasi-check-reconnect)
 
-  (advice-add 'dape-quit :before
-              (lambda (&rest _)
-                (setq my/sigasi-auto-reconnect nil)
-                (my/sigasi-cancel-reconnect)
-                (when-let* ((proc (get-process "sigasi-compile-watch")))
-                  (delete-process proc))))
+  (defun my/sigasi-dape-quit-cleanup (&rest _)
+    (setq my/sigasi-auto-reconnect nil)
+    (my/sigasi-cancel-reconnect)
+    (when-let* ((proc (get-process "sigasi-compile-watch")))
+      (delete-process proc)))
+  (advice-add 'dape-quit :before #'my/sigasi-dape-quit-cleanup)
 
   (defun my/sigasi-debug ()
     "Start VS Code extension-development host and attach dape."
