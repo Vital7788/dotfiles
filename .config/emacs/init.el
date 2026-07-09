@@ -355,11 +355,12 @@
                           (prog1 (with-current-buffer buf (line-number-at-pos pos))
                             (unless had-buffer (kill-buffer buf)))))))
            (command (format "%s../../eclipse/eclipse --launcher.openFile %s%s%s"
-                             repo-path repo-path file
-                             (if line (format ":%d" line) ""))))
+                            repo-path repo-path file
+                            (if line (format ":%d" line) ""))))
       (start-process-shell-command "eclipse-launcher" nil command)))
   (with-eval-after-load 'evil-collection-magit
-    (evil-define-key 'normal magit-mode-map (kbd "gf") 'my/magit-open-file-in-eclipse)))
+    (evil-define-key 'normal magit-mode-map (kbd "gf") 'my/magit-open-file-in-eclipse)
+    (evil-define-key 'normal magit-process-mode-map (kbd "gx") 'browse-url-at-point)))
 
 (use-package magit-delta
   :ensure t
@@ -430,11 +431,18 @@
 (use-package eglot
   :ensure nil
   :config
-  (set-face-attribute 'eglot-highlight-symbol-face nil :weight 'normal)
-  (define-key evil-normal-state-map (kbd "<SPC>rn") 'eglot-rename)
-  (define-key evil-normal-state-map (kbd "<SPC>ra") 'eglot-code-actions)
-  (define-key evil-normal-state-map (kbd "<SPC>rf") 'eglot-format)
-  (define-key evil-normal-state-map (kbd "<SPC>ro") 'eglot-code-action-organize-imports))
+  ;; use 'c' as a prefix key for keybinds staring with cr, while remaining an operator otherwise
+  (defmacro my/evil-change-command (func)
+    `(lambda ()
+       (interactive)
+       (when (eq evil-this-operator 'evil-change)
+         (call-interactively ,func))))
+  (evil-define-key 'operator 'evil-normal-state-map
+    "rn" (my/evil-change-command #'eglot-rename)
+    "ra" (my/evil-change-command #'eglot-code-actions)
+    "rf" (my/evil-change-command #'eglot-format)
+    "ro" (my/evil-change-command #'eglot-code-action-organize-imports))
+  (set-face-attribute 'eglot-highlight-symbol-face nil :weight 'normal))
 
 (use-package flycheck
   :ensure t
