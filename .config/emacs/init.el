@@ -344,12 +344,22 @@
               :filter-return #'my/magit-process-environment)
 
   (defun my/magit-open-file-in-eclipse ()
-    "Open the file under the cursor in Eclipse"
+    "Open the file under the cursor in Eclipse, jumping to the current line when point is on a diff hunk."
     (interactive)
     (let* ((repo-path (magit-repository-local-repository))
-           (command (format "%s../../eclipse/eclipse --launcher.openFile %s%s" repo-path repo-path (magit-current-file))))
+           (file (magit-current-file))
+           (had-buffer (get-file-buffer (expand-file-name file repo-path)))
+           (line (and (magit-section-match 'hunk)
+                      (ignore-errors
+                        (pcase-let ((`(,buf ,pos) (magit-diff-visit-file--noselect t)))
+                          (prog1 (with-current-buffer buf (line-number-at-pos pos))
+                            (unless had-buffer (kill-buffer buf)))))))
+           (command (format "%s../../eclipse/eclipse --launcher.openFile %s%s%s"
+                             repo-path repo-path file
+                             (if line (format ":%d" line) ""))))
       (start-process-shell-command "eclipse-launcher" nil command)))
-  (evil-define-key 'normal magit-mode-map (kbd "gf") 'my/magit-open-file-in-eclipse))
+  (with-eval-after-load 'evil-collection-magit
+    (evil-define-key 'normal magit-mode-map (kbd "gf") 'my/magit-open-file-in-eclipse)))
 
 (use-package magit-delta
   :ensure t
