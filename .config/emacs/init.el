@@ -47,10 +47,11 @@
 (setq window-combination-resize t)
 (setq help-window-select t)
 
-(setq completion-cycle-threshold 5)
+(setq global-auto-revert-mode t)
 
 ;; Enable indentation+completion using the TAB key.
 (setq tab-always-indent 'complete)
+(setq completion-cycle-threshold 5)
 
 ;; Emacs 30 and newer: Disable Ispell completion function.
 ;; Try `cape-dict' as an alternative.
