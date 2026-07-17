@@ -4,7 +4,7 @@
     "height": 30,
     "spacing": 1,
     "margin": 0,
-    "modules-left": ["ext/workspaces", "custom/mode", "custom/recorder", "dwl/window"],
+    "modules-left": ["ext/workspaces", "custom/mode", "custom/recorder"],
     "modules-center": ["clock"],
     "modules-right": ["wireplumber", "wireplumber#source", "backlight", "network", "cpu", "memory", "temperature", "battery", "disk", "custom/updates", "tray"],
 
@@ -19,10 +19,6 @@
     "custom/mode": {
         "exec": "~/.config/mango/mode.sh",
         "restart-interval": 1
-    },
-
-    "dwl/window": {
-        "tooltip": false,
     },
 
     "custom/recorder": {
