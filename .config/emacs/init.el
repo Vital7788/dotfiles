@@ -47,7 +47,7 @@
 (setq window-combination-resize t)
 (setq help-window-select t)
 
-(setq global-auto-revert-mode t)
+(global-auto-revert-mode 1)
 
 ;; Enable indentation+completion using the TAB key.
 (setq tab-always-indent 'complete)
