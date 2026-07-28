@@ -23,9 +23,6 @@
 (setq auto-save-file-name-transforms '((".*" "~/.local/state/emacs/autosave/\\1" t)))
 (make-directory "~/.local/state/emacs/autosave/" t)
 
-(use-package recentf
-  :hook (after-init . recentf-mode))
-
 (setq-default indent-tabs-mode nil)
 (setq tab-width 4)
 
