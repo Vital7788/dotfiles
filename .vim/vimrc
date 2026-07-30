@@ -274,6 +274,8 @@ nnoremap U <C-R>
 nnoremap Y y$
 nnoremap Q gQ
 
+nnoremap <Tab> za
+
 " expand %% in command mode to current file path
 "cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<CR>
 
