@@ -360,6 +360,10 @@
       (start-process-shell-command "eclipse-launcher" nil command)))
   (with-eval-after-load 'evil-collection-magit
     (evil-define-key 'normal magit-mode-map (kbd "gf") 'my/magit-open-file-in-eclipse)
+    ;; In the status buffer `gf' is a prefix (gfu/gfp jump to unpulled commits),
+    ;; which shadows the binding above
+    (evil-define-key 'normal magit-status-mode-map
+      (kbd "gf") 'my/magit-open-file-in-eclipse)
     (evil-define-key 'normal magit-process-mode-map (kbd "gx") 'browse-url-at-point)))
 
 (use-package magit-delta
