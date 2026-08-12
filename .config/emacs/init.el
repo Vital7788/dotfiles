@@ -202,6 +202,7 @@
   (add-to-list 'consult-buffer-filter "\\`\\*Messages\\*\\'")
   (add-to-list 'consult-buffer-filter "\\`\\*Warnings\\*\\'")
   (add-to-list 'consult-buffer-filter "\\`\\*Async-native-compile-log\\*\\'")
+  (add-to-list 'consult-buffer-filter "\\`magit-process: ")
 
   (defvar my/consult-git-repos-cache
     (progn
@@ -371,7 +372,30 @@
   :after magit
   :hook (magit-mode . magit-delta-mode)
   :config
-  (setq magit-delta-default-light-theme "ansi"))
+  (setq magit-delta-default-light-theme "ansi")
+
+  ;; Magit paints the leading tabs of a hunk with a `display' property so they
+  ;; occupy exactly `tab-width' columns (see `magit-diff-paint-tab').  A
+  ;; `display' property wins over `whitespace-mode's display table, which is why
+  ;; tab markers never appear in diffs.
+  (defun my/magit-diff-paint-tab (merging width)
+    "Render leading tabs in diff hunks as a marker WIDTH columns wide."
+    (save-excursion
+      (forward-char (if merging 2 1))
+      (while (= (char-after) ?\t)
+        (put-text-property (point) (1+ (point)) 'display
+                           (concat (propertize "»" 'face 'whitespace-tab)
+                                   (make-string (max 0 (1- width)) ?\s)))
+        (forward-char))))
+  (advice-add 'magit-diff-paint-tab :override #'my/magit-diff-paint-tab)
+
+  (defun my/magit-diff-show-whitespace ()
+    (setq-local whitespace-style '(tab-mark))
+    (whitespace-mode 1))
+  (dolist (hook '(magit-diff-mode-hook
+                  magit-revision-mode-hook
+                  magit-status-mode-hook))
+    (add-hook hook #'my/magit-diff-show-whitespace)))
 
 (use-package keychain-environment
   :ensure t
