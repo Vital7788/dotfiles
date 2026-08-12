@@ -318,6 +318,62 @@
   (setq magit-diff-fontify-hunk t)
   (setq magit-diff-use-indicator-faces t)
 
+  ;; `diff--refine-hunk' word-diffs a whole run of removed lines against the
+  ;; whole run of added lines, so matches span line boundaries and unrelated
+  ;; rewrites still get refined on coincidental words.  Pair the Nth removed
+  ;; line with the Nth added line instead, and refine a pair only when the two
+  ;; are close enough, which is what delta's `--max-line-distance' does.
+  (require 'diff-mode)
+  (require 'smerge-mode)
+
+  (defvar my/magit-diff-refine-max-line-distance 0.6
+    "Maximum normalized edit distance for two lines to be refined as a pair.")
+
+  (defun my/magit-diff--collect-lines (char bound)
+    "Collect (BEG . END) of consecutive lines from point starting with CHAR."
+    (let (lines)
+      (while (and (< (point) bound) (eql (following-char) char))
+        (push (cons (point) (progn (forward-line 1) (point))) lines))
+      (nreverse lines)))
+
+  (defun my/magit-diff--line-text (beg end)
+    "Text of line BEG..END without its diff marker or trailing newline."
+    (buffer-substring-no-properties
+     (min end (1+ beg))
+     (if (eq (char-before end) ?\n) (1- end) end)))
+
+  (defun my/magit-diff--lines-similar-p (del add)
+    (let* ((a (my/magit-diff--line-text (car del) (cdr del)))
+           (b (my/magit-diff--line-text (car add) (cdr add)))
+           (len (max (length a) (length b))))
+      (or (zerop len)
+          (<= (/ (string-distance a b) (float len))
+              my/magit-diff-refine-max-line-distance))))
+
+  (defun my/magit-diff--refine-line-pairs (beg end)
+    "Refine removed/added lines in BEG..END pairwise, skipping distant pairs."
+    (let ((props-r '((diff-mode . fine) (face . diff-refine-removed)))
+          (props-a '((diff-mode . fine) (face . diff-refine-added))))
+      (remove-overlays beg end 'diff-mode 'fine)
+      (goto-char beg)
+      (while (re-search-forward "^-" end t)
+        (beginning-of-line)
+        (let ((dels (my/magit-diff--collect-lines ?- end))
+              (adds (my/magit-diff--collect-lines ?+ end)))
+          (while (and dels adds)
+            (let ((del (pop dels))
+                  (add (pop adds)))
+              (when (my/magit-diff--lines-similar-p del add)
+                (smerge-refine-regions (car del) (cdr del) (car add) (cdr add)
+                                       nil #'diff-refine-preproc
+                                       props-r props-a))))))))
+
+  (defun my/magit-diff-refine-line-pairs (fn beg end)
+    (if (derived-mode-p 'magit-mode)
+        (my/magit-diff--refine-line-pairs beg end)
+      (funcall fn beg end)))
+  (advice-add 'diff--refine-hunk :around #'my/magit-diff-refine-line-pairs)
+
   (defun my/magit-display-buffer-same-window (buffer)
     (display-buffer buffer '(display-buffer-same-window)))
   (setq magit-display-buffer-function #'my/magit-display-buffer-same-window)
