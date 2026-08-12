@@ -314,7 +314,10 @@
   :config
   (setq magit-list-refs-sortby "-committerdate")
   (setq magit-diff-refine-hunk 'all)
-  (setq magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)
+  (defun my/magit-display-buffer-same-window (buffer)
+    (display-buffer buffer '(display-buffer-same-window)))
+  (setq magit-display-buffer-function #'my/magit-display-buffer-same-window)
+  (setq magit-commit-diff-inhibit-same-window t)
 
   (defun my/magit-diff-origin-master (&optional args files)
     "Diff the current branch against origin's default branch."
