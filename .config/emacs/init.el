@@ -379,7 +379,6 @@
   (setq magit-display-buffer-function #'my/magit-display-buffer-same-window)
   (setq magit-commit-diff-inhibit-same-window t)
 
-  ;; TODO remove duplication from transient that is currently checked in in git
   (put 'magit-status-mode 'magit-diff-default-arguments
        '("--no-ext-diff" "--color-moved=zebra"))
   (put 'magit-revision-mode 'magit-diff-default-arguments
