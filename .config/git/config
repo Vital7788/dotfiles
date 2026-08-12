@@ -13,6 +13,9 @@
     conflictStyle = zdiff3
 [diff]
     colorMoved = default
+[color "diff"]
+    oldMoved = "normal #e6cee3"
+    newMoved = "normal #cddad8"
 
 [core]
     pager = "command -v delta >/dev/null 2>&1 && delta || less"

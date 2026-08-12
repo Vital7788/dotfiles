@@ -311,13 +311,51 @@
   :ensure t
   :init
   (setq magit-define-global-key-bindings 'recommended)
+  (setq magit-diff-specify-hunk-foreground nil)
   :config
   (setq magit-list-refs-sortby "-committerdate")
-  (setq magit-diff-refine-hunk 'all)
+  (setq magit-diff-refine-hunk t)
+  (setq magit-diff-fontify-hunk t)
+  (setq magit-diff-use-indicator-faces t)
+
   (defun my/magit-display-buffer-same-window (buffer)
     (display-buffer buffer '(display-buffer-same-window)))
   (setq magit-display-buffer-function #'my/magit-display-buffer-same-window)
   (setq magit-commit-diff-inhibit-same-window t)
+
+  ;; TODO remove duplication from transient that is currently checked in in git
+  (put 'magit-status-mode 'magit-diff-default-arguments
+       '("--no-ext-diff" "--color-moved=zebra"))
+  (put 'magit-revision-mode 'magit-diff-default-arguments
+       '("--stat" "--no-ext-diff" "--color-moved=zebra"))
+  (put 'magit-stash-mode 'magit-diff-default-arguments
+       '("--no-ext-diff" "--color-moved=zebra"))
+
+  (defun my/magit-color-moved-extend-face (face)
+    (cond ((keywordp (car-safe face)) (append face '(:extend t)))
+          ((symbolp face) (list :inherit face :extend t))
+          (t (mapcar #'my/magit-color-moved-extend-face face))))
+
+  (defun my/magit-color-moved-apply-face (beg end face)
+    (when face
+      (overlay-put (ansi-color-make-extent
+                    beg (save-excursion
+                          (goto-char end)
+                          (min (point-max) (1+ (line-end-position)))))
+                   'face (my/magit-color-moved-extend-face face))))
+
+  (defun my/magit-color-moved-extend (fn &rest args)
+    (let ((ansi-color-apply-face-function #'my/magit-color-moved-apply-face))
+      (apply fn args)))
+  (advice-add 'magit-diff-wash-diffs :around #'my/magit-color-moved-extend)
+
+  (custom-set-faces
+   '(magit-diff-removed           ((t :background "#e6c8c8")))
+   '(magit-diff-removed-highlight ((t :background "#e6c8c8")))
+   '(magit-diff-added             ((t :background "#d0d6cd")))
+   '(magit-diff-added-highlight   ((t :background "#d0d6cd")))
+   '(diff-refine-removed          ((t :background "#d69fa2")))
+   '(diff-refine-added            ((t :background "#aabbab"))))
 
   (defun my/magit-diff-origin-master (&optional args files)
     "Diff the current branch against origin's default branch."
@@ -373,7 +411,7 @@
 (use-package magit-delta
   :ensure t
   :after magit
-  :hook (magit-mode . magit-delta-mode)
+  ;; :hook (magit-mode . magit-delta-mode)
   :config
   (setq magit-delta-default-light-theme "ansi")
 
