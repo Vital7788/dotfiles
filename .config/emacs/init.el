@@ -507,6 +507,7 @@
   (setq org-hide-emphasis-markers t)
   (add-hook 'org-mode-hook 'org-indent-mode)  ; nicer indentation
   (add-hook 'org-mode-hook 'visual-line-mode) ; wrap lines
+  (add-hook 'org-mode-hook (lambda () (electric-indent-local-mode -1)))
   (add-hook 'org-mode-hook 'variable-pitch-mode) ; proportionally spaced font
 
   (font-lock-add-keywords
