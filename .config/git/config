@@ -12,10 +12,18 @@
 [merge]
     conflictStyle = zdiff3
 [diff]
-    colorMoved = default
+    colorMoved = zebra
+    colorMovedWS = allow-indentation-change
 [color "diff"]
-    oldMoved = "normal #e6cee3"
-    newMoved = "normal #cddad8"
+    ; Dayfox color scheme
+    ; lua pal = require('nightfox.palette').load("dayfox"); spec = require('nightfox.spec').load("dayfox"); C = require('nightfox.lib.color')
+    ; lua print(C(spec.bg1):blend(C(pal.green.base), 0.2):to_css())
+    old = "normal #e6c8c8"                 ; blend bg1 with red at 0.2
+    new = "normal #d0d6cd"                 ; blend bg1 with green at 0.2
+    oldMoved = "normal #e6cee3"            ; blend bg1 with pink at 0.2
+    newMoved = "normal #cddad8"            ; blend bg1 with cyan at 0.2
+    oldMovedAlternative = "normal #dbcce8" ; blend bg1 with magenta at 0.2
+    newMovedAlternative = "normal #cdd0e0" ; blend bg1 with blue at 0.2
 
 [core]
     pager = "command -v delta >/dev/null 2>&1 && delta || less"
@@ -28,16 +36,14 @@
     ; side-by-side = true
 
     ; generic color scheme
-    ; map-styles = bold purple => syntax "#ffe0f0", bold cyan => syntax "#d0fff8"
     ; minus-style = "syntax auto"
     ; minus-emph-style = "syntax auto"
 
     ; Dayfox color scheme
-    map-styles = bold purple => syntax "#e6cee3", bold cyan => syntax "#cddad8" ;blend bg1 with pink and cyan at 0.2
-    minus-style = "syntax #e6c8c8"      ;blend bg1 with red at 0.2
-    minus-emph-style = "syntax #d69fa2" ;blend bg1 with red at 0.4
-    plus-style = "syntax #d0d6cd"       ;blend bg1 with green at 0.2
-    plus-emph-style = "syntax #aabbab"  ;blend bg1 with green at 0.4
+    minus-style = "syntax #e6c8c8"      ; blend bg1 with red at 0.2
+    minus-emph-style = "syntax #d69fa2" ; blend bg1 with red at 0.4
+    plus-style = "syntax #d0d6cd"       ; blend bg1 with green at 0.2
+    plus-emph-style = "syntax #aabbab"  ; blend bg1 with green at 0.4
 
     line-numbers = false
     file-decoration-style = "green ul"
