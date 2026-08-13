@@ -62,6 +62,65 @@
   :config
   (exec-path-from-shell-initialize))
 
+;;;; Outline folding
+(setq outline-minor-mode-cycle nil)
+
+(defun my/outline-cycle ()
+  "Cycle the current section: subheadings, then everything, then hidden.
+Like `outline-cycle', except the intermediate state also shows the heading's
+own body."
+  (save-excursion
+    (outline-back-to-heading)
+    (pcase (outline--cycle-state)
+      ('hide-all
+       (if (outline-has-subheading-p)
+           (progn (outline-show-entry)
+                  (outline-show-children)
+                  (message "Subheadings"))
+         (outline-show-subtree)
+         (message "Show all")))
+      ('headings-only
+       (outline-show-subtree)
+       (message "Show all"))
+      ('show-all
+       (outline-hide-subtree)
+       (message "Hide all")))))
+
+(defun my/outline-cycle-buffer ()
+  "Cycle the whole buffer: `;;;' headings, then all headings, then everything.
+Like `outline-cycle-buffer', except the middle state applies `my/outline-cycle'
+to every section rather than calling `outline-hide-region-body'."
+  (interactive)
+  (pcase outline--cycle-buffer-state
+    ('show-all
+     (outline-hide-sublevels 1)
+     (setq outline--cycle-buffer-state 'top-level)
+     (message "Top level headings"))
+    ('top-level
+     (outline-show-all)
+     (save-excursion
+       (goto-char (point-min))
+       (while (outline-next-heading)
+         (when (> (funcall outline-level) 1)
+           (outline-hide-entry))))
+     (setq outline--cycle-buffer-state 'all-heading)
+     (message "Headings and top level code"))
+    (_
+     (outline-show-all)
+     (setq outline--cycle-buffer-state 'show-all)
+     (message "Show all"))))
+
+(defun my/outline-cycle-dwim ()
+  "Cycle the section point is inside, wherever point sits within it.
+`outline-back-to-heading' finds the enclosing heading from anywhere in its
+body, but errors above the first one, so cycle the whole buffer there
+instead."
+  (interactive)
+  (if (or (outline-on-heading-p t)
+          (save-excursion (outline-previous-heading)))
+      (my/outline-cycle)
+    (my/outline-cycle-buffer)))
+
 ;;; Appearance
 
 ;; More theme customizations: https://www.gnu.org/software/emacs/manual/html_node/modus-themes/DIY-Stylistic-variants-using-palette-overrides.html
@@ -119,6 +178,9 @@
   (define-key evil-motion-state-map (kbd "RET") nil)
   (define-key evil-motion-state-map (kbd "SPC") nil)
   (define-key evil-motion-state-map (kbd "DEL") nil)
+  (evil-define-key 'normal outline-minor-mode-map
+    (kbd "TAB") #'my/outline-cycle-dwim
+    (kbd "<backtab>") #'my/outline-cycle-buffer)
 
   (setq evil-symbol-word-search t)
 
@@ -318,11 +380,95 @@
   (setq magit-diff-fontify-hunk t)
   (setq magit-diff-use-indicator-faces t)
 
-  ;; `diff--refine-hunk' word-diffs a whole run of removed lines against the
-  ;; whole run of added lines, so matches span line boundaries and unrelated
-  ;; rewrites still get refined on coincidental words.  Pair the Nth removed
-  ;; line with the Nth added line instead, and refine a pair only when the two
-  ;; are close enough, which is what delta's `--max-line-distance' does.
+  (defun my/magit-display-buffer-same-window (buffer)
+    (display-buffer buffer '(display-buffer-same-window)))
+  (setq magit-display-buffer-function #'my/magit-display-buffer-same-window)
+  (setq magit-commit-diff-inhibit-same-window t)
+
+  (defun my/magit-diff-origin-master (&optional args files)
+    "Diff the current branch against origin's default branch."
+    (interactive (magit-diff-arguments))
+    (let ((main (or (magit-git-string "symbolic-ref" "--short"
+                                      "refs/remotes/origin/HEAD")
+                    "origin/master")))
+      (magit-diff-setup-buffer (concat main "...") nil args files 'committed)))
+  (transient-append-suffix 'magit-diff "r"
+    '("o" "Diff origin/master..." my/magit-diff-origin-master)))
+
+;;;; Magit: diff colors
+(use-package magit
+  :ensure nil
+  :config
+  (put 'magit-status-mode 'magit-diff-default-arguments
+       '("--no-ext-diff" "--color-moved=zebra"))
+  (put 'magit-revision-mode 'magit-diff-default-arguments
+       '("--stat" "--no-ext-diff" "--color-moved=zebra"))
+  (put 'magit-stash-mode 'magit-diff-default-arguments
+       '("--no-ext-diff" "--color-moved=zebra"))
+
+  (custom-set-faces
+   '(magit-diff-removed           ((t :background "#e6c8c8")))
+   '(magit-diff-removed-highlight ((t :background "#e6c8c8")))
+   '(magit-diff-added             ((t :background "#d0d6cd")))
+   '(magit-diff-added-highlight   ((t :background "#d0d6cd")))
+   '(diff-refine-removed          ((t :background "#d69fa2")))
+   '(diff-refine-added            ((t :background "#aabbab"))))
+
+  (defun my/magit-color-moved-extend-face (face)
+    (cond ((keywordp (car-safe face)) (append face '(:extend t)))
+          ((symbolp face) (list :inherit face :extend t))
+          (t (mapcar #'my/magit-color-moved-extend-face face))))
+
+  (defun my/magit-color-moved-apply-face (beg end face)
+    (when face
+      (overlay-put (ansi-color-make-extent
+                    beg (save-excursion
+                          (goto-char end)
+                          (min (point-max) (1+ (line-end-position)))))
+                   'face (my/magit-color-moved-extend-face face))))
+
+  ;; extend `--color-moved' faces to the window edge
+  (defun my/magit-color-moved-extend (fn &rest args)
+    (let ((ansi-color-apply-face-function #'my/magit-color-moved-apply-face))
+      (apply fn args)))
+  (advice-add 'magit-diff-wash-diffs :around #'my/magit-color-moved-extend))
+
+;;;; Magit: diff whitespace
+(use-package magit
+  :ensure nil
+  :config
+  ;; Magit paints the leading tabs of a hunk with a `display' property so they
+  ;; occupy exactly `tab-width' columns (see `magit-diff-paint-tab'). A
+  ;; `display' property wins over `whitespace-mode's display table, which is why
+  ;; tab markers never appear in diffs.
+  (defun my/magit-diff-paint-tab (merging width)
+    "Render leading tabs in diff hunks as a marker WIDTH columns wide."
+    (save-excursion
+      (forward-char (if merging 2 1))
+      (while (= (char-after) ?\t)
+        (put-text-property (point) (1+ (point)) 'display
+                           (concat (propertize "»" 'face 'whitespace-tab)
+                                   (make-string (max 0 (1- width)) ?\s)))
+        (forward-char))))
+  (advice-add 'magit-diff-paint-tab :override #'my/magit-diff-paint-tab)
+
+  (defun my/magit-diff-show-whitespace ()
+    (setq-local whitespace-style '(tab-mark))
+    (whitespace-mode 1))
+  (dolist (hook '(magit-diff-mode-hook
+                  magit-revision-mode-hook
+                  magit-status-mode-hook))
+    (add-hook hook #'my/magit-diff-show-whitespace)))
+
+;;;; Magit: pairwise hunk refinement
+;; `diff--refine-hunk' word-diffs a whole run of removed lines against the
+;; whole run of added lines, so matches span line boundaries and unrelated
+;; rewrites still get refined on coincidental words.  Pair the Nth removed
+;; line with the Nth added line instead, and refine a pair only when the two
+;; are close enough.
+(use-package magit
+  :ensure nil
+  :config
   (require 'diff-mode)
   (require 'smerge-mode)
 
@@ -372,56 +518,12 @@
     (if (derived-mode-p 'magit-mode)
         (my/magit-diff--refine-line-pairs beg end)
       (funcall fn beg end)))
-  (advice-add 'diff--refine-hunk :around #'my/magit-diff-refine-line-pairs)
+  (advice-add 'diff--refine-hunk :around #'my/magit-diff-refine-line-pairs))
 
-  (defun my/magit-display-buffer-same-window (buffer)
-    (display-buffer buffer '(display-buffer-same-window)))
-  (setq magit-display-buffer-function #'my/magit-display-buffer-same-window)
-  (setq magit-commit-diff-inhibit-same-window t)
-
-  (put 'magit-status-mode 'magit-diff-default-arguments
-       '("--no-ext-diff" "--color-moved=zebra"))
-  (put 'magit-revision-mode 'magit-diff-default-arguments
-       '("--stat" "--no-ext-diff" "--color-moved=zebra"))
-  (put 'magit-stash-mode 'magit-diff-default-arguments
-       '("--no-ext-diff" "--color-moved=zebra"))
-
-  (defun my/magit-color-moved-extend-face (face)
-    (cond ((keywordp (car-safe face)) (append face '(:extend t)))
-          ((symbolp face) (list :inherit face :extend t))
-          (t (mapcar #'my/magit-color-moved-extend-face face))))
-
-  (defun my/magit-color-moved-apply-face (beg end face)
-    (when face
-      (overlay-put (ansi-color-make-extent
-                    beg (save-excursion
-                          (goto-char end)
-                          (min (point-max) (1+ (line-end-position)))))
-                   'face (my/magit-color-moved-extend-face face))))
-
-  (defun my/magit-color-moved-extend (fn &rest args)
-    (let ((ansi-color-apply-face-function #'my/magit-color-moved-apply-face))
-      (apply fn args)))
-  (advice-add 'magit-diff-wash-diffs :around #'my/magit-color-moved-extend)
-
-  (custom-set-faces
-   '(magit-diff-removed           ((t :background "#e6c8c8")))
-   '(magit-diff-removed-highlight ((t :background "#e6c8c8")))
-   '(magit-diff-added             ((t :background "#d0d6cd")))
-   '(magit-diff-added-highlight   ((t :background "#d0d6cd")))
-   '(diff-refine-removed          ((t :background "#d69fa2")))
-   '(diff-refine-added            ((t :background "#aabbab"))))
-
-  (defun my/magit-diff-origin-master (&optional args files)
-    "Diff the current branch against origin's default branch."
-    (interactive (magit-diff-arguments))
-    (let ((main (or (magit-git-string "symbolic-ref" "--short"
-                                      "refs/remotes/origin/HEAD")
-                    "origin/master")))
-      (magit-diff-setup-buffer (concat main "...") nil args files 'committed)))
-  (transient-append-suffix 'magit-diff "r"
-    '("o" "Diff origin/master..." my/magit-diff-origin-master))
-
+;;;; Magit: bare-repo dotfiles
+(use-package magit
+  :ensure nil
+  :config
   (defun my/magit-process-environment (env)
     "Detect and set git -bare repo env vars when in tracked dotfile directories."
     (let* ((default (file-name-as-directory (expand-file-name default-directory)))
@@ -438,8 +540,12 @@
         (push (format "GIT_DIR=%s" git-dir) env)))
     env)
   (advice-add 'magit-process-environment
-              :filter-return #'my/magit-process-environment)
+              :filter-return #'my/magit-process-environment))
 
+;;;; Magit: open the file at point in Eclipse
+(use-package magit
+  :ensure nil
+  :config
   (defun my/magit-open-file-in-eclipse ()
     "Open the file under the cursor in Eclipse, jumping to the current line when point is on a diff hunk."
     (interactive)
@@ -463,36 +569,15 @@
       (kbd "gf") 'my/magit-open-file-in-eclipse)
     (evil-define-key 'normal magit-process-mode-map (kbd "gx") 'browse-url-at-point)))
 
+;;;; Magit delta
 (use-package magit-delta
   :ensure t
   :after magit
   ;; :hook (magit-mode . magit-delta-mode)
   :config
-  (setq magit-delta-default-light-theme "ansi")
+  (setq magit-delta-default-light-theme "ansi"))
 
-  ;; Magit paints the leading tabs of a hunk with a `display' property so they
-  ;; occupy exactly `tab-width' columns (see `magit-diff-paint-tab').  A
-  ;; `display' property wins over `whitespace-mode's display table, which is why
-  ;; tab markers never appear in diffs.
-  (defun my/magit-diff-paint-tab (merging width)
-    "Render leading tabs in diff hunks as a marker WIDTH columns wide."
-    (save-excursion
-      (forward-char (if merging 2 1))
-      (while (= (char-after) ?\t)
-        (put-text-property (point) (1+ (point)) 'display
-                           (concat (propertize "»" 'face 'whitespace-tab)
-                                   (make-string (max 0 (1- width)) ?\s)))
-        (forward-char))))
-  (advice-add 'magit-diff-paint-tab :override #'my/magit-diff-paint-tab)
-
-  (defun my/magit-diff-show-whitespace ()
-    (setq-local whitespace-style '(tab-mark))
-    (whitespace-mode 1))
-  (dolist (hook '(magit-diff-mode-hook
-                  magit-revision-mode-hook
-                  magit-status-mode-hook))
-    (add-hook hook #'my/magit-diff-show-whitespace)))
-
+;;;; Keychain
 (use-package keychain-environment
   :ensure t
   :hook (after-init . keychain-refresh-environment))
@@ -595,6 +680,38 @@
 (use-package dape
   :ensure t
   :config
+  (transient-define-prefix my/dape-transient ()
+    "Dape debug commands."
+    [["Session"
+      ("d" "launch"   dape)
+      ("r" "restart"  dape-restart)
+      ("Q" "stop"     dape-quit)]
+     ["Step"
+      ("c" "continue" dape-continue        :transient t)
+      ("n" "next"     dape-next            :transient t)
+      ("i" "step-in"  dape-step-in         :transient t)
+      ("o" "step-out" dape-step-out        :transient t)
+      ("p" "pause"    dape-pause           :transient t)
+      ("u" "until"    dape-until           :transient t)]
+     ["Breakpoints"
+      ("b" "toggle"     dape-breakpoint-toggle)
+      ("B" "condition"  dape-breakpoint-expression)
+      ("l" "log"        dape-breakpoint-log)
+      ("h" "hits"       dape-breakpoint-hits)
+      ("x" "remove all" dape-breakpoint-remove-all)]
+     ["Inspect"
+      ("e" "eval"       dape-evaluate-expression)
+      ("w" "watch"      dape-watch-dwim)
+      ("s" "stack"      dape-select-stack)
+      ("S-k" "frame up"   dape-stack-select-up   :transient t)
+      ("S-j" "frame down" dape-stack-select-down :transient t)]])
+
+  (define-key evil-normal-state-map (kbd "<SPC>d") #'my/dape-transient))
+
+;;;; Dape: Sigasi VS Code extension host
+(use-package dape
+  :ensure nil
+  :config
   (add-to-list 'dape-configs
                `(sigasi-extension
                  modes nil
@@ -665,35 +782,7 @@
                        "--inspect-extensions" "9229")))
     (dape (dape--config-eval 'sigasi-extension nil)))
 
-  (define-key evil-normal-state-map (kbd "<f5>") #'my/sigasi-debug)
-
-  (transient-define-prefix my/dape-transient ()
-    "Dape debug commands."
-    [["Session"
-      ("d" "launch"   dape)
-      ("r" "restart"  dape-restart)
-      ("Q" "stop"     dape-quit)]
-     ["Step"
-      ("c" "continue" dape-continue        :transient t)
-      ("n" "next"     dape-next            :transient t)
-      ("i" "step-in"  dape-step-in         :transient t)
-      ("o" "step-out" dape-step-out        :transient t)
-      ("p" "pause"    dape-pause           :transient t)
-      ("u" "until"    dape-until           :transient t)]
-     ["Breakpoints"
-      ("b" "toggle"     dape-breakpoint-toggle)
-      ("B" "condition"  dape-breakpoint-expression)
-      ("l" "log"        dape-breakpoint-log)
-      ("h" "hits"       dape-breakpoint-hits)
-      ("x" "remove all" dape-breakpoint-remove-all)]
-     ["Inspect"
-      ("e" "eval"       dape-evaluate-expression)
-      ("w" "watch"      dape-watch-dwim)
-      ("s" "stack"      dape-select-stack)
-      ("S-k" "frame up"   dape-stack-select-up   :transient t)
-      ("S-j" "frame down" dape-stack-select-down :transient t)]])
-
-  (define-key evil-normal-state-map (kbd "<SPC>d") #'my/dape-transient))
+  (define-key evil-normal-state-map (kbd "<f5>") #'my/sigasi-debug))
 
 ;;; Language specific
 (use-package sly
@@ -707,6 +796,17 @@
   (modify-syntax-entry ?/ "w"))
 (dolist (hook '(emacs-lisp-mode-hook lisp-mode-hook))
   (add-hook hook 'lisp-word-syntax))
+
+(defun my/emacs-lisp-outline ()
+  "Enable outline folding, starting folded to the top-level headings."
+  (setq-local outline-regexp ";;;;* [^ \t\n]")
+  (outline-minor-mode 1)
+  (outline-hide-sublevels 1)
+  ;; `outline-cycle-buffer' tracks visibility itself, and still reads
+  ;; `show-all' after the fold above -- which makes the first S-TAB a no-op
+  ;; that merely refolds.
+  (setq outline--cycle-buffer-state 'top-level))
+(add-hook 'emacs-lisp-mode-hook #'my/emacs-lisp-outline)
 
 (defun c-word-syntax ()
   (modify-syntax-entry ?_ "w"))
