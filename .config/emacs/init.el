@@ -376,14 +376,23 @@ instead."
   (setq magit-diff-specify-hunk-foreground nil)
   :config
   (setq magit-list-refs-sortby "-committerdate")
-  (setq magit-diff-refine-hunk t)
-  (setq magit-diff-fontify-hunk t)
-  (setq magit-diff-use-indicator-faces t)
 
   (defun my/magit-display-buffer-same-window (buffer)
     (display-buffer buffer '(display-buffer-same-window)))
   (setq magit-display-buffer-function #'my/magit-display-buffer-same-window)
   (setq magit-commit-diff-inhibit-same-window t)
+
+  (defvar my/magit-diff-detail-max-size 100000
+    "Buffers larger than this many characters get no inline diffs or syntax highlighting.")
+
+  (defun my/magit-diff-set-detail ()
+    "Refine and fontify hunks, unless this buffer's diff is a large one."
+    (when (derived-mode-p 'magit-mode)
+      (let ((detail (and (<= (buffer-size) my/magit-diff-detail-max-size)
+                         'all)))
+        (setq-local magit-diff-refine-hunk detail)
+        (setq-local magit-diff-fontify-hunk detail))))
+  (add-hook 'magit-refresh-buffer-hook #'my/magit-diff-set-detail)
 
   (defun my/magit-diff-origin-master (&optional args files)
     "Diff the current branch against origin's default branch."
@@ -406,13 +415,17 @@ instead."
   (put 'magit-stash-mode 'magit-diff-default-arguments
        '("--no-ext-diff" "--color-moved=zebra"))
 
+  (setq magit-diff-use-indicator-faces t)
   (custom-set-faces
-   '(magit-diff-removed           ((t :background "#e6c8c8")))
-   '(magit-diff-removed-highlight ((t :background "#e6c8c8")))
-   '(magit-diff-added             ((t :background "#d0d6cd")))
-   '(magit-diff-added-highlight   ((t :background "#d0d6cd")))
-   '(diff-refine-removed          ((t :background "#d69fa2")))
-   '(diff-refine-added            ((t :background "#aabbab"))))
+   '(magit-diff-removed           ((t :background "#e6c8c8" :foreground unspecified)))
+   '(magit-diff-removed-highlight ((t :background "#e6c8c8" :foreground unspecified)))
+   '(magit-diff-added             ((t :background "#d0d6cd" :foreground unspecified)))
+   '(magit-diff-added-highlight   ((t :background "#d0d6cd" :foreground unspecified)))
+   '(diff-refine-removed          ((t :background "#d69fa2" :foreground unspecified)))
+   '(diff-refine-added            ((t :background "#aabbab" :foreground unspecified)))
+   '(magit-diff-removed-indicator ((t :foreground "#8c1d28")))
+   '(magit-diff-added-indicator   ((t :foreground "#30583c")))
+   '(magit-diff-base-indicator    ((t :foreground "#302b5d"))))
 
   (defun my/magit-color-moved-extend-face (face)
     (cond ((keywordp (car-safe face)) (append face '(:extend t)))
