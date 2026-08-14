@@ -375,25 +375,22 @@ instead."
   (setq magit-define-global-key-bindings 'recommended)
   (setq magit-diff-specify-hunk-foreground nil)
   :config
-  (setq magit-list-refs-sortby "-committerdate")
+  (setq magit-list-refs-sortby "-committerdate"))
 
+;;;; Magit: diff
+;;;;; Display buffer
+(use-package magit
+  :ensure nil
+  :config
   (defun my/magit-display-buffer-same-window (buffer)
     (display-buffer buffer '(display-buffer-same-window)))
   (setq magit-display-buffer-function #'my/magit-display-buffer-same-window)
-  (setq magit-commit-diff-inhibit-same-window t)
+  (setq magit-commit-diff-inhibit-same-window t))
 
-  (defvar my/magit-diff-detail-max-size 100000
-    "Buffers larger than this many characters get no inline diffs or syntax highlighting.")
-
-  (defun my/magit-diff-set-detail ()
-    "Refine and fontify hunks, unless this buffer's diff is a large one."
-    (when (derived-mode-p 'magit-mode)
-      (let ((detail (and (<= (buffer-size) my/magit-diff-detail-max-size)
-                         'all)))
-        (setq-local magit-diff-refine-hunk detail)
-        (setq-local magit-diff-fontify-hunk detail))))
-  (add-hook 'magit-refresh-buffer-hook #'my/magit-diff-set-detail)
-
+;;;;; Transient
+(use-package magit
+  :ensure nil
+  :config
   (defun my/magit-diff-origin-master (&optional args files)
     "Diff the current branch against origin's default branch."
     (interactive (magit-diff-arguments))
@@ -404,7 +401,7 @@ instead."
   (transient-append-suffix 'magit-diff "r"
     '("o" "Diff origin/master..." my/magit-diff-origin-master)))
 
-;;;; Magit: diff colors
+;;;;; Colors
 (use-package magit
   :ensure nil
   :config
@@ -446,7 +443,29 @@ instead."
       (apply fn args)))
   (advice-add 'magit-diff-wash-diffs :around #'my/magit-color-moved-extend))
 
-;;;; Magit: diff whitespace
+;;;;; Performance
+(use-package magit
+  :ensure nil
+  :config
+  (defvar my/magit-diff-detail-max-size 100000
+    "Buffers larger than this many characters get no inline diffs or syntax highlighting.")
+
+  (defun my/magit-diff-set-detail ()
+    "Refine and fontify hunks, unless this buffer's diff is a large one."
+    (when (derived-mode-p 'magit-mode)
+      (let ((detail (and (<= (buffer-size) my/magit-diff-detail-max-size)
+                         'all)))
+        (setq-local magit-diff-refine-hunk detail)
+        (setq-local magit-diff-fontify-hunk detail))))
+  (add-hook 'magit-refresh-buffer-hook #'my/magit-diff-set-detail)
+
+  (defun my/larger-heap-allocation (fn &rest args)
+    "More heap allocation to speed up large diffs"
+    (let ((gc-cons-percentage 0.6))
+      (apply fn args)))
+  (advice-add 'magit-refresh-buffer :around #'my/larger-heap-allocation))
+
+;;;;; Whitespace
 (use-package magit
   :ensure nil
   :config
@@ -473,7 +492,7 @@ instead."
                   magit-status-mode-hook))
     (add-hook hook #'my/magit-diff-show-whitespace)))
 
-;;;; Magit: pairwise hunk refinement
+;;;;; Pairwise hunk refinement
 ;; `diff--refine-hunk' word-diffs a whole run of removed lines against the
 ;; whole run of added lines, so matches span line boundaries and unrelated
 ;; rewrites still get refined on coincidental words.  Pair the Nth removed
@@ -581,14 +600,6 @@ instead."
     (evil-define-key 'normal magit-status-mode-map
       (kbd "gf") 'my/magit-open-file-in-eclipse)
     (evil-define-key 'normal magit-process-mode-map (kbd "gx") 'browse-url-at-point)))
-
-;;;; Magit delta
-(use-package magit-delta
-  :ensure t
-  :after magit
-  ;; :hook (magit-mode . magit-delta-mode)
-  :config
-  (setq magit-delta-default-light-theme "ansi"))
 
 ;;;; Keychain
 (use-package keychain-environment
