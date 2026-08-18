@@ -14,6 +14,9 @@
                (display-buffer-no-window)
                (allow-no-window . t)))
 
+;; Local packages, not installed through `package'
+(add-to-list 'load-path (locate-user-emacs-file "lisp"))
+
 ;;; Basic behavior
 
 (setq inhibit-startup-screen t)
@@ -455,8 +458,8 @@ instead."
     (when (derived-mode-p 'magit-mode)
       (let ((detail (and (<= (buffer-size) my/magit-diff-detail-max-size)
                          'all)))
-        (setq-local magit-diff-refine-hunk detail)
-        (setq-local magit-diff-fontify-hunk detail))))
+        (setq-local magit-diff-refine-hunk 'all)
+        (setq-local magit-diff-fontify-hunk 'all))))
   (add-hook 'magit-refresh-buffer-hook #'my/magit-diff-set-detail)
 
   (defun my/larger-heap-allocation (fn &rest args)
@@ -551,6 +554,14 @@ instead."
         (my/magit-diff--refine-line-pairs beg end)
       (funcall fn beg end)))
   (advice-add 'diff--refine-hunk :around #'my/magit-diff-refine-line-pairs))
+
+;;;;; Diffstat tree
+;; Group the files in a diffstat under collapsible directory sections.
+(use-package magit-diffstat-tree
+  :ensure nil
+  :after magit
+  :config
+  (magit-diffstat-tree-mode 1))
 
 ;;;; Magit: bare-repo dotfiles
 (use-package magit
