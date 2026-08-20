@@ -111,7 +111,6 @@ set tabstop=4                " Show tab as 4 spaces
 set softtabstop=4            " Insert four spaces with tab key
 set breakindent              " Indent wrapped lines
 "set breakindentopt=shift:2   " Indent wrapped lines slightly more
-set showbreak=>\ 
 set linebreak                " Break at word boundaries
 
 "set shiftround

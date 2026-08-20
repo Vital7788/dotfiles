@@ -143,6 +143,10 @@ instead."
 
 (blink-cursor-mode 0)
 
+(global-visual-line-mode 1) ; wrap lines
+(global-visual-wrap-prefix-mode 1)
+(setq visual-line-fringe-indicators '(left-curly-arrow nil))
+
 (use-package nerd-icons
   :ensure t)
 
@@ -410,6 +414,8 @@ instead."
   :config
   (put 'magit-status-mode 'magit-diff-default-arguments
        '("--no-ext-diff" "--color-moved=zebra"))
+  (put 'magit-diff-mode 'magit-diff-default-arguments
+       '("--stat" "--no-ext-diff" "--color-moved=zebra"))
   (put 'magit-revision-mode 'magit-diff-default-arguments
        '("--stat" "--no-ext-diff" "--color-moved=zebra"))
   (put 'magit-stash-mode 'magit-diff-default-arguments
@@ -626,7 +632,6 @@ instead."
   (setq org-return-follows-link t)
   (setq org-hide-emphasis-markers t)
   (add-hook 'org-mode-hook 'org-indent-mode)  ; nicer indentation
-  (add-hook 'org-mode-hook 'visual-line-mode) ; wrap lines
   (add-hook 'org-mode-hook (lambda () (electric-indent-local-mode -1)))
   (add-hook 'org-mode-hook 'variable-pitch-mode) ; proportionally spaced font
 
