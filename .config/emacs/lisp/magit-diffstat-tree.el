@@ -277,11 +277,16 @@ Diffstat entries have no body of their own, so toggling them does nothing."
         (goto-char (oref parent start)))
     (funcall fn section)))
 
-(defun magit-diffstat-tree--goto (target)
+(defun magit-diffstat-tree--goto (target &optional top)
   (unless target
     (user-error "No corresponding section"))
   (magit-section-reveal target)
-  (goto-char (oref target start)))
+  (goto-char (oref target start))
+  ;; With TOP, show the target at the top of the window instead of letting
+  ;; Emacs recenter
+  (when top
+    (when-let ((window (get-buffer-window (current-buffer))))
+      (set-window-start window (point)))))
 
 (defun magit-diffstat-tree-jump ()
   "Jump from a diffstat entry to the corresponding diff, or back."
@@ -289,20 +294,22 @@ Diffstat entries have no body of their own, so toggling them does nothing."
   (let ((section (magit-current-section))
         (diffstat (or (magit-diffstat-tree--diffstat)
                       (user-error "No diffstat in this buffer"))))
-    (magit-diffstat-tree--goto
-     (cond
-      ;; Inside the diffstat: go to the real diff.
-      ((magit-section-match '[file * diffstat] section)
-       (magit-get-section
-        (append `((file . ,(oref section value)))
-                (magit-section-ident magit-root-section))))
+    (if (magit-section-match '[file * diffstat] section)
+        ;; Inside the diffstat: go to the real diff, shown from its top.
+        (magit-diffstat-tree--goto
+         (magit-get-section
+          (append `((file . ,(oref section value)))
+                  (magit-section-ident magit-root-section)))
+         t)
       ;; In a diff: go to the matching diffstat entry.
-      ((magit-section-match 'file section)
-       (magit-diffstat-tree--find-file diffstat (oref section value)))
-      ((magit-section-match 'hunk section)
-       (magit-diffstat-tree--find-file
-        diffstat (magit-section-parent-value section)))
-      (t diffstat)))))
+      (magit-diffstat-tree--goto
+       (cond
+        ((magit-section-match 'file section)
+         (magit-diffstat-tree--find-file diffstat (oref section value)))
+        ((magit-section-match 'hunk section)
+         (magit-diffstat-tree--find-file
+          diffstat (magit-section-parent-value section)))
+        (t diffstat))))))
 
 (defun magit-diffstat-tree-jump-to-diffstat ()
   "Go to the diffstat, or to the entry for the file at point."
