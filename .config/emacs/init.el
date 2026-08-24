@@ -235,7 +235,23 @@ instead."
 
 (use-package vertico
   :ensure t
-  :hook (after-init . vertico-mode))
+  :hook (after-init . vertico-mode)
+  :config
+  (defun my/vertico-kill-buffer ()
+    "Kill the buffer of the selected candidate. Falls back to
+`delete-forward-char' when the candidate is not a buffer."
+    (interactive)
+    (require 'embark)
+    (let ((target (car (embark--targets))))
+      (if (not (eq (plist-get target :type) 'buffer))
+          (call-interactively #'delete-forward-char)
+        ;; `kill-buffer' has an `embark--confirm' pre-action hook; suppress it
+        ;; and let `kill-buffer' prompt on its own for unsaved changes.  The
+        ;; `embark--restart' post-action hook refreshes the candidate list.
+        (let ((embark-pre-action-hooks (cons '(kill-buffer ignore)
+                                             embark-pre-action-hooks)))
+          (embark--act #'kill-buffer target)))))
+  (keymap-set vertico-map "<delete>" #'my/vertico-kill-buffer))
 
 (use-package marginalia
   :ensure t
@@ -286,12 +302,23 @@ instead."
                               (bookmark-all-names)))))
     "Alist of (BOOKMARK-NAME . DIR)")
 
+  (defun my/magit-status-reuse (dir)
+    "Display magit status buffer if it exists. Call magit-status otherwise."
+    (require 'magit)
+    (let* ((default-directory dir)
+           (buffer (and (magit-toplevel)
+                        (magit-get-mode-buffer 'magit-status-mode))))
+      (if buffer
+          (magit-display-buffer buffer)
+        (magit-status dir))))
+
   (defvar my/consult-source-git-repos
     (list :name   "Git Repositories"
           :narrow ?g
           :items  (lambda () (mapcar #'car my/consult-git-repos-cache))
           :action (lambda (name)
-                    (magit-status (cdr (assoc name my/consult-git-repos-cache))))))
+                    (my/magit-status-reuse
+                     (cdr (assoc name my/consult-git-repos-cache))))))
   (setq consult-buffer-sources
         (let (result)
           (dolist (source consult-buffer-sources (nreverse result))
@@ -303,7 +330,7 @@ instead."
   (defun my/consult-magit-repos ()
     "Select a git repository (from bookmarks) with consult and open it in magit."
     (interactive)
-    (magit-status
+    (my/magit-status-reuse
      (cdr (assoc (consult--read
                   (mapcar #'car my/consult-git-repos-cache)
                   :prompt "Repository: "
