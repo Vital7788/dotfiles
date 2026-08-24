@@ -176,7 +176,8 @@ instead."
   :ensure t
   :init
   (setq evil-want-keybinding nil)
-  (setq evil-want-Y-yank-to-eol 1)
+  (setq evil-want-Y-yank-to-eol t)
+  (setq evil-respect-visual-line-mode t)
   :config
   (evil-mode 1)
   (evil-set-undo-system 'undo-redo)
@@ -190,6 +191,7 @@ instead."
     (kbd "<backtab>") #'my/outline-cycle-buffer)
 
   (setq evil-symbol-word-search t)
+  (setq evil-move-beyond-eol t)
 
   (add-hook 'evil-insert-state-entry-hook (lambda () (unless (display-graphic-p) (send-string-to-terminal "\033[6 q"))))
   (add-hook 'evil-insert-state-exit-hook  (lambda () (unless (display-graphic-p) (send-string-to-terminal "\033[2 q")))))
