@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# Start the Sigasi VS Code extension development host and publish the port its
+# extension host listens on, so Emacs can attach a debugger to it.
+
+set -u
+
+EXTENSION_PATH=${VSCODE_EXTENSION_PATH:-$HOME/sigasi/git/sigasi/com.sigasi.lsp.extension.vscode}
+DATA_DIR=${VSCODE_DATA_DIR:-$HOME/.local/share/sigasi-dev-host}
+PORT_FILE=${SIGASI_DEV_HOST_PORT_FILE:-${XDG_RUNTIME_DIR:-/tmp}/sigasi-dev-host.port}
+LOG=${XDG_RUNTIME_DIR:-/tmp}/sigasi-dev-host.log
+CODE=${CODE:-code}
+INSPECT_PORT=9229
+PUBLISHED=false
+
+say() { printf 'sigasi-dev-host: %s\n' "$*"; }
+die() { printf 'sigasi-dev-host: %s\n' "$*" >&2; exit 1; }
+
+if [ "${1:-}" = --help ]; then
+    echo "Usage: $(basename "$0")"
+    echo "Starts the dev host and publishes its extension host's port to ${PORT_FILE}."
+    echo "Reads VSCODE_EXTENSION_PATH, VSCODE_DATA_DIR, SIGASI_DEV_HOST_PORT_FILE, CODE."
+    exit 0
+fi
+
+command -v "$CODE" > /dev/null 2>&1 || die "$CODE not found on PATH; set CODE=/path/to/code"
+[ -d "$EXTENSION_PATH/packages/buildUtils/dist/server" ] ||
+    die "packages/buildUtils/dist/server is missing; run ./build.sh in $EXTENSION_PATH"
+[ -f "$EXTENSION_PATH/app/extension.js" ] ||
+    die "app/extension.js is missing; run vswatch (or ./build.sh) in $EXTENSION_PATH"
+
+cleanup() {
+    # Keep the status that triggered this, or `die' would report success.
+    local status=$?
+    trap - EXIT INT TERM
+    # Only clear the file this run published: VS Code delegates a second launch to the
+    # running instance and exits at once, which must not pull the port out from under
+    # the dev host that is still up.
+    [ "$PUBLISHED" = true ] && rm -f "$PORT_FILE" "$PORT_FILE.tmp"
+    exit "$status"
+}
+trap cleanup EXIT INT TERM
+
+port_of_pid() {
+    { tr '\0' '\n' < "/proc/$1/cmdline"; } 2>/dev/null |
+        sed -n 's/^--inspect-brk=.*:\([0-9]\{1,\}\)$/\1/p'
+}
+
+answers() { timeout 1 bash -c "exec 3<>/dev/tcp/127.0.0.1/$1" 2>/dev/null; }
+
+publish() {
+    local port=$1 i
+    # The lifecycle line arrives when the process is created, a moment before the
+    # inspector binds, so wait for it rather than publishing a port nobody answers.
+    for i in $(seq 1 50); do
+        if answers "$port"; then
+            printf '%s\n' "$port" > "$PORT_FILE.tmp" && mv -f "$PORT_FILE.tmp" "$PORT_FILE"
+            PUBLISHED=true
+            say "extension host on port $port (published to $PORT_FILE)"
+            return
+        fi
+        sleep 0.1
+    done
+    say "port $port never accepted connections"
+}
+
+say "starting the dev host; its output goes to $LOG"
+exec 4>>"$LOG"
+
+# Process substitution, not a pipe: the loop must run in this shell so that what it
+# publishes is visible to the exit trap.
+while IFS= read -r line; do
+    printf '%s\n' "$line" >&4
+    case $line in
+        *"type: extensionHost, pid: "*"successfully created"*)
+            pid=${line##*pid: }
+            pid=${pid%%]*}
+            port=$(port_of_pid "$pid")
+            if [ -n "$port" ]; then
+                publish "$port"
+            else
+                # Observed after a rerun reloads the window: the replacement host comes
+                # up with no inspector, so there is nothing to attach to any more.
+                say "extension host $pid came up without an inspector; close the window and start again"
+            fi
+            ;;
+        *"Extension host with pid "*" exited"*)
+            # A reload restarts it on a freshly derived port; stop advertising the old one.
+            rm -f "$PORT_FILE"
+            PUBLISHED=false
+            say "extension host exited; waiting for its replacement"
+            ;;
+    esac
+done < <(RELOAD_ON_WATCH=true "$CODE" --verbose --ozone-platform-hint=auto --enable-wayland-ime \
+             "--extensionDevelopmentPath=$EXTENSION_PATH" \
+             "--user-data-dir=$DATA_DIR/user-data" \
+             "--extensions-dir=$DATA_DIR/extensions" \
+             "--inspect-brk-extensions=$INSPECT_PORT" 2>&1)
