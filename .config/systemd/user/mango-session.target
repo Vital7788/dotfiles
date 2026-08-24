@@ -1,0 +1,8 @@
+# https://github.com/swaywm/sway/wiki/systemd-integration
+[Unit]
+Description=mango compositor session
+Documentation=man:systemd.special(7)
+BindsTo=graphical-session.target
+Before=graphical-session.target
+Wants=graphical-session-pre.target
+After=graphical-session-pre.target
