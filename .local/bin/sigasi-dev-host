@@ -1,49 +1,152 @@
 #!/bin/bash
 
-# Start the Sigasi VS Code extension development host and publish the port its
-# extension host listens on, so Emacs can attach a debugger to it.
+# Build the Sigasi VS Code extension, keep its watchers running, and publish the
+# port the development host's extension host listens on
 
 set -u
+
+# Emacs closes this script's stdout when it quits, so `say' would take the cleanup
+# below down with SIGPIPE half way through, stranding the window and the watchers.
+trap '' PIPE
 
 EXTENSION_PATH=${VSCODE_EXTENSION_PATH:-$HOME/sigasi/git/sigasi/com.sigasi.lsp.extension.vscode}
 DATA_DIR=${VSCODE_DATA_DIR:-$HOME/.local/share/sigasi-dev-host}
 PORT_FILE=${SIGASI_DEV_HOST_PORT_FILE:-${XDG_RUNTIME_DIR:-/tmp}/sigasi-dev-host.port}
-LOG=${XDG_RUNTIME_DIR:-/tmp}/sigasi-dev-host.log
+LOCK_FILE=$PORT_FILE.lock
+TSC_LOG=${XDG_RUNTIME_DIR:-/tmp}/sigasi-dev-host-tsc.log
+READY_TIMEOUT=${SIGASI_DEV_HOST_READY_TIMEOUT:-600}
 CODE=${CODE:-code}
 INSPECT_PORT=9229
-PUBLISHED=false
+CHILDREN=
+STARTED_WATCHERS=false
 
 say() { printf 'sigasi-dev-host: %s\n' "$*"; }
 die() { printf 'sigasi-dev-host: %s\n' "$*" >&2; exit 1; }
 
-if [ "${1:-}" = --help ]; then
-    echo "Usage: $(basename "$0")"
-    echo "Starts the dev host and publishes its extension host's port to ${PORT_FILE}."
-    echo "Reads VSCODE_EXTENSION_PATH, VSCODE_DATA_DIR, SIGASI_DEV_HOST_PORT_FILE, CODE."
-    exit 0
-fi
-
 command -v "$CODE" > /dev/null 2>&1 || die "$CODE not found on PATH; set CODE=/path/to/code"
-[ -d "$EXTENSION_PATH/packages/buildUtils/dist/server" ] ||
-    die "packages/buildUtils/dist/server is missing; run ./build.sh in $EXTENSION_PATH"
-[ -f "$EXTENSION_PATH/app/extension.js" ] ||
-    die "app/extension.js is missing; run vswatch (or ./build.sh) in $EXTENSION_PATH"
+cd "$EXTENSION_PATH" || die "cannot enter $EXTENSION_PATH"
+EXTENSION_PATH=$(pwd -P)
+command -v yarn > /dev/null 2>&1 || die "yarn not found on PATH"
+
+exec 9> "$LOCK_FILE" || die "cannot write $LOCK_FILE"
+flock -n 9 || die "a dev host is already running; close its window first"
+
+# `yarn' is a corepack shim that runs the real yarn as a child, which runs the compiler
+# as a child of its own, so signalling what $! named would leave both behind.
+descendants() {
+    local pid=$1 child
+    printf '%s ' "$pid"
+    for child in $(pgrep -P "$pid" 2>/dev/null); do descendants "$child"; done
+}
+
+# `code' starts the editor in a process group of its own, with two launchers in between
+# that do share this script's group. Ctrl-C reaches those launchers directly and they
+# die on the spot, so by the time the trap below runs, the editor has been reparented to
+# init and descendants() can no longer walk down to it. Its --user-data-dir belongs to
+# this script alone, which is what makes it possible to find it back regardless.
+proc_args() { { tr '\0' '\n' < "/proc/$1/cmdline"; } 2>/dev/null; }
+
+dev_host_pids() {
+    local entry pid args exe
+    for entry in /proc/[0-9]*; do
+        pid=${entry#/proc/}
+        args=$(proc_args "$pid")
+        case $args in *"$DATA_DIR/user-data"*) ;; *) continue ;; esac
+        exe=$(readlink "/proc/$pid/exe" 2>/dev/null)
+        # Three launchers stand in front of the editor and carry the same arguments:
+        # `sh /usr/bin/code ...', the cli.js that it runs, and (once it has handed over)
+        # nothing at all. Renderers, the GPU process and the extension host carry
+        # --type=; the crash handler only names the directory in passing. Matching on
+        # argv[1] is no help here, since the editor flattens its own argv into a single
+        # NUL-free string as Chromium rewrites the process title.
+        case ${exe##*/} in sh|bash|dash|zsh|ksh) continue ;; esac
+        case $args in *"--type="*|*cli.js*|*crashpad*) continue ;; esac
+        printf '%s ' "$pid"
+    done
+}
+
+stop_dev_host() {
+    local pids i
+    pids=$(dev_host_pids)
+    [ -n "${pids// /}" ] || return 0
+    say "closing the dev host window"
+    # SIGTERM is the quit the editor performs for itself, so the window state is saved
+    # and the extension host goes down cleanly.
+    kill $pids 2>/dev/null
+    # Quitting takes the editor the better part of ten seconds: the extension host is
+    # asked to stop, the window state is written out. Rushing it with SIGKILL is what
+    # strands the crash handler, so the grace period is generous.
+    for i in $(seq 1 150); do
+        pids=$(dev_host_pids)
+        [ -n "${pids// /}" ] || return 0
+        sleep 0.2
+    done
+    say "dev host still up after 30s; killing it"
+    kill -9 $pids 2>/dev/null
+}
+
+# An editor that was killed rather than asked to quit leaves its crash handler behind,
+# reparented to init, where it stays for as long as the machine is up.
+stop_crashpad_orphans() {
+    local entry pid args pids=
+    for entry in /proc/[0-9]*; do
+        pid=${entry#/proc/}
+        args=$(proc_args "$pid")
+        case $args in
+            *crashpad*"$DATA_DIR/user-data"*) pids="$pids $pid" ;;
+        esac
+    done
+    [ -n "${pids// /}" ] && kill $pids 2>/dev/null
+    return 0
+}
+
+# Before anything is built: a window that outlived its script (a kill -9, a crash, a
+# closed terminal) still owns the data dir, and `code' would hand this run's arguments
+# to it and exit straight away, which reads as a dev host that started and stopped the
+# watchers in the same breath. Refused here, while the trap below is still uninstalled
+# and cannot mistake this for a window of our own to close.
+running=$(dev_host_pids)
+[ -z "${running// /}" ] || die "a dev host window is already using $DATA_DIR (pid ${running% }); close it first"
+
+stop_children() {
+    local pids alive pid i
+    # Snapshot the trees before signalling any of them: killing a parent reparents its
+    # children to init, and pgrep can no longer reach them from here.
+    pids=$(for pid in $CHILDREN; do descendants "$pid"; done)
+    [ -n "${pids// /}" ] || return
+    kill $pids 2>/dev/null
+    for i in 1 2 3 4 5; do
+        alive=
+        for pid in $pids; do kill -0 "$pid" 2>/dev/null && alive="$alive $pid"; done
+        [ -n "$alive" ] || return
+        sleep 0.2
+    done
+    # .yarn/releases/yarn-4.3.1.cjs ignores SIGTERM outright, so whatever is still up
+    # after the grace period gets SIGKILL. Without this it and the lerna watch below it
+    # outlive every run and accumulate as orphans of init.
+    alive=$(for pid in $alive; do descendants "$pid"; done)
+    kill -9 $alive 2>/dev/null
+}
 
 cleanup() {
     # Keep the status that triggered this, or `die' would report success.
     local status=$?
     trap - EXIT INT TERM
-    # Only clear the file this run published: VS Code delegates a second launch to the
-    # running instance and exits at once, which must not pull the port out from under
-    # the dev host that is still up.
-    [ "$PUBLISHED" = true ] && rm -f "$PORT_FILE" "$PORT_FILE.tmp"
+    stop_dev_host
+    stop_crashpad_orphans
+    [ "$STARTED_WATCHERS" = true ] && say "stopping the watchers"
+    stop_children
+    rm -f "$PORT_FILE" "$PORT_FILE.tmp"
     exit "$status"
 }
 trap cleanup EXIT INT TERM
 
 port_of_pid() {
+    # The host half is optional: this VS Code hands the extension host
+    # --inspect-brk=127.0.0.1:9229, older ones only the port. Missing it read as a host
+    # that came up without an inspector, which is a different problem entirely.
     { tr '\0' '\n' < "/proc/$1/cmdline"; } 2>/dev/null |
-        sed -n 's/^--inspect-brk=.*:\([0-9]\{1,\}\)$/\1/p'
+        sed -n 's/^--inspect-brk=\(.*:\)\?\([0-9]\+\)$/\2/p'
 }
 
 answers() { timeout 1 bash -c "exec 3<>/dev/tcp/127.0.0.1/$1" 2>/dev/null; }
@@ -55,7 +158,6 @@ publish() {
     for i in $(seq 1 50); do
         if answers "$port"; then
             printf '%s\n' "$port" > "$PORT_FILE.tmp" && mv -f "$PORT_FILE.tmp" "$PORT_FILE"
-            PUBLISHED=true
             say "extension host on port $port (published to $PORT_FILE)"
             return
         fi
@@ -64,35 +166,106 @@ publish() {
     say "port $port never accepted connections"
 }
 
-say "starting the dev host; its output goes to $LOG"
-exec 4>>"$LOG"
+# Watchers this working tree already has. Matched on the interpreter,
+# the cwd and the command line
+watchers_for() {
+    local pid exe
+    for pid in $(pgrep -f "$1" 2>/dev/null); do
+        exe=$(readlink "/proc/$pid/exe" 2>/dev/null)
+        case ${exe##*/} in node|node[0-9]*) ;; *) continue ;; esac
+        [ "$(readlink "/proc/$pid/cwd" 2>/dev/null)" = "$EXTENSION_PATH" ] &&
+            printf '%s ' "$pid"
+    done
+}
 
-# Process substitution, not a pipe: the loop must run in this shell so that what it
-# publishes is visible to the exit trap.
-while IFS= read -r line; do
-    printf '%s\n' "$line" >&4
-    case $line in
-        *"type: extensionHost, pid: "*"successfully created"*)
-            pid=${line##*pid: }
-            pid=${pid%%]*}
-            port=$(port_of_pid "$pid")
-            if [ -n "$port" ]; then
-                publish "$port"
-            else
-                # Observed after a rerun reloads the window: the replacement host comes
-                # up with no inspector, so there is nothing to attach to any more.
-                say "extension host $pid came up without an inspector; close the window and start again"
-            fi
-            ;;
-        *"Extension host with pid "*" exited"*)
-            # A reload restarts it on a freshly derived port; stop advertising the old one.
-            rm -f "$PORT_FILE"
-            PUBLISHED=false
-            say "extension host exited; waiting for its replacement"
-            ;;
-    esac
-done < <(RELOAD_ON_WATCH=true "$CODE" --verbose --ozone-platform-hint=auto --enable-wayland-ime \
-             "--extensionDevelopmentPath=$EXTENSION_PATH" \
-             "--user-data-dir=$DATA_DIR/user-data" \
-             "--extensions-dir=$DATA_DIR/extensions" \
-             "--inspect-brk-extensions=$INSPECT_PORT" 2>&1)
+compile_pids=$(watchers_for 'compile:watch|tsc .*-w')
+packages_pids=$(watchers_for 'watch:packages|lerna.*cli\.js watch')
+
+if [ -n "${compile_pids// /}${packages_pids// /}" ]; then
+    # Someone else owns them, so they are not started here and not stopped on the way
+    # out either.
+    found="${compile_pids}${packages_pids}"
+    say "watchers already running for this tree (${found% }); skipping the build"
+    [ -n "${compile_pids// /}" ] || say "no compile:watch among them: app/ will not be rebuilt"
+    [ -n "${packages_pids// /}" ] || say "no watch:packages among them: packages/ will not be rebuilt"
+    [ -f app/extension.js ] ||
+        die "app/extension.js is missing; let the running watcher finish its first compile"
+else
+    yarn install || die "yarn install failed"
+    yarn build:dep || die "yarn build:dep failed"
+
+    # Through a file rather than a pipe, so readiness can be read off it while `tail'
+    # keeps the compiler's output on screen.
+    : > "$TSC_LOG"
+    yarn compile:watch > "$TSC_LOG" 2>&1 9>&- &
+    tsc_pid=$!
+    tail -f "$TSC_LOG" 9>&- &
+    tail_pid=$!
+    yarn watch:packages 9>&- &
+    CHILDREN="$tsc_pid $tail_pid $!"
+    STARTED_WATCHERS=true
+
+    # `lerna watch' only reacts to later changes, so build:dep above is what leaves the
+    # packages ready; tsc is the one still owing the first compile of app/extension.js.
+    say "waiting for the first tsc compile"
+    SECONDS=0
+    until grep -q 'Watching for file changes' "$TSC_LOG"; do
+        kill -0 "$tsc_pid" 2>/dev/null || die "compile:watch exited before it was ready"
+        [ "$SECONDS" -lt "$READY_TIMEOUT" ] || die "tsc was not ready after ${READY_TIMEOUT}s"
+        sleep 0.2
+    done
+
+    # tsc emits despite type errors, so a failed compile is worth a warning, not a stop.
+    errors=$(sed -n 's/.*Found \([0-9]\{1,\}\) error.*/\1/p' "$TSC_LOG" | tail -1)
+    [ "${errors:-0}" = 0 ] || say "tsc reported $errors error(s); starting the dev host anyway"
+fi
+
+# One child wrapping the whole pipeline, so a single kill_tree reaches both `code' and
+# this loop, and so `wait' below is what blocks: bash defers traps until a foreground
+# command returns, which for a dev host that is still up means never.
+dev_host() {
+    set -o pipefail
+    RELOAD_ON_WATCH=true "$CODE" --verbose --ozone-platform-hint=auto --enable-wayland-ime \
+        "--extensionDevelopmentPath=$EXTENSION_PATH" \
+        "--user-data-dir=$DATA_DIR/user-data" \
+        "--extensions-dir=$DATA_DIR/extensions" \
+        "--inspect-brk-extensions=$INSPECT_PORT" 2>&1 |
+        while IFS= read -r line; do
+            case $line in
+                *"type: extensionHost, pid: "*"successfully created"*)
+                    pid=${line##*pid: }
+                    pid=${pid%%]*}
+                    port=$(port_of_pid "$pid")
+                    if [ -n "$port" ]; then
+                        publish "$port" &
+                    else
+                        # Observed after a rerun reloads the window: the replacement host
+                        # comes up with no inspector, so there is nothing left to attach to.
+                        say "extension host $pid came up without an inspector; close the window and start again"
+                    fi
+                    ;;
+                *"Extension host with pid "*" exited"*)
+                    # A reload restarts it on a freshly derived port; stop advertising
+                    # the old one. This is also the last line VS Code prints on the way
+                    # out, so it is not necessarily a replacement that follows.
+                    rm -f "$PORT_FILE"
+                    say "extension host exited"
+                    ;;
+            esac
+        done
+}
+
+# Leaving the dev host ends this wait and the exit trap stops the watchers; Ctrl-C runs
+# the same trap, which is what stops them all, since a background child of a script
+# without job control ignores the terminal's SIGINT.
+say "starting the dev host"
+dev_host 9>&- &
+host_pid=$!
+CHILDREN="$CHILDREN $host_pid"
+wait "$host_pid"
+status=$?
+# Reached only when the dev host ended by itself: on a signal the trap exits from cleanup
+# and never comes back here, so a window this script closed cannot be read as a launch that
+# failed.
+[ "$status" -eq 0 ] || say "the dev host exited with status $status"
+exit "$status"
