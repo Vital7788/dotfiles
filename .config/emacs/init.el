@@ -51,7 +51,7 @@
 
 ;; Enable indentation+completion using the TAB key.
 (setq tab-always-indent 'complete)
-(setq completion-cycle-threshold 5)
+(setq completion-cycle-threshold nil)
 
 ;; Emacs 30 and newer: Disable Ispell completion function.
 ;; Try `cape-dict' as an alternative.
@@ -179,7 +179,6 @@ instead."
   :init
   (setq evil-want-keybinding nil)
   (setq evil-want-Y-yank-to-eol t)
-  (setq evil-respect-visual-line-mode t)
   :config
   (evil-mode 1)
   (evil-set-undo-system 'undo-redo)
@@ -364,6 +363,12 @@ instead."
   :config
   (setq corfu-preview-current nil)
   (setq corfu-min-width 20)
+  (setq corfu-cycle t)
+  (defun my/corfu-tab ()
+    "Expand the common prefix of the candidates, else go to the next one."
+    (interactive)
+    (or (corfu-expand) (corfu-next)))
+  (keymap-set corfu-map "TAB" #'my/corfu-tab)
   (setq corfu-popupinfo-delay '(1.25 . 0.5))
   (corfu-popupinfo-mode 1) ; shows documentation after `corfu-popupinfo-delay'
   ;; Sort by input history (no need to modify `corfu-sort-function').
@@ -749,7 +754,11 @@ instead."
 
 (use-package apheleia
   :ensure t
-  :hook (after-init . apheleia-global-mode))
+  :hook (after-init . apheleia-global-mode)
+  :config
+  ;; match VS Code behavior
+  (add-to-list 'apheleia-mode-alist
+               '("/package\\(-lock\\)?\\.json\\'" . prettier-json-stringify)))
 
 ;;; Debugger (DAP)
 (use-package dape
