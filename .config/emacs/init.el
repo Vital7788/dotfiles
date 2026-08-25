@@ -421,9 +421,12 @@ instead."
   :ensure nil
   :config
   (defun my/magit-display-buffer-same-window (buffer)
-    (display-buffer buffer '(display-buffer-same-window)))
-  (setq magit-display-buffer-function #'my/magit-display-buffer-same-window)
-  (setq magit-commit-diff-inhibit-same-window t))
+    "Display BUFFER in the selected window, unless magit wants it beside it."
+    (display-buffer buffer
+                    (if magit-display-buffer-noselect
+                        '(nil (inhibit-same-window . t))
+                      '(display-buffer-same-window))))
+  (setq magit-display-buffer-function #'my/magit-display-buffer-same-window))
 
 ;;;;; Transient
 (use-package magit
