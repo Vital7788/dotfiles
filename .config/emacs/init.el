@@ -291,6 +291,7 @@ instead."
   (add-to-list 'consult-buffer-filter "\\`\\*Messages\\*\\'")
   (add-to-list 'consult-buffer-filter "\\`\\*Warnings\\*\\'")
   (add-to-list 'consult-buffer-filter "\\`\\*Async-native-compile-log\\*\\'")
+  (add-to-list 'consult-buffer-filter "\\`\\*dape")
   (add-to-list 'consult-buffer-filter "\\`magit-process: ")
 
   (defvar my/consult-git-repos-cache
@@ -754,33 +755,61 @@ instead."
 (use-package dape
   :ensure t
   :config
+  (set-face-attribute 'dape-source-line-face nil
+                      :background (modus-themes-get-color-value 'bg-yellow-subtle)
+                      :extend t)
+
   (transient-define-prefix my/dape-transient ()
-    "Dape debug commands."
+    [:hide always
+           ("q"        "close menu" transient-quit-one)
+           ("<escape>" "close menu" transient-quit-one)]
     [["Session"
-      ("d" "launch"   dape)
-      ("r" "restart"  dape-restart)
-      ("Q" "stop"     dape-quit)]
+      ("d" "start"      dape)
+      ("r" "restart"    dape-restart)
+      ("D" "detach"     dape-disconnect-quit)
+      ("K" "kill"       dape-kill)
+      ("Q" "quit all"   dape-quit)]
      ["Step"
-      ("c" "continue" dape-continue        :transient t)
-      ("n" "next"     dape-next            :transient t)
-      ("i" "step-in"  dape-step-in         :transient t)
-      ("o" "step-out" dape-step-out        :transient t)
-      ("p" "pause"    dape-pause           :transient t)
-      ("u" "until"    dape-until           :transient t)]
+      ("c" "continue"   dape-continue)
+      ("n" "next"       dape-next              :transient t)
+      ("s" "step in"    dape-step-in           :transient t)
+      ("o" "step out"   dape-step-out          :transient t)
+      ("u" "until"      dape-until)
+      ("p" "pause"      dape-pause)]
      ["Breakpoints"
       ("b" "toggle"     dape-breakpoint-toggle)
-      ("B" "condition"  dape-breakpoint-expression)
+      ("e" "expression" dape-breakpoint-expression)
       ("l" "log"        dape-breakpoint-log)
       ("h" "hits"       dape-breakpoint-hits)
-      ("x" "remove all" dape-breakpoint-remove-all)]
+      ("F" "function"   dape-breakpoint-function)
+      ("B" "remove all" dape-breakpoint-remove-all)]
      ["Inspect"
-      ("e" "eval"       dape-evaluate-expression)
+      ("i" "info"       dape-info)
+      ("R" "repl"       dape-repl)
+      ("x" "eval"       dape-evaluate-expression)
       ("w" "watch"      dape-watch-dwim)
-      ("s" "stack"      dape-select-stack)
-      ("S-k" "frame up"   dape-stack-select-up   :transient t)
-      ("S-j" "frame down" dape-stack-select-down :transient t)]])
+      ("S" "stack"      dape-select-stack)
+      ("t" "thread"     dape-select-thread)
+      ("<" "frame up"   dape-stack-select-up   :transient t)
+      (">" "frame down" dape-stack-select-down :transient t)]])
 
-  (define-key evil-normal-state-map (kbd "<SPC>d") #'my/dape-transient))
+  (define-key evil-normal-state-map (kbd "SPC") #'my/dape-transient)
+
+  (keymap-global-set "<f9>"  #'dape-breakpoint-toggle)
+  (keymap-global-set "<f10>" #'dape-next)
+  (keymap-global-set "<f11>" #'dape-step-in)
+  (keymap-global-set "<f12>" #'dape-step-out)
+
+  (defun my/dape-start-or-continue ()
+    "Resume a stopped session, or launch/attach the dev host when there is none."
+    (interactive)
+    (cond ((dape--live-connection 'stopped 'nowarn)
+           (call-interactively #'dape-continue))
+          ((dape--live-connection 'parent 'nowarn)
+           (message "Extension host is running; nothing to resume"))
+          (t (my/vscode-dev-host-debug))))
+
+  (keymap-global-set "<f5>" #'my/dape-start-or-continue))
 
 ;;;; Dape: Sigasi VS Code extension host
 (use-package dape
@@ -1019,9 +1048,7 @@ being early costs nothing."
     (if-let* ((port (my/vscode-dev-host--inspect-port)))
         (my/vscode-dev-host--attach port)
       (my/vscode-dev-host--launch)
-      (message "Started the Sigasi dev host; watching its output")))
-
-  (keymap-global-set "<f5>" #'my/vscode-dev-host-debug))
+      (message "Started the Sigasi dev host; watching its output"))))
 
 ;;; Language specific
 (use-package sly
