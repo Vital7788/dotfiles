@@ -51,7 +51,6 @@
 
 ;; Enable indentation+completion using the TAB key.
 (setq tab-always-indent 'complete)
-(setq completion-cycle-threshold nil)
 
 ;; Emacs 30 and newer: Disable Ispell completion function.
 ;; Try `cape-dict' as an alternative.
