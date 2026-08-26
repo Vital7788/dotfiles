@@ -1,0 +1,86 @@
+#!/bin/bash
+
+set -euo pipefail
+
+start_watchers() {
+    if pgrep -f 'bin/yarn (compile:watch|watch:packages)$'; then
+        echo "watcher already running"
+        exit 0
+    fi
+
+    cd "$VSCODE_EXTENSION_PATH"
+
+    yarn install
+    yarn build:dep
+    setsid --fork yarn watch:packages >/dev/null 2>&1
+    setsid --fork yarn compile:watch 2>&1 | (
+        status=1
+        while IFS= read -r line; do
+            case $line in
+                *"Watching for file changes"*)
+                    status=0; break ;;
+            esac
+        done
+
+        # Hand the pipe to a background drain before leaving, otherwise the watcher
+        # dies of SIGPIPE on its next recompile message.
+        cat >/dev/null &
+
+        exit $status
+    )
+}
+
+stop_watchers() {
+    echo "stopping watchers"
+    pgrep -f 'bin/yarn (compile:watch|watch:packages)$' | xargs -r -I{} kill -INT -{}
+}
+
+watcher_status() {
+    if pgrep -f 'bin/yarn (compile:watch|watch:packages)$'; then
+        echo "watchers running"
+    else
+        echo "watchers not running"
+    fi
+}
+
+get_pid() {
+    pgrep -f "code .* --inspect(-brk|-port)?=.* --user-data-dir=$VSCODE_DATA_DIR/user-data(\$| )" | tail -1
+}
+
+get_port() {
+    local pid=${1:-$(get_pid)} port
+    [ -n "$pid" ] || return 1
+    port=$(tr '\0' ' ' < "/proc/$pid/cmdline" | grep -oP -- '--inspect(-brk)?=[^ ]*:\K[0-9]+' || true)
+    if [ -z "$port" ]; then                    # --inspect-port=0 -> activate, then read the socket
+        kill -USR1 "$pid"                      # no-op once the inspector is open
+        for _ in $(seq 40); do
+            port=$(ss -Hltnp | grep -F "pid=$pid," | grep -oP ':\K[0-9]+(?=\s)' | head -1 || true)
+            [ -n "$port" ] && break
+            sleep 0.1
+        done
+    fi
+    [ -n "$port" ] || return 1
+    echo "$port"
+}
+
+print_pid() {
+    local pid
+    pid=$(get_pid) || true
+    [ -n "$pid" ] || { echo "extension host not running" >&2; exit 1; }
+    echo "$pid"
+}
+
+print_port() {
+    local port
+    port=$(get_port) || { echo "no inspector port" >&2; exit 1; }
+    echo "$port"
+}
+
+case $1 in
+    start) start_watchers ;;
+    stop) stop_watchers ;;
+    status) watcher_status ;;
+    pid) print_pid ;;
+    port) print_port ;;
+esac
+
