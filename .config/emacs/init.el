@@ -823,6 +823,12 @@ instead."
 (use-package dape
   :ensure nil
   :config
+  (defun my/vscode-extension-path ()
+    (bookmark-maybe-load-default-file)
+    (file-name-as-directory
+     (expand-file-name (or (bookmark-get-filename "vscode")
+                           (user-error "No \"vscode\" bookmark")))))
+
   (add-to-list 'dape-configs
                `(sigasi-extension
                  modes nil
@@ -832,15 +838,17 @@ instead."
                               (user-error "js-debug not found"))))
                  command "node"
                  command-args (,(expand-file-name "js-debug/src/dapDebugServer.js" dape-adapter-dir) :autoport)
+                 command-cwd my/vscode-extension-path
                  port :autoport
                  :type "pwa-node"
                  :request "attach"
                  ;; Only the port the dev host is asked for; `my/vscode-dev-host-debug'
                  ;; overrides it with the one the extension host really listens on.
                  :port 9229
-                 :cwd dape-cwd-fn
                  :restart t
                  :continueOnAttach t
+                 :cwd my/vscode-extension-path
+                 :__workspaceFolder my/vscode-extension-path
                  :sourceMaps t
                  :resolveSourceMapLocations ["${workspaceFolder}/**" "!**/node_modules/**"])))
 
