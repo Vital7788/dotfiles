@@ -1,0 +1,145 @@
+#!/bin/bash
+
+set -euo pipefail
+
+start_watchers() {
+    if pgrep -f 'bin/yarn (compile:watch|watch:packages)$' >/dev/null; then
+        echo "watcher already running"
+        return
+    fi
+
+    (
+        cd "$VSCODE_EXTENSION_PATH"
+
+        yarn install
+        yarn build:dep
+        setsid --fork yarn watch:packages >/dev/null 2>&1
+        setsid --fork yarn compile:watch 2>&1 | (
+            status=1
+            while IFS= read -r line; do
+                case $line in
+                    *"Watching for file changes"*)
+                        status=0; break ;;
+                esac
+            done
+
+            # Hand the pipe to a background drain before leaving, otherwise the watcher
+            # dies of SIGPIPE on its next recompile message.
+            cat >/dev/null &
+
+            exit $status
+        )
+    )
+}
+
+stop_watchers() {
+    echo "stopping watchers"
+    pgrep -f 'bin/yarn (compile:watch|watch:packages)$' | xargs -r -I{} kill -INT -{}
+}
+
+watcher_status() {
+    if pgrep -f 'bin/yarn (compile:watch|watch:packages)$'; then
+        echo "watchers running"
+    else
+        echo "watchers not running"
+    fi
+}
+
+get_pid() {
+    local pid
+    for _ in $(seq 20); do
+        pid=$(pgrep -f "code .* --inspect(-brk|-port)?=.* --user-data-dir=$VSCODE_DATA_DIR/user-data(\$| )" | tail -1)
+        [ -n "$pid" ] && break
+        sleep 0.1
+    done
+    [ -n "$pid" ] || return 1
+    echo $pid
+}
+
+get_port() {
+    local pid=${1:-$(get_pid)} port
+    [ -n "$pid" ] || return 1
+    port=$(tr '\0' ' ' < "/proc/$pid/cmdline" | grep -oP -- '--inspect(-brk)?=[^ ]*:\K[0-9]+' || true)
+    if [ -z "$port" ]; then                    # --inspect-port=0 -> activate, then read the socket
+        kill -USR1 "$pid"                      # no-op once the inspector is open
+        for _ in $(seq 20); do
+            port=$(ss -Hltnp | grep -F "pid=$pid," | grep -oP ':\K[0-9]+(?=\s)' | head -1 || true)
+            [ -n "$port" ] && break
+            sleep 0.1
+        done
+    fi
+    [ -n "$port" ] || return 1
+    echo "$port"
+}
+
+attach() {
+    local port
+    if port=$(get_port); then
+        echo "$port"
+    else
+        echo "no port" >&2
+        return 1
+    fi
+}
+
+emit_port() {
+    local port
+    if port=$(get_port); then
+        echo "port $port"
+    else
+        echo "port none"
+    fi
+}
+
+listen_port() {
+    if [[ ! -f "$VSCODE_LOG_FILE" ]]; then
+        echo "VS Code log file '$VSCODE_LOG_FILE' does not exist" >&2
+        exit 1
+    fi
+
+    emit_port
+
+    tail -n0 -f "$VSCODE_LOG_FILE" 2>/dev/null |
+        while IFS= read -r line; do
+            case $line in
+                *"type: extensionHost, pid: "*"successfully created"*)
+                    emit_port
+                    ;;
+                *"Extension host with pid "*" exited"*)
+                    echo "exited"
+                    ;;
+            esac
+        done
+}
+
+vscode() {
+    start_watchers
+    RELOAD_ON_WATCH=true code --extensionDevelopmentPath="$VSCODE_EXTENSION_PATH" --user-data-dir="$VSCODE_DATA_DIR/user-data" --extensions-dir="$VSCODE_DATA_DIR/extensions" --inspect-extensions=9229 --verbose &>"$VSCODE_LOG_FILE" &
+}
+
+vscode_debug() {
+    start_watchers
+    RELOAD_ON_WATCH=true code --extensionDevelopmentPath="$VSCODE_EXTENSION_PATH" --user-data-dir="$VSCODE_DATA_DIR/user-data" --extensions-dir="$VSCODE_DATA_DIR/extensions" --inspect-brk-extensions=9229 --verbose &>"$VSCODE_LOG_FILE" &
+}
+
+vscode_debug_inspect() {
+    if pgrep -f -- "--extensionDevelopmentPath=$VSCODE_EXTENSION_PATH .*--user-data-dir=$VSCODE_DATA_DIR/user-data"; then
+        echo "VS Code already running" >&2
+    else
+        # Keep stdout free for the port protocol
+        vscode_debug >&2
+    fi
+
+    listen_port
+}
+
+case $1 in
+    watch) start_watchers ;;
+    stop) stop_watchers ;;
+    status) watcher_status ;;
+    attach) attach ;;
+    inspect) listen_port ;;
+    start) vscode ;;
+    debug) vscode_debug ;;
+    debug-inspect) vscode_debug_inspect ;;
+esac

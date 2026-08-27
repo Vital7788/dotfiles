@@ -62,7 +62,7 @@
 (use-package exec-path-from-shell
   :ensure t
   :config
-  (dolist (var '("VSCODE_EXTENSION_PATH" "VSCODE_DATA_DIR"))
+  (dolist (var '("VSCODE_EXTENSION_PATH" "VSCODE_DATA_DIR" "VSCODE_LOG_FILE"))
     (add-to-list 'exec-path-from-shell-variables var))
   (exec-path-from-shell-initialize))
 
@@ -775,7 +775,7 @@ instead."
       ("d" "start"      dape)
       ("r" "restart"    dape-restart)
       ("D" "detach"     dape-disconnect-quit)
-      ("K" "kill"       dape-kill)
+      ("K" "kill"       my/dape-kill)
       ("Q" "quit all"   dape-quit)]
      ["Step"
       ("c" "continue"   dape-continue)
@@ -809,13 +809,13 @@ instead."
   (keymap-global-set "<f12>" #'dape-step-out)
 
   (defun my/dape-start-or-continue ()
-    "Resume a stopped session, or launch/attach the dev host when there is none."
+    "Resume a stopped session, or attach to the dev host when there is none."
     (interactive)
     (cond ((dape--live-connection 'stopped 'nowarn)
            (call-interactively #'dape-continue))
           ((dape--live-connection 'parent 'nowarn)
            (message "Extension host is running; nothing to resume"))
-          (t (my/vscode-dev-host-debug))))
+          (t (my/sigasi--start))))
 
   (keymap-global-set "<f5>" #'my/dape-start-or-continue))
 
@@ -829,131 +829,48 @@ instead."
      (expand-file-name (or (bookmark-get-filename "vscode")
                            (user-error "No \"vscode\" bookmark")))))
 
+  ;; (add-to-list 'dape-minibuffer-hint-ignore-properties ':port)
+
+  ;; (defvar my/vscode-debug-port
+  ;;   (defun my/vscode-inspect ()
+  ;;     (make-process
+  ;;      :name "vscode-inspect"
+  ;;      :command '("sigasi-vscode" "inspect")
+  ;;      :connection-type 'pipe
+  ;;      :filter #'my/vscode-inspect-filter))
+
+  ;;   (defun my/vscode-inspect-filter (proc string)
+  ;;     (if (string-equal string "port none\n")
+  ;;         (message "no debug port for VS Code found")
+  ;;       (message string)))
+
   (add-to-list 'dape-configs
                `(sigasi-extension
                  modes nil
+                 my/sigasi t
                  ensure (lambda (_)
                           (let ((adapter (expand-file-name "js-debug/src/dapDebugServer.js" dape-adapter-dir)))
                             (unless (file-exists-p adapter)
                               (user-error "js-debug not found"))))
+                 ;; `ensure' also runs while merely browsing configurations;
+                 ;; `fn' runs only once this one really starts.
+                 fn (lambda (config)
+                      (setq my/sigasi--session-wanted t)
+                      config)
                  command "node"
                  command-args (,(expand-file-name "js-debug/src/dapDebugServer.js" dape-adapter-dir) :autoport)
                  command-cwd my/vscode-extension-path
                  port :autoport
                  :type "pwa-node"
                  :request "attach"
-                 ;; Only the port the dev host is asked for; `my/vscode-dev-host-debug'
-                 ;; overrides it with the one the extension host really listens on.
-                 :port 9229
-                 :restart t
+                 ;; No `:restart', js-debug would retry the port the previous
+                 ;; extension host had; `my/sigasi--port-changed' reattaches.
+                 :port my/sigasi-port
                  :continueOnAttach t
                  :cwd my/vscode-extension-path
                  :__workspaceFolder my/vscode-extension-path
                  :sourceMaps t
                  :resolveSourceMapLocations ["${workspaceFolder}/**" "!**/node_modules/**"])))
-
-;;;; Dape: launch the dev host
-(use-package dape
-  :ensure nil
-  :config
-  (require 'filenotify)
-
-  (defvar my/vscode-dev-host-program "sigasi-dev-host"
-    "Script that builds the extension, runs the dev host and publishes its port.")
-
-  (defvar my/vscode-dev-host-port-file
-    (expand-file-name "sigasi-dev-host.port"
-                      (or (getenv "XDG_RUNTIME_DIR") temporary-file-directory))
-    "File the script publishes the port to; its $SIGASI_DEV_HOST_PORT_FILE.")
-
-  (defvar my/vscode-dev-host--process nil "The dev host we started, if any.")
-  (defvar my/vscode-dev-host--watch nil "Watch descriptor for the port file.")
-  (defvar my/vscode-dev-host--port nil "Port dape was last attached to.")
-
-  (defun my/vscode-dev-host--published-port ()
-    "Return the port in `my/vscode-dev-host-port-file', or nil.
-The script writes it once the inspector accepts connections and removes it
-again when the extension host exits."
-    (when (file-readable-p my/vscode-dev-host-port-file)
-      (with-temp-buffer
-        (insert-file-contents my/vscode-dev-host-port-file)
-        (goto-char (point-min))
-        (when (re-search-forward "[0-9]+" nil t)
-          (string-to-number (match-string 0))))))
-
-  (defun my/vscode-dev-host--attach (port)
-    "Attach dape to the extension host on PORT, replacing any live session."
-    (setq my/vscode-dev-host--port port)
-    (let ((config (dape--config-eval 'sigasi-extension (list :port port))))
-      (if-let* ((conn (dape--live-connection 'parent 'nowarn)))
-          (dape-kill conn (lambda (&rest _) (dape config)))
-        (dape config))))
-
-  (defun my/vscode-dev-host--port-changed (event)
-    "Attach to, or forget, the port EVENT says the script published."
-    (let ((file (or (nth 3 event) (nth 2 event))))
-      (when (equal (file-name-nondirectory file)
-                   (file-name-nondirectory my/vscode-dev-host-port-file))
-        (let ((port (my/vscode-dev-host--published-port)))
-          (cond ((null port)
-                 (when my/vscode-dev-host--port
-                   (setq my/vscode-dev-host--port nil)
-                   (message "Extension host exited; waiting for its replacement")))
-                ((not (eql port my/vscode-dev-host--port))
-                 (message "Attaching dape to the extension host on port %d" port)
-                 (my/vscode-dev-host--attach port)))))))
-
-  (defun my/vscode-dev-host--follow ()
-    "Watch the port file, so a reload is followed to its new port."
-    (unless my/vscode-dev-host--watch
-      (setq my/vscode-dev-host--watch
-            (file-notify-add-watch
-             (file-name-directory my/vscode-dev-host-port-file)
-             '(change) #'my/vscode-dev-host--port-changed))))
-
-  (defun my/vscode-dev-host--unfollow ()
-    "Stop watching the port file."
-    (when my/vscode-dev-host--watch
-      (file-notify-rm-watch my/vscode-dev-host--watch)
-      (setq my/vscode-dev-host--watch nil)))
-
-  (defun my/vscode-dev-host--sentinel (proc event)
-    "Forget the dev host PROC once EVENT says it is gone."
-    (unless (process-live-p proc)
-      (setq my/vscode-dev-host--process nil
-            my/vscode-dev-host--port nil)
-      (my/vscode-dev-host--unfollow)
-      (message "Sigasi dev host exited (%s)" (string-trim event))))
-
-  (defun my/vscode-dev-host--launch ()
-    "Run the dev host script, collecting its output in `*sigasi-dev-host*'."
-    (let ((program (or (executable-find my/vscode-dev-host-program)
-                       (user-error "%s not found on PATH"
-                                   my/vscode-dev-host-program)))
-          (buffer (get-buffer-create "*sigasi-dev-host*")))
-      (with-current-buffer buffer (erase-buffer))
-      (setq my/vscode-dev-host--port nil
-            my/vscode-dev-host--process
-            (make-process
-             :name "sigasi-dev-host"
-             :buffer buffer
-             :noquery t
-             :connection-type 'pipe
-             :command (list program)
-             :sentinel #'my/vscode-dev-host--sentinel))))
-
-  (defun my/vscode-dev-host-debug ()
-    "Debug the Sigasi extension.
-With a dev host already up, attach to the port it published; with nothing running,
-start the script."
-    (interactive)
-    (my/vscode-dev-host--follow)
-    (let ((port (my/vscode-dev-host--published-port)))
-      (cond (port (my/vscode-dev-host--attach port))
-            ((process-live-p my/vscode-dev-host--process)
-             (message "Sigasi dev host is still starting; see *sigasi-dev-host*"))
-            (t (my/vscode-dev-host--launch)
-               (message "Started the Sigasi dev host; waiting for its port"))))))
 
 ;;; Language specific
 (use-package sly
