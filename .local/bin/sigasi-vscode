@@ -85,7 +85,7 @@ attach() {
 emit_port() {
     local port
     if port=$(get_port); then
-        echo "port $port"
+        echo "$port"
     else
         echo "port none"
     fi
@@ -99,17 +99,21 @@ listen_port() {
 
     emit_port
 
-    tail -n0 -f "$VSCODE_LOG_FILE" 2>/dev/null |
-        while IFS= read -r line; do
-            case $line in
-                *"type: extensionHost, pid: "*"successfully created"*)
-                    emit_port
-                    ;;
-                *"Extension host with pid "*" exited"*)
-                    echo "exited"
-                    ;;
-            esac
-        done
+    exec 3< <(tail -n0 -f "$VSCODE_LOG_FILE" 2>/dev/null)
+    local tail_pid=$!
+
+    trap 'kill "$tail_pid" 2>/dev/null || true' EXIT
+    trap 'exit' INT TERM
+
+    while IFS= read -r line <&3; do
+        case $line in
+            # *"type: extensionHost, pid: "*"successfully created"*)
+            #     ;;
+            *"Extension host with pid "*" exited"*)
+                emit_port
+                ;;
+        esac
+    done
 }
 
 vscode() {

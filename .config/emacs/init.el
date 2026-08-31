@@ -775,7 +775,7 @@ instead."
       ("d" "start"      dape)
       ("r" "restart"    dape-restart)
       ("D" "detach"     dape-disconnect-quit)
-      ("K" "kill"       my/dape-kill)
+      ("K" "kill"       dape-kill)
       ("Q" "quit all"   dape-quit)]
      ["Step"
       ("c" "continue"   dape-continue)
@@ -806,20 +806,9 @@ instead."
   (keymap-global-set "<f9>"  #'dape-breakpoint-toggle)
   (keymap-global-set "<f10>" #'dape-next)
   (keymap-global-set "<f11>" #'dape-step-in)
-  (keymap-global-set "<f12>" #'dape-step-out)
+  (keymap-global-set "<f12>" #'dape-step-out))
 
-  (defun my/dape-start-or-continue ()
-    "Resume a stopped session, or attach to the dev host when there is none."
-    (interactive)
-    (cond ((dape--live-connection 'stopped 'nowarn)
-           (call-interactively #'dape-continue))
-          ((dape--live-connection 'parent 'nowarn)
-           (message "Extension host is running; nothing to resume"))
-          (t (my/sigasi--start))))
-
-  (keymap-global-set "<f5>" #'my/dape-start-or-continue))
-
-;;;; Dape: Sigasi VS Code extension host
+;;;; Dape: VS Code extension host
 (use-package dape
   :ensure nil
   :config
@@ -829,48 +818,56 @@ instead."
      (expand-file-name (or (bookmark-get-filename "vscode")
                            (user-error "No \"vscode\" bookmark")))))
 
-  ;; (add-to-list 'dape-minibuffer-hint-ignore-properties ':port)
+  (defvar my/vscode-inspect-port 9229)
 
-  ;; (defvar my/vscode-debug-port
-  ;;   (defun my/vscode-inspect ()
-  ;;     (make-process
-  ;;      :name "vscode-inspect"
-  ;;      :command '("sigasi-vscode" "inspect")
-  ;;      :connection-type 'pipe
-  ;;      :filter #'my/vscode-inspect-filter))
+  (defun my/vscode-inspect ()
+    (make-process
+     :name "vscode-inspect"
+     :command '("sigasi-vscode" "debug-inspect")
+     :connection-type 'pipe
+     :filter #'my/vscode-inspect-filter))
 
-  ;;   (defun my/vscode-inspect-filter (proc string)
-  ;;     (if (string-equal string "port none\n")
-  ;;         (message "no debug port for VS Code found")
-  ;;       (message string)))
+  (defun my/vscode-inspect-filter (proc string)
+    "Restart Dape when a new port gets published"
+    (if (string-equal string "port none\n")
+        (progn
+          (message "stopping VS Code inspector")
+          (interrupt-process proc))
+      (let ((port (string-to-number string)))
+        (when (not (zerop port))
+          (setq my/vscode-inspect-port port)
+          (dape--kill-busy-wait)
+          (message (concat "reloading dape with port " string))
+          (dape (dape--config-eval 'sigasi-extension nil))))))
+
+  (defun my/js-debug-adapter ()
+    "Get config from dape's `js-debug-node'."
+    (let ((config (alist-get 'js-debug-node dape-configs)))
+      (mapcan (lambda (key) (list key (plist-get config key)))
+              '(ensure command command-args port))))
 
   (add-to-list 'dape-configs
                `(sigasi-extension
-                 modes nil
-                 my/sigasi t
-                 ensure (lambda (_)
-                          (let ((adapter (expand-file-name "js-debug/src/dapDebugServer.js" dape-adapter-dir)))
-                            (unless (file-exists-p adapter)
-                              (user-error "js-debug not found"))))
-                 ;; `ensure' also runs while merely browsing configurations;
-                 ;; `fn' runs only once this one really starts.
-                 fn (lambda (config)
-                      (setq my/sigasi--session-wanted t)
-                      config)
-                 command "node"
-                 command-args (,(expand-file-name "js-debug/src/dapDebugServer.js" dape-adapter-dir) :autoport)
-                 command-cwd my/vscode-extension-path
-                 port :autoport
-                 :type "pwa-node"
+                 ,@(my/js-debug-adapter)
+                 modes (typescript-ts-mode tsx-ts-mode js-ts-mode)
+                 :type "pwa-extensionHost"
                  :request "attach"
-                 ;; No `:restart', js-debug would retry the port the previous
-                 ;; extension host had; `my/sigasi--port-changed' reattaches.
-                 :port my/sigasi-port
-                 :continueOnAttach t
+                 :port my/vscode-inspect-port
                  :cwd my/vscode-extension-path
-                 :__workspaceFolder my/vscode-extension-path
+                 :__workspaceFolder (directory-file-name (my/vscode-extension-path))
                  :sourceMaps t
-                 :resolveSourceMapLocations ["${workspaceFolder}/**" "!**/node_modules/**"])))
+                 :outFiles ["${workspaceFolder}/app/**/*.js"]
+                 :resolveSourceMapLocations ["${workspaceFolder}/**" "!**/node_modules/**"]))
+
+  (defun my/dape-start-or-continue ()
+    (interactive)
+    (cond ((dape--live-connection 'stopped 'nowarn)
+           (call-interactively #'dape-continue))
+          ((dape--live-connection 'parent 'nowarn)
+           (message "Extension host is running; nothing to resume"))
+          (t (my/vscode-inspect))))
+
+  (keymap-global-set "<f5>" #'my/dape-start-or-continue))
 
 ;;; Language specific
 (use-package sly
