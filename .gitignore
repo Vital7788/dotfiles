@@ -1,14 +1,9 @@
 .cfg
-.vim/vim_plug
 .config/emacs/elpa
 .config/emacs/eln-cache
 .config/emacs/auto-save-list
 .config/i3/local
 .config/nvim/lazy-lock.json
-.zsh/histfile
-.zsh/chpwd-recent-dirs
-.zsh/zcompdump
-.zsh/local.zsh
 .config/river/local.sh
 .config/mango/local.conf
 .config/kitty/local.conf

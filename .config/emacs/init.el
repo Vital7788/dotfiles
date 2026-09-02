@@ -59,13 +59,6 @@
 ;; Hide commands in M-x which do not apply to the current mode.
 (setq read-extended-command-predicate #'command-completion-default-include-p)
 
-(use-package exec-path-from-shell
-  :ensure t
-  :config
-  (dolist (var '("VSCODE_EXTENSION_PATH" "VSCODE_DATA_DIR" "VSCODE_LOG_FILE"))
-    (add-to-list 'exec-path-from-shell-variables var))
-  (exec-path-from-shell-initialize))
-
 ;;;; Outline folding
 (setq outline-minor-mode-cycle nil)
 

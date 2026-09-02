@@ -29,6 +29,4 @@ if [[ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
 elif [[ -f /usr/share/zsh/site-functions/zsh-syntax-highlighting.zsh ]]; then
     source /usr/share/zsh/site-functions/zsh-syntax-highlighting.zsh
 fi
-if [[ -f ~/.zsh/local.zsh ]]; then
-    source ~/.zsh/local.zsh
-fi
+[[ -f ~/.zsh/local.zsh ]] && source ~/.zsh/local.zsh

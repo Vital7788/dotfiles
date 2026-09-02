@@ -47,3 +47,5 @@ export CARGO_HOME="${XDG_DATA_HOME}/cargo"
 export TEXMFVAR="${XDG_CACHE_HOME}/texlive/texmf-var"
 export W3M_DIR="${XDG_DATA_HOME}/w3m"
 export WORKON_HOME="$XDG_DATA_HOME/virtualenvs"
+
+[[ -f ~/.zsh/localenv.zsh ]] && source ~/.zsh/localenv.zsh
