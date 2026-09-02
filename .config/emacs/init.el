@@ -283,13 +283,12 @@ instead."
   ;; Switch to another buffer, or bookmarked file, or recently opened file.
   (define-key evil-normal-state-map (kbd ",b") 'consult-buffer)
 
+  ;; add preview to consult-fd
   (consult-customize consult-fd :state (consult--file-preview))
+  ;; add preview to hidden buffers
+  (consult-customize consult-source-hidden-buffer :state #'consult--buffer-state)
 
-  (add-to-list 'consult-buffer-filter "\\`\\*scratch\\*\\'")
-  (add-to-list 'consult-buffer-filter "\\`\\*Messages\\*\\'")
-  (add-to-list 'consult-buffer-filter "\\`\\*Warnings\\*\\'")
-  (add-to-list 'consult-buffer-filter "\\`\\*Async-native-compile-log\\*\\'")
-  (add-to-list 'consult-buffer-filter "\\`\\*dape")
+  (add-to-list 'consult-buffer-filter "\\`\\*.*\\*\\'")
   (add-to-list 'consult-buffer-filter "\\`magit-process: ")
 
   (defvar my/consult-git-repos-cache
