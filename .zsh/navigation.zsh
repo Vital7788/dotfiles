@@ -10,7 +10,7 @@ function list_all() {
 
 # auto activate and deactivate python virtual environments
 function python_venv() {
-  MYVENV=./.venv
+  local MYVENV=./.venv
   # when you cd into a folder that contains $MYVENV and the venv isn't active yet
   [[ -d $MYVENV ]] && [[ ${PWD:A} != ${VIRTUAL_ENV:h} ]] && source $MYVENV/bin/activate > /dev/null 2>&1
   # when you cd into a folder that doesn't
@@ -28,6 +28,6 @@ python_venv
 autoload -Uz chpwd_recent_dirs cdr
 add-zsh-hook chpwd chpwd_recent_dirs
 zstyle ':chpwd:*' recent-dirs-default yes
-zstyle ':chpwd:*' recent-dirs-file ~/.zsh/chpwd-recent-dirs
+zstyle ':chpwd:*' recent-dirs-file "${XDG_CACHE_HOME}/zsh/chpwd-recent-dirs"
 zstyle ':completion:*' recent-dirs-insert always
 alias j=cdr

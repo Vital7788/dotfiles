@@ -1,15 +1,18 @@
-#zstyle :compinstall filename '/home/vital/.zshrc'
-
 setopt extendedglob
 unsetopt beep
 
-# disable control flow (Ctrl-S and Ctrl-Q)
-stty -ixon
+if [[ -t 0 ]]; then
+    # disable control flow (Ctrl-S and Ctrl-Q)
+    stty -ixon
 
-# set ls colors
-eval $(dircolors ~/.config/dir_colors)
+    # set ls colors
+    eval $(dircolors -b ~/.config/dir_colors)
+fi
 
-source ~/.zsh/env.zsh
+for directory in "${XDG_STATE_HOME}/zsh" "${XDG_CACHE_HOME}/zsh"; do
+    [[ -d "$directory" ]] || mkdir -p "$directory"
+done
+
 source ~/.zsh/history.zsh
 source ~/.zsh/prompt.zsh
 source ~/.zsh/input.zsh
@@ -20,17 +23,16 @@ source ~/.zsh/alias.zsh
 source ~/.zsh/command.zsh
 source ~/.zsh/fzf.zsh
 source ~/.zsh/kitty.zsh
-if [ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
+if [[ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
     source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-elif [ -f /usr/share/zsh/site-functions/zsh-syntax-highlighting.zsh ]; then
+elif [[ -f /usr/share/zsh/site-functions/zsh-syntax-highlighting.zsh ]]; then
     source /usr/share/zsh/site-functions/zsh-syntax-highlighting.zsh
 fi
-if [ -f ~/.zsh/local.zsh ]; then
+if [[ -f ~/.zsh/local.zsh ]]; then
     source ~/.zsh/local.zsh
 fi
 
 # start keychain
-if command -v keychain 2>&1 >/dev/null
-then
+if (( $+commands[keychain] )); then
     eval $(keychain --eval --quiet --noask ~/.ssh/id_ed25519)
 fi

@@ -1,9 +1,10 @@
-HISTFILE=~/.zsh/histfile
+HISTFILE="${XDG_STATE_HOME}/zsh/histfile"
 HISTSIZE=100000
 SAVEHIST=100000
-setopt sharehistory         # share history file between all sessions
-setopt appendhistory        # immediately add commands to history file
-setopt histignorealldups    # delete old record when new event is duplicate
+setopt share_history        # share history file between all sessions
+setopt append_history       # immediately add commands to history file
+setopt hist_ignore_dups     # do not enter record when it's duplicate of previous event
+setopt extended_history     # save timestamp of command
 
 function zshaddhistory() {
     # if return is 1, the history line won't be saved

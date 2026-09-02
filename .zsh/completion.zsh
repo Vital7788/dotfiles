@@ -2,7 +2,8 @@
 zmodload zsh/complist
 
 # autoload compinit function and call it to initialize completion for the current session
-autoload -Uz compinit; compinit -d .zsh/zcompdump
+autoload -Uz compinit
+compinit -d "${XDG_CACHE_HOME}/zsh/zcompdump"
 
 # Use hjlk in menu selection (during completion)
 # Doesn't work well with interactive mode

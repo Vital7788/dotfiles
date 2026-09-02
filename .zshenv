@@ -1,14 +1,14 @@
-path+=("${HOME}/.local/bin" "${HOME}/.local/share/nvim/mason/bin")
-export PATH
+typeset -U PATH path fpath
 
 export XDG_CONFIG_HOME="${HOME}/.config"
 export XDG_CACHE_HOME="${HOME}/.cache"
 export XDG_DATA_HOME="${HOME}/.local/share"
 export XDG_STATE_HOME="${HOME}/.local/state"
 
-export EDITOR=/usr/bin/nvim
+# npm binary path defined in ~/.config/npmrc
+path=("${HOME}/.local/bin" "${XDG_DATA_HOME}/npm/bin" "${XDG_DATA_HOME}/nvim/mason/bin" $path)
 
-export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/cuda/extras/CUPTI/lib64"
+export EDITOR="${EDITOR:-/usr/bin/nvim}"
 
 # dotfiles
 export USERXSESSION="${XDG_CACHE_HOME}/X11/xsession"
@@ -25,7 +25,7 @@ export IPYTHONDIR="${XDG_CONFIG_HOME}/jupyter"
 export JUPYTER_CONFIG_DIR="${XDG_CONFIG_HOME}/jupyter"
 export GNUPGHOME="${XDG_DATA_HOME}/gnupg"
 export ICEAUTHORITY="${XDG_CACHE_HOME}/ICEauthority"
-export PYTHONSTARTUP="${XDG_CONFIG_HOME}/python/pythonrc"
+export PYTHON_HISTORY="${XDG_STATE_HOME}/python/history"
 # export _JAVA_OPTIONS="-Djava.util.prefs.userRoot=${XDG_CONFIG_HOME}/java"
 export STACK_ROOT="${XDG_DATA_HOME}/stack"
 export SSB_HOME="${XDG_DATA_HOME}/zoom"
@@ -37,7 +37,7 @@ export PSQL_HISTORY="${XDG_STATE_HOME}/psql_history"
 export NPM_CONFIG_USERCONFIG="${XDG_CONFIG_HOME}/npmrc"
 export NPM_CONFIG_INIT_MODULE="${XDG_CONFIG_HOME}/npm/config/npm-init.js"
 export NPM_CONFIG_CACHE="${XDG_CACHE_HOME}/npm"
-export NPM_CONFIG_TMP="${XDG_RUNTIME_DIR}/npm"
+export NPM_CONFIG_TMP="${XDG_RUNTIME_DIR:-/tmp}/npm"
 export ANDROID_HOME="${XDG_DATA_HOME}/android"
 export ANDROID_USER_HOME="${XDG_DATA_HOME}/android"
 export MAXIMA_USERDIR="${XDG_CONFIG_HOME}/maxima"
