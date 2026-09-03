@@ -113,6 +113,7 @@ exts = [
   { name = "opus", text = "󰈣" },
   { name = "pcm", text = "󰈣" },
   { name = "png", text = "󰈟", fg = "magenta" },
+  { name = "svg", text = "󰈟" },
   { name = "spx", text = "󰈣" },
   { name = "wav", text = "󰈣" },
   { name = "webm", text = "󰈫" },
