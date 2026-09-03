@@ -14,6 +14,9 @@ do
         screencopy)
             echo "s:selection, d:screen, f:window, w: selection, e: screen, r: window, c:󰶐 headless, v:󰍺 headless"
             ;;
+        notification)
+            echo "i: click, a: action menu, x: dismiss, g: dismiss group, c: clear, r: restore"
+            ;;
         default)
             echo ""
             ;;

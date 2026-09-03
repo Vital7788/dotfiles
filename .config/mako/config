@@ -1,0 +1,10 @@
+# mako configuration
+# reload with: makoctl reload
+
+# --- global ---
+output=DP-1
+group-by=app-name
+
+# --- style ---
+font=IBM Plex Sans 11
+max-icon-size=32
