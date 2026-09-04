@@ -19,6 +19,10 @@
 
 ;;; Basic behavior
 
+(defun my/reload-init ()
+  (interactive)
+  (load user-init-file))
+
 (setq inhibit-startup-screen t)
 
 ;; Put autosave files (ie #foo#) and backup files (ie foo~) in ~/.local/state/emacs/
@@ -182,6 +186,7 @@ instead."
   (evil-define-key 'normal outline-minor-mode-map
     (kbd "TAB") #'my/outline-cycle-dwim
     (kbd "<backtab>") #'my/outline-cycle-buffer)
+  (evil-global-set-key 'normal (kbd ",r") 'my/reload-init)
 
   (setq evil-symbol-word-search t)
   (setq evil-move-beyond-eol t)
