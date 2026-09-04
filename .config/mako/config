@@ -3,7 +3,7 @@
 
 # --- global ---
 output=DP-1
-group-by=app-name
+group-by=app-name,summary,body
 
 # --- style ---
 font=IBM Plex Sans 11
