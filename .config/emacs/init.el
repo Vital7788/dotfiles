@@ -286,19 +286,66 @@ instead."
   ;; add preview to hidden buffers
   (consult-customize consult-source-hidden-buffer :state #'consult--buffer-state)
 
+  (setq consult-buffer-list-function #'consult--frame-buffer-list)
+
   (add-to-list 'consult-buffer-filter "\\`\\*.*\\*\\'")
   (add-to-list 'consult-buffer-filter "\\`magit-process: ")
 
-  (defvar my/consult-git-repos-cache
-    (progn
-      (bookmark-maybe-load-default-file)
-      (cons (cons "dotfiles" (expand-file-name "~/"))
-            (delq nil (mapcar (lambda (name)
-                                (let ((dir (bookmark-get-filename name)))
-                                  (when (and dir (file-exists-p (expand-file-name ".git" dir)))
-                                    (cons name dir))))
-                              (bookmark-all-names)))))
-    "Alist of (BOOKMARK-NAME . DIR)")
+  (defun my/git-dir (dir)
+    "Path of DIR's git directory, or nil if it has none."
+    (let ((dotgit (expand-file-name ".git" dir)))
+      (cond ((file-directory-p dotgit) dotgit)
+            ((file-regular-p dotgit)     ; worktree or submodule
+             (with-temp-buffer
+               (insert-file-contents dotgit)
+               (when (looking-at "gitdir: \\(.*\\)")
+                 (expand-file-name (match-string 1) dir))))
+            ;; The dotfiles work tree is ~/, its git dir is the bare ~/.cfg
+            ((file-equal-p dir "~/") (expand-file-name "~/.cfg")))))
+
+  (defun my/git-reflog-activity (gitdir)
+    "Recent activity of the repository at GITDIR.
+Returns (COUNT . LAST-TIME), COUNT being the number of HEAD reflog entries
+within the last two weeks."
+    (let ((log (expand-file-name "logs/HEAD" gitdir))
+          ;; cutoff of 2 weeks
+          (cutoff (- (time-convert nil 'integer) (* 14 24 60 60)))
+          (count 0)
+          (last 0))
+      (when (file-readable-p log)
+        (with-temp-buffer
+          (let ((size (file-attribute-size (file-attributes log))))
+            ;; Only the tail can fall inside the window; 64K is ~350 entries.
+            (insert-file-contents-literally log nil (max 0 (- size 65536)) size))
+          (goto-char (point-min))
+          ;; Author names contain spaces, so anchor on the end of the email.
+          (while (re-search-forward "> \\([0-9]+\\) [-+][0-9]+\t" nil t)
+            (let ((time (string-to-number (match-string 1))))
+              (setq last (max last time))
+              (when (> time cutoff) (setq count (1+ count)))))))
+      (cons count last)))
+
+  (defun my/consult-git-repos-scan ()
+    "Get git repositories from bookmarks, most active first."
+    (bookmark-maybe-load-default-file)
+    (let ((bookmarks (cons (cons "dotfiles" (expand-file-name "~/"))
+                           (mapcar (lambda (name)
+                                     (cons name (bookmark-get-filename name)))
+                                   (bookmark-all-names))))
+          scored)
+      (pcase-dolist (`(,name . ,dir) bookmarks)
+        (when-let* ((gitdir (and dir (my/git-dir dir))))
+          (push (cons (cons name dir) (my/git-reflog-activity gitdir)) scored)))
+      (mapcar #'car
+              (sort (nreverse scored)
+                    :lessp (lambda (a b)
+                             (let ((a (cdr a)) (b (cdr b)))
+                               (or (> (car a) (car b))
+                                   (and (= (car a) (car b))
+                                        (> (cdr a) (cdr b))))))))))
+
+  (defvar my/consult-git-repos-cache (my/consult-git-repos-scan)
+    "Alist of (BOOKMARK-NAME . DIR), most active repository first.")
 
   (defun my/magit-status-reuse (dir)
     "Display magit status buffer if it exists. Call magit-status otherwise."
