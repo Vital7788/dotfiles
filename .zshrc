@@ -18,7 +18,6 @@ source ~/.zsh/prompt.zsh
 source ~/.zsh/input.zsh
 source ~/.zsh/navigation.zsh
 source ~/.zsh/completion.zsh
-#source ~/.zsh/autocomplete.zsh
 source ~/.zsh/alias.zsh
 source ~/.zsh/command.zsh
 source ~/.zsh/fzf.zsh

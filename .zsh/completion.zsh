@@ -120,7 +120,6 @@ else
     local git_hash_preview='git show --color=always --decorate $word | delta'
     local git_branch_preview="git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' \$word"
     local git_remote_branch_preview="git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' \$(git branch -r | grep /\$word$ | head -n1)"
-    local git_branches=$'git branch --sort=-committerdate --sort=-HEAD --format=$\'%(HEAD) %(color:yellow)%(refname:short) %(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)\1%(refname:short)\' --color=never | column -ts"\t" | awk -F"\1" \'{print $2 "\1" $1}\''
 
     # no preview for options or subcommands
     zstyle ':fzf-tab:complete:*:options' fzf-preview
@@ -148,15 +147,6 @@ else
             $git_branch_preview
             ;;
         esac"
-    zstyle ':fzf-tab:complete:git-switch:*' fzf-description \
-        "case \$1 in
-        '[branches]')
-            $git_branches
-            ;;
-        *)
-            return 2
-            ;;
-        esac"
 
     zstyle ':fzf-tab:complete:git-show:*' fzf-preview \
         "case \$group in
@@ -167,18 +157,6 @@ else
             ;;
         *)
             $git_hash_preview
-            ;;
-        esac"
-    zstyle ':fzf-tab:complete:git-show:*' fzf-description \
-        "case \$1 in
-        '[local head]')
-            $git_branches
-            ;;
-        '[commit tag]'|'[head]')
-            return 1
-            ;;
-        *)
-            return 2
             ;;
         esac"
 fi

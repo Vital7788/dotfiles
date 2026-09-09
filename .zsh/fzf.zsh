@@ -1,10 +1,9 @@
 # Set up fzf key bindings and fuzzy completion
 
-# Check if fzf, fd and patch are installed
-if [[ -v commands[fzf] && -v commands[fd] && -v commands[patch] ]]
+# Check if fzf and fd are installed
+if [[ -v commands[fzf] && -v commands[fd] ]]
 then
-  source <(patch -i ~/.zsh/fzf.patch -r - -o - =(fzf --zsh) 2>/dev/null)
-  source ~/.zsh/fzf-git.sh
+  source <(fzf --zsh)
 
   export FZF_DEFAULT_COMMAND='fd --hidden --follow --type f'
   export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS'
@@ -16,6 +15,25 @@ then
   export FZF_CTRL_R_OPTS="
     --no-sort --exact
     --header 'Press CTRL-F to edit the command'"
+
+  # Ctrl+R immediately runs the command after selection
+  # Ctrl+F puts it on the command line
+  fzf-history-run-widget() {
+    local FZF_CTRL_R_OPTS="${FZF_CTRL_R_OPTS-}
+      --bind=\"enter:become(printf '%s\n' {+}; exit 10)\"
+      --bind=ctrl-f:accept"
+    zle fzf-history-widget
+    local ret=$?
+    if (( ret == 10 )); then
+      zle accept-line
+      ret=0
+    fi
+    return $ret
+  }
+  zle -N fzf-history-run-widget
+  bindkey -M emacs '^R' fzf-history-run-widget
+  bindkey -M vicmd '^R' fzf-history-run-widget
+  bindkey -M viins '^R' fzf-history-run-widget
 
   export FZF_CTRL_T_COMMAND="fd --hidden --follow"
   export FZF_CTRL_T_OPTS="
@@ -40,36 +58,6 @@ then
   # Use fd to generate the list for directory completion
   _fzf_compgen_dir() {
     fd --type d --hidden --follow . "$1"
-  }
-
-  _fzf_complete_git() {
-    # split command line into array
-    args=( ${(z)LBUFFER} )
-    # shift once, since first arg is 'git'
-    shift args
-    case "$args[1]" in
-      (branch|switch|diff|log|rebase|merge|reset)
-        mode="branches"
-        ;;
-      (show|revert|cherry-pick)
-        mode="hashes"
-        ;;
-      (fetch|pull|push)
-        mode="remotes"
-        ;;
-      (tag)
-        mode="tags"
-        ;;
-      (worktree)
-        mode="worktrees"
-        ;;
-      (*)
-        mode="files"
-        ;;
-    esac
-    _fzf_complete \
-      --bind "start:become(zsh \"$__fzf_git\" --run $mode)" \
-      -- "$@"
   }
 
 fi
