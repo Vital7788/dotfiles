@@ -19,16 +19,16 @@ then
   # Ctrl+R immediately runs the command after selection
   # Ctrl+F puts it on the command line
   fzf-history-run-widget() {
+    local run_flag="${TMPDIR:-/tmp}/.fzf-history-run.$$"
     local FZF_CTRL_R_OPTS="${FZF_CTRL_R_OPTS-}
-      --bind=\"enter:become(printf '%s\n' {+}; exit 10)\"
+      --bind='enter:execute-silent(touch -- \"$run_flag\")+accept'
       --bind=ctrl-f:accept"
+    command rm -f -- "$run_flag"
     zle fzf-history-widget
-    local ret=$?
-    if (( ret == 10 )); then
+    if [[ -e "$run_flag" ]]; then
+      command rm -f -- "$run_flag"
       zle accept-line
-      ret=0
     fi
-    return $ret
   }
   zle -N fzf-history-run-widget
   bindkey -M emacs '^R' fzf-history-run-widget
