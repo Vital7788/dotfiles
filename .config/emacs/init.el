@@ -8,6 +8,8 @@
 (package-initialize)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 
+(setq package-install-upgrade-built-in t)
+
 ;; Don't show byte compilation warnings after installing packages
 (add-to-list 'display-buffer-alist
              '("\\`\\*\\(Warnings\\|Compile-Log\\)\\*\\'"
@@ -287,6 +289,11 @@ instead."
   (consult-customize consult-source-hidden-buffer :state #'consult--buffer-state)
 
   (setq consult-buffer-list-function #'consult--frame-buffer-list)
+  ;; Start fresh emacsclient with empty buffer list
+  (add-hook 'server-after-make-frame-hook
+            (lambda ()
+              (set-frame-parameter nil 'buffer-list nil)
+              (set-frame-parameter nil 'buried-buffer-list nil)))
 
   (add-to-list 'consult-buffer-filter "\\`\\*.*\\*\\'")
   (add-to-list 'consult-buffer-filter "\\`magit-process: ")
