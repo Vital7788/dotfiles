@@ -33,7 +33,13 @@
 (make-directory "~/.local/state/emacs/autosave/" t)
 
 (setq-default indent-tabs-mode nil)
-(setq tab-width 4)
+(setq-default tab-width 4)
+
+;; Adopt the indentation actually used by the visited file (tabs vs spaces, and
+;; the offset), falling back to the defaults above when there is none to detect.
+(use-package dtrt-indent
+  :ensure t
+  :hook (after-init . dtrt-indent-global-mode))
 
 (use-package whitespace
   :ensure nil
