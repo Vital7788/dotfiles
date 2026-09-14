@@ -773,6 +773,7 @@ within the last two weeks."
         org-appear-autosubmarkers t)) ; Show sub- and superscripts
 
 ;;; LSP
+;;;; Eglot
 (use-package eglot
   :ensure nil
   :config
@@ -789,19 +790,88 @@ within the last two weeks."
     "ro" (my/evil-change-command #'eglot-code-action-organize-imports))
   (set-face-attribute 'eglot-highlight-symbol-face nil :weight 'normal))
 
-(use-package flycheck
+;;;; Flymake
+(use-package flymake
+  :ensure nil
+  :config
+  ;; Project-wide diagnostics
+  (define-key evil-normal-state-map (kbd ",d") 'flymake-show-project-diagnostics)
+  ;; Buffer diagnostics
+  (define-key evil-normal-state-map (kbd ",D") 'flymake-show-buffer-diagnostics))
+
+;;;;; ESLint
+(use-package flymake-eslint
   :ensure t
   :config
-  (advice-add 'flycheck-eslint-config-exists-p :override #'always))
+  ;; `flymake-eslint-enable' would otherwise refuse to set up a buffer whose
+  ;; project has no eslint binary yet, e.g. before `yarn install'.
+  (setq flymake-eslint-defer-binary-check t)
 
-(defun my/flycheck-use-local-eslint ()
-  (when-let* ((root (locate-dominating-file buffer-file-name "node_modules"))
-              (eslint (expand-file-name "node_modules/.bin/eslint" root)))
-    (when (file-executable-p eslint)
-      (setq-local flycheck-javascript-eslint-executable eslint))))
+  (defun my/flymake-eslint-enable ()
+    "Lint the current buffer with its own project's eslint.
+Runs from `eglot-managed-mode-hook' rather than from the major mode hook
+because eglot replaces `flymake-diagnostic-functions' wholesale when it
+takes a buffer over, which drops any backend registered before it."
+    (when (and (eglot-managed-p)
+               (derived-mode-p 'typescript-ts-base-mode))
+      (when-let* ((root (locate-dominating-file default-directory "node_modules")))
+        (setq-local flymake-eslint-executable-name
+                    (expand-file-name "node_modules/.bin/eslint" root)))
+      (flymake-eslint-enable)))
 
-(add-hook 'flycheck-mode-hook #'my/flycheck-use-local-eslint)
+  (add-hook 'eglot-managed-mode-hook #'my/flymake-eslint-enable))
 
+;;;;; Project-wide TypeScript diagnostics
+(use-package flymake
+  :ensure nil
+  :commands flymake-show-project-diagnostics
+  :config
+  (defvar my/tsc-problems--files nil
+    "Files the last refresh added to `flymake-list-only-diagnostics'.")
+
+  (defun my/tsc-problems--parse ()
+    "Read problems into an alist of (FILE . DIAGNOSTICS)."
+    (with-temp-buffer
+      (apply #'process-file "sigasi-vscode" nil t nil '("problems"))
+      (goto-char (point-min))
+      (let (by-file)
+        (while (not (eobp))
+          (when (looking-at (concat "\\([^\t\n]+\\)\t\\([^\t\n]+\\)\t"
+                                    "\\([0-9]+\\)\t\\([0-9]+\\)\t"
+                                    "\\([^\t\n]+\\)\t\\(.*\\)"))
+            (let ((file (match-string 2)))
+              (push (flymake-make-diagnostic
+                     file
+                     (cons (string-to-number (match-string 3))
+                           (string-to-number (match-string 4)))
+                     nil
+                     (pcase (match-string 1)
+                       ("error" :error)
+                       ("warning" :warning)
+                       (_ :note))
+                     (format "%s: %s" (match-string 5) (match-string 6)))
+                    (alist-get file by-file nil nil #'equal))))
+          (forward-line 1))
+        by-file)))
+
+  (defun my/tsc-problems-refresh (&rest _)
+    "Put the watcher's problems in `flymake-list-only-diagnostics'.
+Replaces the batch of the previous refresh.  Entries are keyed by file,
+the same way eglot keys the ones it reports for files it has not opened,
+so the two can coexist in that variable."
+    (let ((by-file (my/tsc-problems--parse)))
+      (dolist (file (append my/tsc-problems--files (mapcar #'car by-file)))
+        (setq flymake-list-only-diagnostics
+              (assoc-delete-all file flymake-list-only-diagnostics)))
+      (setq my/tsc-problems--files (mapcar #'car by-file))
+      (pcase-dolist (`(,file . ,diags) by-file)
+        (push (cons file (nreverse diags)) flymake-list-only-diagnostics))))
+
+  ;; `flymake-show-project-diagnostics' goes through this function, so the list
+  ;; is up to date whenever it is shown or reverted.
+  (advice-add 'flymake--project-diagnostics :before #'my/tsc-problems-refresh))
+
+;;;; Apheleia
 (use-package apheleia
   :ensure t
   :hook (after-init . apheleia-global-mode)
@@ -810,6 +880,7 @@ within the last two weeks."
   (add-to-list 'apheleia-mode-alist
                '("/package\\(-lock\\)?\\.json\\'" . prettier-json-stringify)))
 
+;;;; IntelliJ LSP
 ;; Java/Kotlin via JetBrains' IntelliJ language server (see lisp/intellij-eglot.el).
 ;; The server is an EAP preview and expires 30 days after its build date.
 (use-package intellij-eglot
@@ -972,13 +1043,10 @@ within the last two weeks."
 
 (use-package typescript-ts-mode
   :ensure nil
+  :mode (("\\.ts\\'" . typescript-ts-mode)
+         ("\\.tsx\\'" . tsx-ts-mode))
   :config
-  (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
-  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
-  (setq typescript-ts-mode-indent-offset 4)
-  :hook (typescript-ts-mode . (lambda ()
-                                (eglot-ensure)
-                                (flycheck-mode 1))))
+  :hook (typescript-ts-base-mode . eglot-ensure))
 
 (custom-set-variables
  '(markdown-command "/usr/bin/pandoc"))
