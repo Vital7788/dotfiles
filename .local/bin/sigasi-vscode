@@ -2,6 +2,30 @@
 
 set -euo pipefail
 
+PROBLEMS_FILE="${SIGASI_TSC_PROBLEMS_FILE:-${XDG_RUNTIME_DIR:-/tmp}/sigasi-tsc-problems}"
+
+# Turn `tsc --watch' output into one TAB-separated problem per line, the way
+# VS Code's $tsc-watch problem matcher does
+TSC_PROBLEMS_AWK='
+function publish(   i, tmp) {
+    tmp = dest ".tmp"
+    printf "" > tmp
+    for (i = 1; i <= n; i++) print problems[i] > tmp
+    close(tmp)
+    system("mv -f " tmp " " dest)
+}
+{ print; fflush() }
+/ - (Starting compilation in watch mode|File change detected\. Starting incremental compilation)\.\.\./ {
+    n = 0; next
+}
+match($0, /^([^ \t].*)\(([0-9]+),([0-9]+)\): (error|warning|info) TS([0-9]+): (.*)$/, m) {
+    problems[++n] = m[4] "\t" root "/" m[1] "\t" m[2] "\t" m[3] "\tTS" m[5] "\t" m[6]
+    next
+}
+/ - (Compilation complete\.|Found [0-9]+ errors?\.) Watching for file changes\./ { publish() }
+END { n = 0; publish() }
+'
+
 start_watchers() {
     if pgrep -f 'bin/yarn (compile:watch|watch:packages)$' >/dev/null; then
         echo "watcher already running"
@@ -14,7 +38,9 @@ start_watchers() {
         yarn install
         yarn build:dep
         setsid --fork yarn watch:packages 2>&1
-        setsid --fork yarn compile:watch 2>&1 | (
+        setsid --fork yarn compile:watch 2>&1 \
+            | setsid --fork awk -v root="$PWD" -v dest="$PROBLEMS_FILE" "$TSC_PROBLEMS_AWK" \
+            | (
             status=1
             while IFS= read -r line; do
                 echo $line
@@ -36,6 +62,12 @@ start_watchers() {
 stop_watchers() {
     echo "stopping watchers"
     pgrep -f 'bin/yarn (compile:watch|watch:packages)$' | xargs -r -I{} kill -INT -{}
+    # awk empties the file when the pipe closes; do it here too in case it died.
+    : >"$PROBLEMS_FILE" 2>/dev/null || true
+}
+
+problems() {
+    cat "$PROBLEMS_FILE" 2>/dev/null || true
 }
 
 watcher_status() {
@@ -141,6 +173,7 @@ vscode_debug_inspect() {
 case $1 in
     watch) start_watchers ;;
     stop) stop_watchers ;;
+    problems) problems ;;
     status) watcher_status ;;
     attach) attach ;;
     inspect) listen_port ;;

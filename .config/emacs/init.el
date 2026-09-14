@@ -810,6 +810,17 @@ within the last two weeks."
   (add-to-list 'apheleia-mode-alist
                '("/package\\(-lock\\)?\\.json\\'" . prettier-json-stringify)))
 
+;; Java/Kotlin via JetBrains' IntelliJ language server (see lisp/intellij-eglot.el).
+;; The server is an EAP preview and expires 30 days after its build date.
+(use-package intellij-eglot
+  :ensure nil
+  :hook (java-mode . my/java-eglot-ensure)
+  :init
+  (defun my/java-eglot-ensure ()
+    "Register the IntelliJ server with eglot, then manage this buffer."
+    (require 'intellij-eglot)
+    (eglot-ensure)))
+
 ;;; Debugger (DAP)
 (use-package dape
   :ensure t

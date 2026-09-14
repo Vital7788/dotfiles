@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+#
+# Keep the IntelliJ language server at the latest published build.
+#
+# JetBrains ships the server as a ~370MB tarball whose URL is named inside a
+# small marketplace stub extension; this resolves that stub, compares the build
+# it names against what is installed, and swaps the `current` symlink. Preview
+# builds are EAP and stop working 30 days after their build date, so this is
+# expected to be re-run periodically rather than once.
+#
+#   intellij-server-update            download the latest build if needed
+#   intellij-server-update --check    report only; exit 10 if an update exists
+#   intellij-server-update --prune    afterwards, delete every non-current build
+#
+set -euo pipefail
+
+readonly DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+readonly ROOT="$DATA_HOME/intellij-server"
+readonly LINK="$ROOT/current"
+readonly REGISTRY="https://open-vsx.org/api/JetBrains/intellij-server"
+
+check_only=false
+prune=false
+for arg in "$@"; do
+  case "$arg" in
+    --check) check_only=true ;;
+    --prune) prune=true ;;
+    -h|--help) sed -n '3,13p' "$0" | sed 's/^# \?//'; exit 0 ;;
+    *) echo "unknown option: $arg (try --help)" >&2; exit 2 ;;
+  esac
+done
+
+die() { echo "error: $*" >&2; exit 1; }
+for tool in curl unzip tar jq sha256sum; do
+  command -v "$tool" >/dev/null || die "$tool is required but not on PATH"
+done
+
+# Open VSX publishes one stub per platform; its name is what we must ask for.
+detect_platform() {
+  local os arch
+  case "$(uname -s)" in
+    Linux)  os=linux ;;
+    Darwin) os=darwin ;;
+    *) die "unsupported OS: $(uname -s)" ;;
+  esac
+  case "$(uname -m)" in
+    x86_64|amd64)  arch=x64 ;;
+    aarch64|arm64) arch=arm64 ;;
+    *) die "unsupported architecture: $(uname -m)" ;;
+  esac
+  printf '%s-%s\n' "$os" "$arch"
+}
+
+# Build date is baked into the artifact, so expiry is fixed at build time and
+# is NOT reset by reinstalling. Prints "YYYY-MM-DD (N days left)".
+expiry_of() {
+  local dir="$1" jar raw
+  raw=""
+  for jar in "$dir"/lib/*.jar; do
+    raw=$(unzip -p "$jar" 'idea/*ApplicationInfo.xml' 2>/dev/null |
+            grep -om1 'date="[0-9]\{12\}"') || raw=""
+    if [[ -n "$raw" ]]; then break; fi
+  done
+  [[ -n "$raw" ]] || return 0
+  raw=${raw#date=\"}; raw=${raw%\"}
+  local built built_epoch expires_epoch
+  built="${raw:0:4}-${raw:4:2}-${raw:6:2} ${raw:8:2}:${raw:10:2}"
+  # Epoch arithmetic rather than "$built + 30 days": GNU date rejects a spaced
+  # sign in a relative offset once a time-of-day is present.
+  built_epoch=$(date -d "$built" +%s 2>/dev/null) || return 0
+  expires_epoch=$(( built_epoch + 30 * 86400 ))
+  printf '%s (%s days left)\n' \
+    "$(date -d "@$expires_epoch" +%Y-%m-%d)" \
+    "$(( (expires_epoch - $(date +%s)) / 86400 ))"
+}
+
+report_expiry() {
+  local exp
+  exp=$(expiry_of "$1") || exp=""
+  [[ -n "$exp" ]] && echo "expires:    $exp"
+  return 0
+}
+
+platform=$(detect_platform)
+mkdir -p "$ROOT"
+
+# Temp dir on the same filesystem as the target: keeps a 1.2GB extraction out
+# of a tmpfs /tmp, and makes the final move a rename rather than a copy.
+tmp=$(mktemp -d "$ROOT/.tmp.XXXXXX")
+trap 'rm -rf "$tmp"' EXIT
+
+echo "resolving latest build for $platform..."
+stub_url=$(curl -fsSL "$REGISTRY/$platform/latest" | jq -er '.files.download') ||
+  die "could not resolve the latest stub from Open VSX"
+
+curl -fsSL -o "$tmp/stub.vsix" "$stub_url" || die "failed to download the stub"
+unzip -qo "$tmp/stub.vsix" 'extension/server-bundle.json' -d "$tmp" ||
+  die "stub has no server-bundle.json; the packaging may have changed"
+
+manifest="$tmp/extension/server-bundle.json"
+version=$(jq -er '.version' "$manifest")
+url=$(jq -er '.url' "$manifest")
+want_sha=$(jq -er '.sha256' "$manifest")
+target="$ROOT/intellij-server-$version"
+
+installed=""
+[[ -L "$LINK" ]] && installed=$(basename "$(readlink "$LINK")")
+
+if [[ "$installed" == "intellij-server-$version" && -d "$target" ]]; then
+  echo "up to date: $version"
+  report_expiry "$target"
+  exit 0
+fi
+
+echo "available:  $version"
+echo "installed:  ${installed:-none}"
+if $check_only; then
+  echo "run without --check to install"
+  exit 10
+fi
+
+if [[ -d "$target" ]]; then
+  echo "build already unpacked; repointing symlink only"
+else
+  echo "downloading $(basename "$url")..."
+  # A progress bar only makes sense on a terminal; piped or from cron it turns
+  # into thousands of redraw lines.
+  local_progress=(-sS)
+  [[ -t 2 ]] && local_progress=(--progress-bar)
+  curl -fL "${local_progress[@]}" -o "$tmp/server.tar.gz" "$url" || die "download failed"
+
+  echo "verifying checksum..."
+  echo "$want_sha  $tmp/server.tar.gz" | sha256sum -c --status ||
+    die "checksum mismatch; refusing to install"
+
+  echo "unpacking..."
+  mkdir -p "$tmp/unpack"
+  tar -xzf "$tmp/server.tar.gz" -C "$tmp/unpack"
+  # The tarball holds a single top-level directory; move it into place under
+  # the name we index by, whatever it calls itself.
+  unpacked=$(find "$tmp/unpack" -mindepth 1 -maxdepth 1 -type d)
+  [[ -d "$unpacked" ]] || die "unexpected archive layout"
+  mv "$unpacked" "$target"
+fi
+
+ln -sfn "intellij-server-$version" "$LINK"
+echo "installed:  $version -> $LINK"
+report_expiry "$target"
+
+if $prune; then
+  while IFS= read -r old; do
+    [[ "$old" == "$target" ]] && continue
+    echo "pruning:    $(basename "$old")"
+    rm -rf "$old"
+  done < <(find "$ROOT" -mindepth 1 -maxdepth 1 -type d -name 'intellij-server-*')
+fi
+
+pgrep -f 'intellij-server' >/dev/null 2>&1 &&
+  echo "note:       a server is running; restart your editor to pick up the new build"
+exit 0
