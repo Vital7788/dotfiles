@@ -946,6 +946,20 @@ so the two can coexist in that variable."
 
   (define-key evil-normal-state-map (kbd "SPC") #'my/dape-transient)
 
+  (defun my/dape-start-or-continue ()
+    "Resume a stopped session, or start the one this buffer's mode calls for."
+    (interactive)
+    (cond ((dape--live-connection 'stopped 'nowarn)
+           (call-interactively #'dape-continue))
+          ((dape--live-connection 'parent 'nowarn)
+           (message "A debug session is already running; nothing to resume"))
+          ((derived-mode-p 'typescript-ts-base-mode 'tsx-ts-mode 'js-ts-mode)
+           (my/vscode-inspect))
+          ((derived-mode-p 'java-mode 'java-ts-mode)
+           (dape (dape--config-eval 'sigasi-lsp-server nil)))
+          (t (call-interactively #'dape))))
+
+  (keymap-global-set "<f5>"  #'my/dape-start-or-continue)
   (keymap-global-set "<f9>"  #'dape-breakpoint-toggle)
   (keymap-global-set "<f10>" #'dape-next)
   (keymap-global-set "<f11>" #'dape-step-in)
@@ -1000,17 +1014,107 @@ so the two can coexist in that variable."
                  :__workspaceFolder (directory-file-name (my/vscode-extension-path))
                  :sourceMaps t
                  :outFiles ["${workspaceFolder}/app/**/*.js"]
-                 :resolveSourceMapLocations ["${workspaceFolder}/**" "!**/node_modules/**"]))
+                 :resolveSourceMapLocations ["${workspaceFolder}/**" "!**/node_modules/**"])))
 
-  (defun my/dape-start-or-continue ()
-    (interactive)
-    (cond ((dape--live-connection 'stopped 'nowarn)
-           (call-interactively #'dape-continue))
-          ((dape--live-connection 'parent 'nowarn)
-           (message "Extension host is running; nothing to resume"))
-          (t (my/vscode-inspect))))
+;;;; Dape: IntelliJ JVM attach
+;; The server implements DAP but reaches it only over LSP: `start_debug_server'
+;; starts an adapter and answers with its port.  The debuggee is reached by
+;; JDWP, so start it listening first -- `-DdebugPort=5005' for a tycho-surefire
+;; run, 5011 for the infinite-server launch group.
+(use-package dape
+  :ensure nil
+  :config
+  (defvar my/jvm-debug-port 5005
+    "JDWP port the debuggee is listening on.")
 
-  (keymap-global-set "<f5>" #'my/dape-start-or-continue))
+  ;; The adapter reports `Source.path' as a `file://' URI where DAP wants a
+  ;; plain path, so `dape--object-to-marker' finds no file and drops the
+  ;; stack-frame overlay.
+  (defun my/dape-uri-to-file-name (path)
+    "Convert a `file://' URI to a file name; pass anything else through."
+    (if (and (stringp path) (string-prefix-p "file://" path))
+        (url-unhex-string (url-filename (url-generic-parse-url path)))
+      path))
+
+  (advice-add 'dape--file-name-local :filter-return #'my/dape-uri-to-file-name)
+
+  ;; Merely evaluating dape's own `jdtls' config fires
+  ;; `vscode.java.resolveMainClass' at whatever server is attached, malformed.
+  (setq dape-configs (assq-delete-all 'jdtls dape-configs))
+
+  (defvar my/sigasi-lsp-server-source
+    "com.sigasi.lsp.server/src/com/sigasi/lsp/server/LspServer.java"
+    "Source of the LSP server main class, relative to the project root.")
+
+  (defun my/intellij-resolve-launch (file)
+    "Ask the server for FILE's JVM launch paths, a `JvmLaunchPaths'."
+    (eglot-execute (eglot-current-server)
+                   `(:command "intellij.java.resolveLaunch"
+                     :arguments [( :uri ,(eglot-path-to-uri file)
+                                   :cwd ,(file-name-directory file))])))
+
+  (defun my/intellij-dap-port ()
+    "Start the IntelliJ server's DAP adapter and return its port."
+    (eglot-execute (eglot-current-server) '(:command "start_debug_server")))
+
+  (add-to-list 'dape-configs
+               `(sigasi-java
+                 modes (java-mode java-ts-mode)
+                 ensure ,(lambda (_config)
+                           (unless (eglot-current-server)
+                             (user-error "No eglot connection in %s" (buffer-name)))
+                           (unless (seq-contains-p
+                                    (eglot-server-capable :executeCommandProvider :commands)
+                                    "start_debug_server")
+                             (user-error "This language server provides no DAP adapter")))
+                 ;; `port' reaches the adapter; `:port' is the JDWP port.
+                 fn ,(lambda (config)
+                       (plist-put config 'port (my/intellij-dap-port)))
+                 ;; `:type' is the DAP adapterID; the server knows only its own.
+                 :type "intellij_jvm"
+                 :request "attach"
+                 :port my/jvm-debug-port))
+
+  ;; `lsp-server.launch' as a DAP launch.  Not the infinite-server harness: it
+  ;; spawns its child with `server=n', which needs a *listening* debugger.
+  (add-to-list 'dape-configs
+               `(sigasi-lsp-server
+                 modes (java-mode java-ts-mode)
+                 ensure ,(plist-get (alist-get 'sigasi-java dape-configs) 'ensure)
+                 ;; The adapter infers nothing: it demands javaExec and paths.
+                 fn ,(lambda (config)
+                       (let* ((root (project-root
+                                     (or (project-current)
+                                         (user-error "Not inside a project"))))
+                              (file (expand-file-name my/sigasi-lsp-server-source root))
+                              (paths (progn
+                                       (unless (file-exists-p file)
+                                         (user-error "No %s under %s" my/sigasi-lsp-server-source root))
+                                       (my/intellij-resolve-launch file))))
+                         (thread-first
+                           config
+                           (plist-put 'port (my/intellij-dap-port))
+                           (plist-put :javaExec (plist-get paths :javaExec))
+                           (plist-put :classPaths (plist-get paths :classpath))
+                           (plist-put :modulePaths (plist-get paths :modulePath))
+                           (plist-put :moduleContentPaths (plist-get paths :moduleContentPaths))
+                           (plist-put :cwd (or (plist-get paths :workingDirectory) root)))))
+                 :type "intellij_jvm"
+                 :request "launch"
+                 ;; No `moduleName': the adapter reads it as a JPMS module, and
+                 ;; this codebase has no module-info.java.
+                 :mainClass "com.sigasi.lsp.server.LspServer"
+                 ;; A List<String>: a joined string serialises as a JsonLiteral.
+                 :vmArgs ["-Dguice_bytecode_gen_option=DISABLED"
+                          "--enable-native-access=ALL-UNNAMED"
+                          "--sun-misc-unsafe-memory-access=allow"
+                          "-Xmx8g" "-Xss4m"
+                          "-XX:+UseCompressedOops" "-XX:+UseG1GC"
+                          "-XX:G1PeriodicGCInterval=60000"
+                          "-XX:-G1PeriodicGCInvokesConcurrent"
+                          "-XX:MinHeapFreeRatio=5" "-XX:MaxHeapFreeRatio=30"
+                          "-XX:+UseStringDeduplication"
+                          "-Dsigasi.dev.mode=true"])))
 
 ;;; Language specific
 (use-package sly
