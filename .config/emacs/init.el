@@ -896,7 +896,11 @@ so the two can coexist in that variable."
   (defun my/java-eglot-ensure ()
     "Register the IntelliJ server with eglot, then manage this buffer."
     (require 'intellij-eglot)
-    (eglot-ensure)))
+    (intellij-server-ensure)))
+
+(use-package jarchive
+  :ensure t
+  :hook (after-init . jarchive-mode))
 
 ;;; Debugger (DAP)
 (use-package dape
