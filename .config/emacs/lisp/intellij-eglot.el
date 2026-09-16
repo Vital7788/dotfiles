@@ -9,15 +9,6 @@
 (defconst intellij-server-data-dir
   (expand-file-name "intellij-server/emacs" (xdg-cache-home)))
 
-(defun intellij-server--eula-hash ()
-  "First 16 chars of the SHA-256 of the server EULA; required since 0.0.10."
-  (let ((f (expand-file-name "EULA.txt" intellij-server-dir)))
-    (substring (with-temp-buffer
-                 (set-buffer-multibyte nil)
-                 (insert-file-contents-literally f)
-                 (secure-hash 'sha256 (buffer-string)))
-               0 16)))
-
 (defclass intellij-server-eglot (eglot-lsp-server) ()
   :documentation "IntelliJ IDEA language server.")
 
@@ -199,6 +190,50 @@ Returns at once; buffers arriving mid-build join the one in flight."
                  (cancel-timer reveal)
                  (intellij-server--gradle-finish proc))))))))
 
+;;; Diagnostic filtering
+
+(defvar intellij-server-filter-diagnostics t
+  "When non-nil, keep only diagnostics Eclipse would also report.")
+
+(defvar intellij-server-eclipse-inspections
+  '("unused" "UNUSED_IMPORT" "UnusedLabel" "RedundantThrows"
+    "Deprecation" "MarkedForRemoval" "MissingDeprecatedAnnotation"
+    "MissingOverrideAnnotation"
+    "SillyAssignment" "AssignmentUsedAsCondition"
+    "EmptyStatementBody" "AccessStaticViaInstance" "MethodNameSameAsClassName"
+    "EqualsBetweenInconvertibleTypes" "SuspiciousMethodCalls"
+    "EnumSwitchStatementWhichMissesCases"
+    "DataFlowIssue" "ConstantValue" "NullableProblems"
+    "AutoCloseableResource"
+    "RawUseOfParameterizedType" "JavadocDeclaration" "JavadocReference"
+    "SerializableHasSerialVersionUIDField"
+    "FinallyBlockCannotCompleteNormally" "UnreachableCode")
+  "Inspection ids kept, mapped from the =warning entries in
+com.sigasi.hdt.target/settings/org.eclipse.jdt.core.prefs.
+The mapping is approximate, and Eclipse's OSGi access-rule warnings
+\(forbiddenReference, discouragedReference, APILeak) have no analogue.
+To add one, read the id from the `[code]' eglot puts in the message.")
+
+(defun intellij-server--keep-diagnostic-p (diag)
+  "Non-nil if DIAG should survive filtering."
+  (let ((severity (plist-get diag :severity))
+        (code (plist-get diag :code)))
+    (or (not intellij-server-filter-diagnostics)
+        (and (numberp severity) (<= severity 1))
+        ;; No id means a compiler-level diagnostic, which Eclipse reports too.
+        (null code)
+        (member (format "%s" code) intellij-server-eclipse-inspections))))
+
+(cl-defmethod eglot-handle-notification :around
+  ((server intellij-server-eglot)
+   (method (eql textDocument/publishDiagnostics))
+   &rest args &key diagnostics &allow-other-keys)
+  "Drop inspections this project would not enable in Eclipse."
+  (apply #'cl-call-next-method server method
+         (plist-put (copy-sequence args) :diagnostics
+                    (cl-remove-if-not #'intellij-server--keep-diagnostic-p
+                                      diagnostics))))
+
 ;;; Autoload
 (defun intellij-server-ensure ()
   "Bring the Gradle IDE model up to date, then manage this buffer with eglot.
@@ -218,6 +253,15 @@ For a Java mode hook, in place of `eglot-ensure'."
        (display-warning 'intellij-server (error-message-string err) :error)))))
 
 ;;; Registration
+
+(defun intellij-server--eula-hash ()
+  "First 16 chars of the SHA-256 of the server EULA; required since 0.0.10."
+  (let ((f (expand-file-name "EULA.txt" intellij-server-dir)))
+    (substring (with-temp-buffer
+                 (set-buffer-multibyte nil)
+                 (insert-file-contents-literally f)
+                 (secure-hash 'sha256 (buffer-string)))
+               0 16)))
 
 (defun intellij-server-contact (&optional _interactive _project)
   "Class and command line for the server, its environment applied via `env'."
@@ -241,4 +285,5 @@ For a Java mode hook, in place of `eglot-ensure'."
 ;; A function, not a literal: re-resolved per connection, not once at load.
 (add-to-list 'eglot-server-programs
              '((java-mode java-ts-mode) . intellij-server-contact))
+
 (provide 'intellij-eglot)
