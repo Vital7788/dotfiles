@@ -1,4 +1,4 @@
-;;; magit-diffstat-tree.el --- Group magit diffstat entries into a collapsible tree  -*- lexical-binding: t; -*-
+;; magit-diffstat-tree.el --- Group magit diffstat entries into a collapsible tree  -*- lexical-binding: t; -*-
 
 ;; Replaces the flat list of files in magit's `diffstat' section with nested
 ;; `directory' sections, so that whole folders can be collapsed with TAB.
@@ -86,15 +86,27 @@ OLD-PATH is nil unless FILE describes a rename."
                                         (:copier nil))
   "A directory or file entry of the diffstat.
 LABEL is the formatted, propertized display name without indentation, so
-that its width is known even when `magit-format-file-function' adds icons."
-  kind depth name label path children
+that its width is known even when `magit-format-file-function' adds icons.
+LABEL-WIDTH is how much of LABEL takes part in the column alignment.  For
+a moved file the trailing \" <- OLD\" is left out of it, so that one deep
+move cannot push the columns of the whole diffstat to the right; such a
+line simply runs past the column instead."
+  kind depth name label label-width path children
   nadd ndel                             ; directories and files
   cnt add del)                          ; files only: git's "12 ++--" graph
+
+(defun magit-diffstat-tree--common-directory (a b)
+  "Return the longest directory prefix A and B share, including its slash."
+  (let ((n (min (length a) (length b))) (i 0) (end 0))
+    (while (and (< i n) (eq (aref a i) (aref b i)))
+      (when (eq (aref a i) ?/) (setq end (1+ i)))
+      (cl-incf i))
+    (substring a 0 end)))
 
 (defun magit-diffstat-tree--build (items prefix depth)
   "Group ITEMS, a list of (RELATIVE-PATH . RECORD), one level at a time.
 PREFIX is the directory ITEMS are relative to, DEPTH its nesting level."
-  (let (dirs files)
+  (let (entries dirs)
     (dolist (item items)
       (if (string-match "\\`\\([^/]+\\)/" (car item))
           (let* ((dir (match-string 1 (car item)))
@@ -102,14 +114,16 @@ PREFIX is the directory ITEMS are relative to, DEPTH its nesting level."
                  (cell (assoc dir dirs)))
             (unless cell
               (setq cell (list dir))
-              (push cell dirs))
+              (push cell dirs)
+              (push cell entries))
             (setcdr cell (cons (cons rest (cdr item)) (cdr cell))))
         (push (magit-diffstat-tree--file-node (cdr item) (car item) depth)
-              files)))
-    (append
-     (mapcar (lambda (cell) (magit-diffstat-tree--dir-node cell prefix depth))
-             (nreverse dirs))
-     (nreverse files))))
+              entries)))
+    (mapcar (lambda (entry)
+              (if (magit-diffstat-tree-node-p entry)
+                  entry
+                (magit-diffstat-tree--dir-node entry prefix depth)))
+            (nreverse entries))))
 
 (defun magit-diffstat-tree--dir-node (cell prefix depth)
   (let* ((name (car cell))
@@ -125,24 +139,39 @@ PREFIX is the directory ITEMS are relative to, DEPTH its nesting level."
         (setq path (magit-diffstat-tree-node-path child))
         (setq children (magit-diffstat-tree--lift
                         (magit-diffstat-tree-node-children child)))))
-    (pcase-let ((`(,nadd ,ndel) (magit-diffstat-tree--sum children)))
+    (pcase-let ((`(,nadd ,ndel) (magit-diffstat-tree--sum children))
+                (label (magit-format-file 'stat (concat name "/")
+                                          'magit-diff-file-heading)))
       (magit-diffstat-tree-node
        :kind 'dir :depth depth :name name :path path :children children
-       :label (magit-format-file 'stat (concat name "/")
-                                 'magit-diff-file-heading)
+       :label label :label-width (length label)
        :nadd nadd :ndel ndel))))
 
 (defun magit-diffstat-tree--file-node (record name depth)
-  (pcase-let ((`(,path ,orig ,nadd ,ndel ,cnt ,add ,del) record))
+  (pcase-let* ((`(,path ,orig ,nadd ,ndel ,cnt ,add ,del) record)
+               ;; A rename within one directory is shown the way magit shows
+               ;; it, "OLD -> NEW", using just the old basename.
+               (in-place (and orig (equal (file-name-directory orig)
+                                          (file-name-directory path))))
+               (label (magit-format-file
+                       'stat name 'magit-filename nil
+                       (and in-place (file-name-nondirectory orig))))
+               (width (length label)))
+    ;; A move is filed under the name the tree already shows, so it only
+    ;; has to say where it came from.  The directories it shares with its
+    ;; new home are spelled out by the sections above it, so drop those.
+    (when (and orig (not in-place))
+      (setq label
+            (concat label
+                    (magit--propertize-face
+                     (concat " <- "
+                             (substring orig
+                                        (length (magit-diffstat-tree--common-directory
+                                                 orig path))))
+                     'magit-filename))))
     (magit-diffstat-tree-node
      :kind 'file :depth depth :name name :path path
-     :label (magit-format-file
-             'stat name 'magit-filename nil
-             ;; Show just the old basename when the file did not move.
-             (and orig (if (equal (file-name-directory orig)
-                                  (file-name-directory path))
-                           (file-name-nondirectory orig)
-                         orig)))
+     :label label :label-width width
      :nadd nadd :ndel ndel :cnt cnt :add add :del del)))
 
 (defun magit-diffstat-tree--lift (nodes)
@@ -168,7 +197,7 @@ PREFIX is the directory ITEMS are relative to, DEPTH its nesting level."
     (dolist (node nodes)
       (setq lw (max lw (+ (* (magit-diffstat-tree-node-depth node)
                              magit-diffstat-tree-indent)
-                          (length (magit-diffstat-tree-node-label node)))))
+                          (magit-diffstat-tree-node-label-width node))))
       (when-let ((counts (magit-diffstat-tree--counts node)))
         (setq aw (max aw (length (car counts))))
         (setq dw (max dw (length (cdr counts)))))

@@ -217,17 +217,6 @@ instead."
   :ensure t
   :hook (after-init . xclip-mode))
 
-;;; Project
-(use-package project
-  :ensure nil
-  :config
-  ;; Custom project folder
-  (defun my/project-find-vscode (path)
-    (when-let* ((folder "com.sigasi.lsp.extension.vscode")
-                (index (string-match folder path)))
-      (cons 'transient (substring path 0 (+ index (length folder))))))
-  (add-to-list 'project-find-functions #'my/project-find-vscode))
-
 ;;; Minibuffer and Completions
 ;; More advanced stuff here: https://protesilaos.com/codelog/2024-02-17-emacs-modern-minibuffer-packages/
 
@@ -549,20 +538,120 @@ within the last two weeks."
   (advice-add 'magit-diff-wash-diffs :around #'my/magit-color-moved-extend))
 
 ;;;;; Performance
+;; Magit gives every hunk its own section and paints each one, so a
+;; file with many hunks takes too long to render. Past the first
+;; threshold below such a file loses its word-level diffs and syntax
+;; highlighting; past the second its hunks are merged into one
+;; section, which stays a valid patch but can no longer be staged hunk
+;; by hunk.
 (use-package magit
   :ensure nil
   :config
-  (defvar my/magit-diff-detail-max-size 100000
-    "Buffers larger than this many characters get no inline diffs or syntax highlighting.")
+  (require 'cl-lib)
 
-  (defun my/magit-diff-set-detail ()
-    "Refine and fontify hunks, unless this buffer's diff is a large one."
-    (when (derived-mode-p 'magit-mode)
-      (let ((detail (and (<= (buffer-size) my/magit-diff-detail-max-size)
-                         'all)))
-        (setq-local magit-diff-refine-hunk 'all)
-        (setq-local magit-diff-fontify-hunk 'all))))
-  (add-hook 'magit-refresh-buffer-hook #'my/magit-diff-set-detail)
+  (setq magit-diff-refine-hunk 'all)
+  (setq magit-diff-fontify-hunk 'all)
+
+  (defvar my/magit-diff-detail-threshold 15
+    "Refine and fontify a file's hunks only when it has at most this many.")
+
+  (defvar my/magit-diff-merge-threshold 100
+    "Merge a file's hunks into one section once it has more than this many.")
+
+  (defconst my/magit-diff-hunk-re "^@\\{2,\\}")
+
+  (defconst my/magit-diff-file-re
+    (concat "^\\(diff\\|Submodule\\|\\* Unmerged path\\|"
+            (substring magit-diff-conflict-headline-re 1)
+            "\\)")
+    "Like `magit-diff-headline-re', but does not match a hunk headline.")
+
+  (defun my/magit-diff-annotate-merged (content count face)
+    "Show in FACE that the heading ending at CONTENT stands for COUNT hunks.
+A `display' property, so the section's text stays the patch given to git."
+    (put-text-property
+     (1- content) content 'display
+     (concat (propertize (format " (%d hunks, whole file)" count) 'face face)
+             "\n")))
+
+  (defun my/magit-diff-wash-merged (end count)
+    "Put every hunk up to END into one section, COUNT hunks in total."
+    (when (looking-at "^@\\{2,\\} \\(.+?\\) @\\{2,\\}\\(?: \\(.*\\)\\)?")
+      (let* ((heading (match-string-no-properties 0))
+             (ranges (mapcar
+                      (lambda (str)
+                        (let ((range (mapcar #'string-to-number
+                                             (split-string (substring str 1) ","))))
+                          ;; A single line is +1 rather than +1,1.
+                          (if (length= range 1) (nconc range (list 1)) range)))
+                      (split-string (match-string-no-properties 1))))
+             (about (match-string-no-properties 2))
+             (combined (length= ranges 3)))
+        (magit-delete-line)
+        (magit-insert-section
+            ( hunk (cons about ranges) nil
+              :combined combined
+              :from-range (if combined (butlast ranges) (car ranges))
+              :to-range (car (last ranges))
+              :about about)
+          ;; Magit reads these slots to skip work it has already done.
+          (oset magit-insert-section--current refined t)
+          (oset magit-insert-section--current fontified t)
+          (magit-insert-heading
+            (propertize (concat heading "\n")
+                        'font-lock-face 'magit-diff-hunk-heading))
+          (my/magit-diff-annotate-merged (point) count 'magit-diff-hunk-heading)
+          (goto-char end))))
+    nil)                                ; stop `magit-wash-sequence'
+
+  (defun my/magit-diff-limit-large-file (fn &rest args)
+    "Wash the hunks of a file that has very many of them more cheaply."
+    (let* ((end (and (looking-at my/magit-diff-hunk-re)
+                     (save-excursion
+                       ;; Washing is narrowed to one git call, so `point-max'
+                       ;; ends the last file.
+                       (if (re-search-forward my/magit-diff-file-re nil t)
+                           (line-beginning-position)
+                         (point-max)))))
+           (count (and end (how-many my/magit-diff-hunk-re (point) end))))
+      (cond
+       ((not (and count (> count my/magit-diff-detail-threshold)))
+        (apply fn args))
+       ((<= count my/magit-diff-merge-threshold)
+        (let ((section (apply fn args)))
+          (dolist (hunk (oref section children))
+            (oset hunk refined t)
+            (oset hunk fontified t))
+          section))
+       (t
+        ;; A marker: the heading is deleted and reinserted before we get there.
+        (let ((end (copy-marker end)))
+          (unwind-protect
+              (cl-letf (((symbol-function 'magit-diff-wash-hunk)
+                         (lambda () (my/magit-diff-wash-merged end count))))
+                (apply fn args))
+            (set-marker end nil)))))))
+  (advice-add 'magit-diff-insert-file-section :around
+              #'my/magit-diff-limit-large-file)
+
+  (cl-defmethod magit-section-paint :after ((section magit-hunk-section) highlight)
+    "Face the merged-in headings of SECTION, which magit paints as context.
+A no-op for magit's own hunk sections, whose bodies hold no \"@@\" line."
+    (when-let ((beg (oref section content))
+               (end (oref section end))
+               (face (if highlight
+                         'magit-diff-hunk-heading-highlight
+                       'magit-diff-hunk-heading)))
+      (save-excursion
+        (goto-char beg)
+        (let ((count 1))
+          (while (re-search-forward my/magit-diff-hunk-re end t)
+            (cl-incf count)
+            (put-text-property (match-beginning 0)
+                               (min end (1+ (line-end-position)))
+                               'font-lock-face face))
+          (when (> count 1)
+            (my/magit-diff-annotate-merged beg count face))))))
 
   (defun my/larger-heap-allocation (fn &rest args)
     "More heap allocation to speed up large diffs"
@@ -1050,8 +1139,8 @@ so the two can coexist in that variable."
     "Ask the server for FILE's JVM launch paths, a `JvmLaunchPaths'."
     (eglot-execute (eglot-current-server)
                    `(:command "intellij.java.resolveLaunch"
-                     :arguments [( :uri ,(eglot-path-to-uri file)
-                                   :cwd ,(file-name-directory file))])))
+                              :arguments [( :uri ,(eglot-path-to-uri file)
+                                            :cwd ,(file-name-directory file))])))
 
   (defun my/intellij-dap-port ()
     "Start the IntelliJ server's DAP adapter and return its port."
