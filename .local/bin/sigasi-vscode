@@ -4,6 +4,10 @@ set -euo pipefail
 
 PROBLEMS_FILE="${SIGASI_TSC_PROBLEMS_FILE:-${XDG_RUNTIME_DIR:-/tmp}/sigasi-tsc-problems}"
 
+SIGASI_REPO="$(dirname "$VSCODE_EXTENSION_PATH")"
+SERVER_DIR="$VSCODE_EXTENSION_PATH/packages/buildUtils/dist/server"
+GRADLE_WATCH_PATTERN='gradle-wrapper\.jar --continuous com\.sigasi\.lsp\.server:classes'
+
 # Turn `tsc --watch' output into one TAB-separated problem per line, the way
 # VS Code's $tsc-watch problem matcher does
 TSC_PROBLEMS_AWK='
@@ -59,11 +63,93 @@ start_watchers() {
     )
 }
 
+start_gradle_watch() {
+    if pgrep -f "$GRADLE_WATCH_PATTERN" >/dev/null; then
+        echo "gradle watch already running"
+        return
+    fi
+
+    echo "starting gradle watch"
+    (
+        cd "$SIGASI_REPO"
+
+        setsid --fork ./gradlew --continuous \
+            com.sigasi.lsp.server:classes processResources syncBinIncludesResources \
+            --offline 2>&1 \
+            | (
+            status=1
+            while IFS= read -r line; do
+                echo "$line"
+                case $line in
+                    *"Waiting for changes to input files"*)
+                        status=0; break ;;
+                esac
+            done
+
+            # Hand the pipe to a background drain before leaving, otherwise the watch
+            # dies of SIGPIPE on its next rebuild message.
+            cat >/dev/null &
+
+            exit $status
+        )
+    )
+}
+
 stop_watchers() {
     echo "stopping watchers"
+    pgrep -f "$GRADLE_WATCH_PATTERN" | xargs -r -I{} kill -INT -{}
     pgrep -f 'bin/yarn (compile:watch|watch:packages)$' | xargs -r -I{} kill -INT -{}
     # awk empties the file when the pipe closes; do it here too in case it died.
     : >"$PROBLEMS_FILE" 2>/dev/null || true
+}
+
+# Gradle-compiled classes go in front of the assembled SDK jars, so an edit is live as soon as
+# the watch has compiled it.
+lsp_classpath() {
+    local cp
+    cp=$(ls -d "$SIGASI_REPO"/com.sigasi.*/target/gradle-out/classes/java/main | tr '\n' ':')
+    cp+=$(ls -d "$SIGASI_REPO"/com.sigasi.*/target/gradle-out/resources/main \
+                "$SIGASI_REPO"/com.sigasi.*/target/gradle-out/bin-includes-resources 2>/dev/null \
+          | grep -vE 'com\.sigasi\.hdt\.(core|logging)/target' | tr '\n' ':' || true)
+    cp+="$SERVER_DIR/com.sigasi.hdt.toolchains.stubs"
+    cp+=":$SERVER_DIR/com.sigasi.hdt.verilog.verible.natives"
+    cp+=":$SERVER_DIR/com.sigasi.yourkit"
+    cp+=":$SERVER_DIR/*"
+    cp+=":$SERVER_DIR/com.sigasi.yourkit/lib/yjp-controller-api-redist.jar"
+    echo "$cp"
+}
+
+start_lsp_server() {
+    if [ ! -d "$SERVER_DIR" ]; then
+        echo "No assembled server at $SERVER_DIR; run a full build first." >&2
+        return 1
+    fi
+
+    java \
+        -Dguice_bytecode_gen_option=DISABLED \
+        --enable-native-access=ALL-UNNAMED \
+        --sun-misc-unsafe-memory-access=allow \
+        -Xmx8g -Xss4m -XX:+UseG1GC -XX:+EnableDynamicAgentLoading \
+        -XX:G1PeriodicGCInterval=60000 -XX:-G1PeriodicGCInvokesConcurrent \
+        -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=30 -XX:+UseStringDeduplication \
+        -Dsigasi.dev.mode=true \
+        -cp "$(lsp_classpath)" com.sigasi.lsp.server.LspServer "$@" &
+    server_pid=$!
+    echo "language server started (pid $server_pid)"
+}
+
+lsp_server() {
+    (
+        cd "$SIGASI_REPO"
+        ./gradlew com.sigasi.lsp.server:classes processResources syncBinIncludesResources --offline
+    )
+
+    start_lsp_server "$@"
+
+    # headless Chromium sets SIGINT to SIG_IGN
+    trap 'kill -TERM "$server_pid" 2>/dev/null || true' INT TERM
+    wait "$server_pid" || true
+    wait "$server_pid"
 }
 
 problems() {
@@ -75,6 +161,12 @@ watcher_status() {
         echo "watchers running"
     else
         echo "watchers not running"
+    fi
+
+    if pgrep -f "$GRADLE_WATCH_PATTERN" >/dev/null; then
+        echo "gradle watch running"
+    else
+        echo "gradle watch not running"
     fi
 }
 
@@ -149,9 +241,54 @@ listen_port() {
     done
 }
 
+launch_vscode() {
+    # SIGASI_DEBUG_MODE makes the extension attach to the server on 5007 rather than start one of
+    # its own from the assembled jars.
+    RELOAD_ON_WATCH=true SIGASI_DEBUG_MODE="${1:-false}" code --extensionDevelopmentPath="$VSCODE_EXTENSION_PATH" --user-data-dir="$VSCODE_DATA_DIR/user-data" --extensions-dir="$VSCODE_DATA_DIR/extensions" --inspect-extensions=9229 --verbose &>"$VSCODE_LOG_FILE" &
+    vscode_pid=$!
+}
+
 vscode() {
     start_watchers
-    RELOAD_ON_WATCH=true code --extensionDevelopmentPath="$VSCODE_EXTENSION_PATH" --user-data-dir="$VSCODE_DATA_DIR/user-data" --extensions-dir="$VSCODE_DATA_DIR/extensions" --inspect-extensions=9229 --verbose &>"$VSCODE_LOG_FILE" &
+
+    if [ "${1-}" != "--server" ]; then
+        launch_vscode false
+        return
+    fi
+
+    start_gradle_watch
+
+    local dead
+    server_pid=""
+    vscode_pid=""
+
+    # Deliberately leaves VS Code running: Ctrl+C here should not close the editor.
+    trap 'kill -TERM "$server_pid" 2>/dev/null || true; exit 0' INT TERM
+
+    start_lsp_server
+    launch_vscode true
+
+    while :; do
+        dead=""
+        wait -n -p dead || true
+        # No children left, or the wait was interrupted.
+        [ -n "$dead" ] || break
+
+        case $dead in
+            "$vscode_pid")
+                echo "VS Code closed; stopping the language server"
+                kill -TERM "$server_pid" 2>/dev/null || true
+                break
+                ;;
+            "$server_pid")
+                if ! kill -0 "$vscode_pid" 2>/dev/null; then
+                    break
+                fi
+                echo "language server exited; restarting with the latest build"
+                start_lsp_server
+                ;;
+        esac
+    done
 }
 
 vscode_debug() {
@@ -177,7 +314,8 @@ case $1 in
     status) watcher_status ;;
     attach) attach ;;
     inspect) listen_port ;;
-    start) vscode ;;
+    start) shift; vscode "$@" ;;
+    server) shift; lsp_server "$@" ;;
     debug) vscode_debug ;;
     debug-inspect) vscode_debug_inspect ;;
 esac
