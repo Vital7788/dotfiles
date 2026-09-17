@@ -483,15 +483,43 @@ within the last two weeks."
 (use-package magit
   :ensure nil
   :config
-  (defun my/magit-diff-origin-master (&optional args files)
-    "Diff the current branch against origin's default branch."
+  (defun my/glab-mr-target-branch (branch)
+    "Target branch of BRANCH's merge request, or nil when it has none."
+    (with-temp-buffer
+      (and (zerop (process-file "glab" nil t nil
+                                "mr" "view" branch "--output" "json"))
+           (progn
+             (goto-char (point-min))
+             (ignore-errors
+               (alist-get 'target_branch
+                          (json-parse-buffer :object-type 'alist)))))))
+
+  (defun my/magit-diff-base-branch ()
+    "Branch the current one is meant to be merged into."
+    (let* ((branch (or (magit-get-current-branch)
+                       ;; Get branch name for detached HEAD
+                       (car (seq-remove
+                             (lambda (ref) (equal ref "HEAD"))
+                             (magit-git-lines "for-each-ref"
+                                              "--format=%(refname:lstrip=3)"
+                                              "--points-at=HEAD"
+                                              "refs/remotes/origin")))))
+           (target (and branch
+                        (executable-find "glab")
+                        (my/glab-mr-target-branch branch))))
+      (or (and target (concat "origin/" target))
+          (magit-git-string "symbolic-ref" "--short"
+                            "refs/remotes/origin/HEAD")
+          "origin/master")))
+
+  (defun my/magit-diff-merge-request-base (&optional args files)
+    "Diff the current branch against the branch its merge request targets."
     (interactive (magit-diff-arguments))
-    (let ((main (or (magit-git-string "symbolic-ref" "--short"
-                                      "refs/remotes/origin/HEAD")
-                    "origin/master")))
-      (magit-diff-setup-buffer (concat main "...") nil args files 'committed)))
+    (let ((base (my/magit-diff-base-branch)))
+      (message "Diffing against %s" base)
+      (magit-diff-setup-buffer (concat base "...") nil args files 'committed)))
   (transient-append-suffix 'magit-diff "r"
-    '("o" "Diff origin/master..." my/magit-diff-origin-master)))
+    '("o" "Diff merge-request base..." my/magit-diff-merge-request-base)))
 
 ;;;;; Colors
 (use-package magit
