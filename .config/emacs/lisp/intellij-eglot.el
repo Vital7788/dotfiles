@@ -109,7 +109,9 @@
 
 ;;; Gradle preflight
 ;; The server imports by running Gradle itself and says nothing meanwhile, so
-;; a cold cache looks like a hang.  Run it here first, where it is visible.
+;; a cold cache looks like a hang.  Run it here first, in a background buffer:
+;; a build slow enough to notice announces itself in the echo area, and only a
+;; failure takes a window.
 ;;
 ;; Simple Tycho writes `gradle/tycho/' during configuration, so `help' -- the
 ;; cheapest task that configures -- suffices, and Gradle's own input tracking
@@ -118,10 +120,13 @@
 (defvar intellij-server-gradle-args '("--console=plain" "help")
   "Arguments to the project's `gradlew' for the preflight build.")
 
-(defvar intellij-server-gradle-reveal-delay 2
-  "Seconds the preflight build may run unseen before its buffer is shown.")
+(defvar intellij-server-gradle-notice-delay 2
+  "Seconds the preflight build may run before it is announced in the echo area.")
 
 (defvar intellij-server--gradle-process nil)
+
+(defvar intellij-server--gradle-announced nil
+  "Non-nil once the running preflight build has been announced.")
 
 (defvar intellij-server--gradle-root nil
   "Project root the running preflight build belongs to.")
@@ -156,6 +161,9 @@
           (message "Gradle preflight failed (exit %s); IntelliJ server not started"
                    status))
       (push intellij-server--gradle-root intellij-server--gradle-checked)
+      ;; Close the "..." only if it was ever opened.
+      (when intellij-server--gradle-announced
+        (message "Building the Gradle IDE model...done"))
       (dolist (buffer buffers)
         (when (buffer-live-p buffer)
           (with-current-buffer buffer (eglot-ensure)))))))
@@ -167,14 +175,16 @@ Returns at once; buffers arriving mid-build join the one in flight."
   (unless (process-live-p intellij-server--gradle-process)
     (let* ((default-directory root)
            (out (get-buffer-create "*intellij-server gradle*"))
-           (reveal (run-at-time
-                    intellij-server-gradle-reveal-delay nil
+           (notice (run-at-time
+                    intellij-server-gradle-notice-delay nil
                     (lambda ()
-                      (message "Building the Gradle IDE model...")
-                      (display-buffer out)))))
+                      (setq intellij-server--gradle-announced t)
+                      (message "Building the Gradle IDE model...")))))
       (with-current-buffer out
+        (special-mode)
         (let ((inhibit-read-only t)) (erase-buffer))
         (setq default-directory root))
+      (setq intellij-server--gradle-announced nil)
       (setq intellij-server--gradle-root root)
       (setq intellij-server--gradle-process
             (make-process
@@ -187,7 +197,7 @@ Returns at once; buffers arriving mid-build join the one in flight."
              :sentinel
              (lambda (proc _event)
                (unless (process-live-p proc)
-                 (cancel-timer reveal)
+                 (cancel-timer notice)
                  (intellij-server--gradle-finish proc))))))))
 
 ;;; Diagnostic filtering

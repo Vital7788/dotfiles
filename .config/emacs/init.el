@@ -1131,7 +1131,82 @@ so the two can coexist in that variable."
                  :__workspaceFolder (directory-file-name (my/vscode-extension-path))
                  :sourceMaps t
                  :outFiles ["${workspaceFolder}/app/**/*.js"]
-                 :resolveSourceMapLocations ["${workspaceFolder}/**" "!**/node_modules/**"])))
+                 :resolveSourceMapLocations ["${workspaceFolder}/**"
+                                             "!**/node_modules/**"
+                                             "!**/.vscode-test/**"])))
+
+;;;; Dape: VS Code extension tests
+(use-package dape
+  :ensure nil
+  :config
+  (defvar my/vscode-test-callers '("suite" "test" "describe" "it")
+    "Mocha functions whose first argument titles a suite or a test.")
+
+  (defun my/vscode-test-title ()
+    "Mocha's full title for the test around point."
+    (let ((node (treesit-node-at (point)))
+          titles innermost)
+      (while node
+        (when-let* (((equal (treesit-node-type node) "call_expression"))
+                    (caller (treesit-node-child-by-field-name node "function"))
+                    ((member (treesit-node-text caller) my/vscode-test-callers))
+                    (args (treesit-node-child-by-field-name node "arguments"))
+                    (string (treesit-node-child args 0 t))
+                    (title (treesit-node-child string 0 t)))
+          (push (treesit-node-text title) titles)
+          (unless innermost (setq innermost (treesit-node-text caller))))
+        (setq node (treesit-node-parent node)))
+      (if (member innermost '("test" "it"))
+          (string-join titles " ")
+        "")))
+
+  (defun my/vscode-test-compile (subcommand)
+    "Run SUBCOMMAND on the test around point in a compilation buffer."
+    (let ((default-directory (my/vscode-extension-path)))
+      (compilation-start (mapconcat #'shell-quote-argument
+                                    (list "sigasi-vscode" subcommand
+                                          buffer-file-name (my/vscode-test-title))
+                                    " ")
+                         #'my/vscode-test-mode)))
+
+  (defun my/vscode-test ()
+    "Run the test around point."
+    (interactive)
+    (my/vscode-test-compile "test"))
+
+  (defun my/vscode-test-debug ()
+    "Debug the test around point."
+    (interactive)
+    (my/vscode-test-compile "test-debug"))
+
+  (defun my/vscode-test-attach ()
+    "Attach to a run once it announces the port its extension host opened."
+    (save-excursion
+      (goto-char compilation-filter-start)
+      (forward-line 0)
+      (when (re-search-forward "^inspect-port \\([0-9]+\\)$" nil t)
+        (setq my/vscode-inspect-port (string-to-number (match-string 1)))
+        (dape (dape--config-eval 'sigasi-extension nil)))))
+
+  ;; Mocha reports a stack frame as `at NAME (FILE:LINE:COLUMN)'.  The
+  ;; built-in `java' rule matches that shape too, but it has no column
+  ;; group, so it takes `:LINE' to be part of the file name and COLUMN
+  ;; to be the line.
+  (add-to-list 'compilation-error-regexp-alist-alist
+               '(my/node-frame
+                 "^[ \t]*at \\(?:.*(\\)?\\([^()]+\\):\\([0-9]+\\):\\([0-9]+\\))?$"
+                 1 2 3))
+
+  (define-derived-mode my/vscode-test-mode compilation-mode "Sigasi-Test"
+    "Compilation mode for a `sigasi-vscode' test run."
+    (setq-local compilation-error-regexp-alist '(my/node-frame))
+    (setq-local compilation-transform-file-match-alist '(("node:" nil)))
+    (add-hook 'compilation-filter-hook #'my/vscode-test-attach nil t)
+    ;; Without this the escapes show up as text.
+    (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter nil t))
+
+  (define-key evil-normal-state-map (kbd ",t") #'my/vscode-test)
+  (define-key evil-normal-state-map (kbd ",T") #'my/vscode-test-debug))
 
 ;;;; Dape: IntelliJ JVM attach
 ;; The server implements DAP but reaches it only over LSP: `start_debug_server'
@@ -1279,5 +1354,8 @@ so the two can coexist in that variable."
   :config
   :hook (typescript-ts-base-mode . eglot-ensure))
 
-(custom-set-variables
- '(markdown-command "/usr/bin/pandoc"))
+(use-package markdown-mode
+  :ensure t
+  :mode ("\\.md\\'" . markdown-mode)
+  :commands (gfm-view-mode markdown-view-mode)
+  :custom (markdown-command "/usr/bin/pandoc"))
