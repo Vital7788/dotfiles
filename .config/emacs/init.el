@@ -955,7 +955,7 @@ takes a buffer over, which drops any backend registered before it."
   (defun my/tsc-problems--parse ()
     "Read problems into an alist of (FILE . DIAGNOSTICS)."
     (with-temp-buffer
-      (apply #'process-file "sigasi-vscode" nil t nil '("problems"))
+      (apply #'process-file "sigasi-dev" nil t nil '("ext" "problems"))
       (goto-char (point-min))
       (let (by-file)
         (while (not (eobp))
@@ -1097,7 +1097,7 @@ so the two can coexist in that variable."
   (defun my/vscode-inspect ()
     (make-process
      :name "vscode-inspect"
-     :command '("sigasi-vscode" "debug-inspect")
+     :command '("sigasi-dev" "start" "--debug" "--follow")
      :connection-type 'pipe
      :filter #'my/vscode-inspect-filter))
 
@@ -1160,24 +1160,24 @@ so the two can coexist in that variable."
           (string-join titles " ")
         "")))
 
-  (defun my/vscode-test-compile (subcommand)
-    "Run SUBCOMMAND on the test around point in a compilation buffer."
+  (defun my/vscode-test-compile (&rest options)
+    "Run the test around point in a compilation buffer, with OPTIONS."
     (let ((default-directory (my/vscode-extension-path)))
       (compilation-start (mapconcat #'shell-quote-argument
-                                    (list "sigasi-vscode" subcommand
-                                          buffer-file-name (my/vscode-test-title))
+                                    `("sigasi-dev" "ext" "test" ,@options
+                                      ,buffer-file-name ,(my/vscode-test-title))
                                     " ")
                          #'my/vscode-test-mode)))
 
   (defun my/vscode-test ()
     "Run the test around point."
     (interactive)
-    (my/vscode-test-compile "test"))
+    (my/vscode-test-compile))
 
   (defun my/vscode-test-debug ()
     "Debug the test around point."
     (interactive)
-    (my/vscode-test-compile "test-debug"))
+    (my/vscode-test-compile "--debug"))
 
   (defun my/vscode-test-attach ()
     "Attach to a run once it announces the port its extension host opened."
@@ -1198,7 +1198,7 @@ so the two can coexist in that variable."
                  1 2 3))
 
   (define-derived-mode my/vscode-test-mode compilation-mode "Sigasi-Test"
-    "Compilation mode for a `sigasi-vscode' test run."
+    "Compilation mode for a `sigasi-dev' test run."
     (setq-local compilation-error-regexp-alist '(my/node-frame))
     (setq-local compilation-transform-file-match-alist '(("node:" nil)))
     (add-hook 'compilation-filter-hook #'my/vscode-test-attach nil t)

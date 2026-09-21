@@ -7,38 +7,61 @@ TEST_DEBUG_CONFIG="$VSCODE_EXTENSION_PATH/.vscode-test/debug-config.mjs"
 TEST_PRELOAD="$VSCODE_EXTENSION_PATH/.vscode-test/source-map-support.cjs"
 # `.vscode-test.mjs' puts the runner's VS Code state here.
 TEST_USER_DATA_DIR="${TMPDIR:-/tmp}/svh-vscode-test"
-TEST_LOG="${XDG_RUNTIME_DIR:-/tmp}/sigasi-test.log"
-TEST_DEBUG=false
 
 SIGASI_REPO="$(dirname "$VSCODE_EXTENSION_PATH")"
 SERVER_DIR="$VSCODE_EXTENSION_PATH/packages/buildUtils/dist/server"
-GRADLE_WATCH_PATTERN='gradle-wrapper\.jar --continuous com\.sigasi\.lsp\.server:classes'
 
-# Turn `tsc --watch' output into one TAB-separated problem per line, the way
-# VS Code's $tsc-watch problem matcher does
-TSC_PROBLEMS_AWK='
-function publish(   i, tmp) {
-    tmp = dest ".tmp"
-    printf "" > tmp
-    for (i = 1; i <= n; i++) print problems[i] > tmp
-    close(tmp)
-    system("mv -f " tmp " " dest)
+yarn_watch_pids() {
+    pgrep -f 'bin/yarn (compile:watch|watch:packages)$'
 }
-{ print; fflush() }
-/ - (Starting compilation in watch mode|File change detected\. Starting incremental compilation)\.\.\./ {
-    n = 0; next
+
+gradle_watch_pids() {
+    pgrep -f 'gradle-wrapper\.jar --continuous assemble'
 }
-match($0, /^([^ \t].*)\(([0-9]+),([0-9]+)\): (error|warning|info) TS([0-9]+): (.*)$/, m) {
-    problems[++n] = m[4] "\t" root "/" m[1] "\t" m[2] "\t" m[3] "\tTS" m[5] "\t" m[6]
-    next
+
+wait_until_watching() {
+    local marker=$1 line
+    while IFS= read -r line; do
+        echo "$line"
+        case $line in
+            *"$marker"*)
+                # Hand the pipe to a background drain before returning, otherwise the
+                # watch dies of SIGPIPE on its next message.
+                cat &>/dev/null &
+                return 0
+                ;;
+        esac
+    done
+    return 1
 }
-/ - (Compilation complete\.|Found [0-9]+ errors?\.) Watching for file changes\./ { publish() }
-END { n = 0; publish() }
-'
+
+# Parse `tsc --watch' output and publish problems to $PROBLEMS_FILE.
+# One line per problem, TAB to separate the fields
+publish_tsc_problems() {
+    setsid --fork awk -v root="$PWD" -v dest="$PROBLEMS_FILE" '
+        function publish(   i, tmp) {
+            tmp = dest ".tmp"
+            printf "" > tmp
+            for (i = 1; i <= n; i++) print problems[i] > tmp
+            close(tmp)
+            system("mv -f " tmp " " dest)
+        }
+        { print; fflush() }
+        / - (Starting compilation in watch mode|File change detected\. Starting incremental compilation)\.\.\./ {
+            n = 0; next
+        }
+        match($0, /^([^ \t].*)\(([0-9]+),([0-9]+)\): (error|warning|info) TS([0-9]+): (.*)$/, m) {
+            problems[++n] = m[4] "\t" root "/" m[1] "\t" m[2] "\t" m[3] "\tTS" m[5] "\t" m[6]
+            next
+        }
+        / - (Compilation complete\.|Found [0-9]+ errors?\.) Watching for file changes\./ { publish() }
+        END { n = 0; publish() }
+    ' 2>&1
+}
 
 start_watchers() {
-    if pgrep -f 'bin/yarn (compile:watch|watch:packages)$' >/dev/null; then
-        echo "watcher already running"
+    if yarn_watch_pids >/dev/null; then
+        echo "yarn watchers already running"
         return
     fi
 
@@ -47,30 +70,15 @@ start_watchers() {
 
         yarn install
         yarn build:dep
-        setsid --fork yarn watch:packages 2>&1
+        setsid --fork yarn watch:packages &>/dev/null
         setsid --fork yarn compile:watch 2>&1 \
-            | setsid --fork awk -v root="$PWD" -v dest="$PROBLEMS_FILE" "$TSC_PROBLEMS_AWK" \
-            | (
-            status=1
-            while IFS= read -r line; do
-                echo $line
-                case $line in
-                    *"Watching for file changes"*)
-                        status=0; break ;;
-                esac
-            done
-
-            # Hand the pipe to a background drain before leaving, otherwise the watcher
-            # dies of SIGPIPE on its next recompile message.
-            cat >/dev/null &
-
-            exit $status
-        )
+            | publish_tsc_problems \
+            | wait_until_watching "Watching for file changes"
     )
 }
 
 start_gradle_watch() {
-    if pgrep -f "$GRADLE_WATCH_PATTERN" >/dev/null; then
+    if gradle_watch_pids >/dev/null; then
         echo "gradle watch already running"
         return
     fi
@@ -80,31 +88,30 @@ start_gradle_watch() {
         cd "$SIGASI_REPO"
 
         setsid --fork ./gradlew --continuous \
-            com.sigasi.lsp.server:classes processResources syncBinIncludesResources \
+            assemble \
             --offline 2>&1 \
-            | (
-            status=1
-            while IFS= read -r line; do
-                echo "$line"
-                case $line in
-                    *"Waiting for changes to input files"*)
-                        status=0; break ;;
-                esac
-            done
-
-            # Hand the pipe to a background drain before leaving, otherwise the watch
-            # dies of SIGPIPE on its next rebuild message.
-            cat >/dev/null &
-
-            exit $status
-        )
+            | wait_until_watching "Waiting for changes to input files"
     )
+}
+
+kill_process_groups() {
+    local what=$1 pid
+    shift
+
+    if [ $# -eq 0 ]; then
+        echo "$what not running"
+        return
+    fi
+
+    for pid in "$@"; do
+        kill -INT "-$pid" 2>/dev/null || true
+    done
 }
 
 stop_watchers() {
     echo "stopping watchers"
-    pgrep -f "$GRADLE_WATCH_PATTERN" | xargs -r -I{} kill -INT -{}
-    pgrep -f 'bin/yarn (compile:watch|watch:packages)$' | xargs -r -I{} kill -INT -{}
+    kill_process_groups "gradle watch" $(gradle_watch_pids || true)
+    kill_process_groups "yarn watchers" $(yarn_watch_pids || true)
     # awk empties the file when the pipe closes; do it here too in case it died.
     : >"$PROBLEMS_FILE" 2>/dev/null || true
 }
@@ -144,7 +151,7 @@ start_lsp_server() {
     echo "language server started (pid $server_pid)"
 }
 
-lsp_server() {
+cmd_lsp_run() {
     (
         cd "$SIGASI_REPO"
         ./gradlew com.sigasi.lsp.server:classes processResources syncBinIncludesResources --offline
@@ -163,28 +170,37 @@ problems() {
 }
 
 watcher_status() {
-    if pgrep -f 'bin/yarn (compile:watch|watch:packages)$'; then
-        echo "watchers running"
+    if yarn_watch_pids >/dev/null; then
+        echo "yarn watchers running"
     else
-        echo "watchers not running"
+        echo "yarn watchers not running"
     fi
 
-    if pgrep -f "$GRADLE_WATCH_PATTERN" >/dev/null; then
+    if gradle_watch_pids >/dev/null; then
         echo "gradle watch running"
     else
         echo "gradle watch not running"
     fi
 }
 
+code_pids() {
+    local data_dir=${1:-$VSCODE_DATA_DIR/user-data}
+    pgrep -f "code .* --inspect(-brk|-port)?=.* --user-data-dir=$data_dir(\$| )"
+}
+
+vscode_dev_pids() {
+    pgrep -f -- "--extensionDevelopmentPath=$VSCODE_EXTENSION_PATH .*--user-data-dir=$VSCODE_DATA_DIR/user-data"
+}
+
 get_pid() {
-    local data_dir=${1:-$VSCODE_DATA_DIR/user-data} pid
+    local pid
     for _ in $(seq 20); do
-        pid=$(pgrep -f "code .* --inspect(-brk|-port)?=.* --user-data-dir=$data_dir(\$| )" | tail -1)
+        pid=$(code_pids "${1-}" | tail -1)
         [ -n "$pid" ] && break
         sleep 0.1
     done
     [ -n "$pid" ] || return 1
-    echo $pid
+    echo "$pid"
 }
 
 get_port() {
@@ -203,33 +219,23 @@ get_port() {
     echo "$port"
 }
 
-attach() {
-    local port
-    if port=$(get_port); then
-        echo "$port"
-    else
-        echo "no port" >&2
-        return 1
-    fi
+print_inspector_port() {
+    get_port || { echo "no port" >&2; return 1; }
 }
 
 emit_port() {
-    local port
-    if port=$(get_port); then
-        echo "$port"
-    else
-        echo "port none"
-    fi
+    get_port || echo "port none"
 }
 
-listen_port() {
+follow_inspector_port() {
     if [[ ! -f "$VSCODE_LOG_FILE" ]]; then
         echo "VS Code log file '$VSCODE_LOG_FILE' does not exist" >&2
-        exit 1
+        return 1
     fi
 
     emit_port
 
+    # bash sets $! from a process substitution since 5.1
     exec 3< <(tail -n0 -f "$VSCODE_LOG_FILE" 2>/dev/null)
     local tail_pid=$!
 
@@ -238,8 +244,6 @@ listen_port() {
 
     while IFS= read -r line <&3; do
         case $line in
-            # *"type: extensionHost, pid: "*"successfully created"*)
-            #     ;;
             *"Extension host with pid "*" exited"*)
                 emit_port
                 ;;
@@ -250,21 +254,37 @@ listen_port() {
 launch_vscode() {
     # SIGASI_DEBUG_MODE makes the extension attach to the server on 5007 rather than start one of
     # its own from the assembled jars.
-    RELOAD_ON_WATCH=true SIGASI_DEBUG_MODE="${1:-false}" code --extensionDevelopmentPath="$VSCODE_EXTENSION_PATH" --user-data-dir="$VSCODE_DATA_DIR/user-data" --extensions-dir="$VSCODE_DATA_DIR/extensions" --inspect-extensions=9229 --verbose &>"$VSCODE_LOG_FILE" &
+    local debug_mode=${1:-false} inspect=${2:---inspect-extensions=9229}
+
+    RELOAD_ON_WATCH=true SIGASI_DEBUG_MODE="$debug_mode" \
+        code --extensionDevelopmentPath="$VSCODE_EXTENSION_PATH" \
+             --user-data-dir="$VSCODE_DATA_DIR/user-data" \
+             --extensions-dir="$VSCODE_DATA_DIR/extensions" \
+             "$inspect" --verbose &>"$VSCODE_LOG_FILE" &
     vscode_pid=$!
 }
 
-vscode() {
-    start_watchers
-
-    if [ "${1-}" != "--server" ]; then
-        launch_vscode false
+start_vscode() {
+    if vscode_dev_pids >/dev/null; then
+        echo "VS Code already running"
         return
     fi
 
+    start_watchers
+    launch_vscode false "$1"
+}
+
+start_with_lsp() {
+    local inspect=$1 dead
+
+    if vscode_dev_pids >/dev/null; then
+        echo "VS Code is already running; stop it first" >&2
+        return 1
+    fi
+
+    start_watchers
     start_gradle_watch
 
-    local dead
     server_pid=""
     vscode_pid=""
 
@@ -272,7 +292,7 @@ vscode() {
     trap 'kill -TERM "$server_pid" 2>/dev/null || true; exit 0' INT TERM
 
     start_lsp_server
-    launch_vscode true
+    launch_vscode true "$inspect"
 
     while :; do
         dead=""
@@ -297,22 +317,6 @@ vscode() {
     done
 }
 
-vscode_debug() {
-    start_watchers
-    RELOAD_ON_WATCH=true code --extensionDevelopmentPath="$VSCODE_EXTENSION_PATH" --user-data-dir="$VSCODE_DATA_DIR/user-data" --extensions-dir="$VSCODE_DATA_DIR/extensions" --inspect-brk-extensions=9229 --verbose &>"$VSCODE_LOG_FILE" &
-}
-
-vscode_debug_inspect() {
-    if pgrep -f -- "--extensionDevelopmentPath=$VSCODE_EXTENSION_PATH .*--user-data-dir=$VSCODE_DATA_DIR/user-data"; then
-        echo "VS Code already running" >&2
-    else
-        # Keep stdout free for the port protocol
-        vscode_debug >&2
-    fi
-
-    listen_port
-}
-
 # Escape a literal title for use inside a JavaScript regular expression.
 escape_regex() {
     printf '%s' "$1" | sed 's,[][\\^$.|?*+(){}/],\\&,g'
@@ -322,7 +326,7 @@ escape_regex() {
 write_test_debug_config() {
     mkdir -p "${TEST_DEBUG_CONFIG%/*}"
     cat >"$TEST_DEBUG_CONFIG" <<EOF
-// Generated by sigasi-vscode; changes are overwritten.
+// Generated by sigasi-dev; changes are overwritten.
 import config from "file://$VSCODE_EXTENSION_PATH/.vscode-test.mjs"
 
 export default {
@@ -337,32 +341,29 @@ EOF
 write_test_preload() {
     mkdir -p "${TEST_PRELOAD%/*}"
     cat >"$TEST_PRELOAD" <<'EOF'
-// Generated by sigasi-vscode; changes are overwritten.
+// Generated by sigasi-dev; changes are overwritten.
 require("source-map-support").install({ handleUncaughtExceptions: false })
 EOF
 }
 
 # Test runs don't clean up their language server
 test_server_pids() {
-    pgrep -f -- "--data-location $TEST_USER_DATA_DIR/" | tr '\n' ' ' || true
+    pgrep -f -- "--data-location $TEST_USER_DATA_DIR/"
 }
 
 # Only the servers this run added, so a run in another terminal keeps its own.
 reap_test_servers() {
     local before=$1 pid
-    for pid in $(test_server_pids); do
-        case " $before " in
-            *" $pid "*) ;;
-            *) kill "$pid" 2>/dev/null || true ;;
-        esac
+    for pid in $(test_server_pids || true); do
+        if ! grep -qxF "$pid" <<<"$before"; then
+            kill "$pid" 2>/dev/null || true
+        fi
     done
 }
 
 filter_test_output() {
-    awk -v logfile="$TEST_LOG" '
+    awk '
         {
-            print > logfile
-            fflush(logfile)
             # Colour has to survive, so match on a copy without it.
             plain = $0
             gsub(/\033\[[0-9;]*m/, "", plain)
@@ -382,14 +383,15 @@ filter_test_output() {
     '
 }
 
-# Run test $2 of source file $1, or all of the file's tests when no title is
-# given.  `test-debug' sets TEST_DEBUG, which holds the extension host on its
-# first line and announces the port to attach a debugger to.
+# Run test $3 of source file $2, or all of the file's tests when no title is
+# given.  $1 holds the extension host on its first line and announces the port
+# to attach a debugger to.
 run_tests() {
-    local file title rel js args=() before runner status=0
+    local debug=$1 file title rel js args=() before runner status=0
+    shift
 
     if [ $# -lt 1 ]; then
-        echo "usage: sigasi-vscode test|test-debug FILE [TITLE]" >&2
+        echo "usage: sigasi-dev [ext] test [--debug] FILE [TITLE]" >&2
         return 1
     fi
 
@@ -416,24 +418,25 @@ run_tests() {
 
     start_watchers
 
-    cd "$VSCODE_EXTENSION_PATH"
-
     write_test_preload
     args+=(--file "$TEST_PRELOAD" --color)
 
-    if $TEST_DEBUG; then
+    if $debug; then
         write_test_debug_config
         args+=(--config "$TEST_DEBUG_CONFIG")
     fi
 
-    before=$(test_server_pids)
+    before=$(test_server_pids || true)
 
     # `--fail-zero': a title matching nothing is a failure rather than a green
     # run of no tests at all.
-    ./node_modules/.bin/vscode-test --run "$js" --fail-zero "${args[@]}" &
+    (
+        cd "$VSCODE_EXTENSION_PATH" \
+            && exec ./node_modules/.bin/vscode-test --run "$js" --fail-zero "${args[@]}"
+    ) &
     runner=$!
 
-    if $TEST_DEBUG; then
+    if $debug; then
         local pid port=
         while [ -z "$port" ] && kill -0 "$runner" 2>/dev/null; do
             pid=$(get_pid "$TEST_USER_DATA_DIR") && port=$(get_port "$pid") || true
@@ -446,17 +449,118 @@ run_tests() {
     return $status
 }
 
-case $1 in
-    watch) start_watchers ;;
+usage() {
+    cat >&2 <<'EOF'
+usage: sigasi-dev COMMAND [ARGUMENT]...
+
+  start [--debug] [--lsp] [--follow]
+                         launch VS Code.  --debug holds the extension host on
+                         its first line, --lsp runs the language server from
+                         source and rebuilds it as you edit, --follow keeps
+                         printing the inspector port as the host restarts
+  stop                   stop every watch
+  status                 report which watches are running
+
+  ext watch              start the yarn watchers
+  ext problems           print the problems the tsc watch last reported
+  ext test [--debug] FILE [TITLE]
+                         run a test file, or the one test with that title
+  ext port [--follow]    print the inspector port of a running extension host,
+                         with --follow again each time it restarts
+
+  lsp run [ARGUMENT]...  build the language server and run it in the foreground
+  lsp watch              rebuild the language server as its sources change
+
+`ext' may be left out: `watch' means `ext watch'.
+EOF
+    return 2
+}
+
+cmd_start() {
+    local debug=false with_lsp=false follow=false inspect
+
+    while [ $# -gt 0 ]; do
+        case $1 in
+            --debug) debug=true ;;
+            --lsp) with_lsp=true ;;
+            --follow) follow=true ;;
+            *) echo "unknown option: $1" >&2; return 2 ;;
+        esac
+        shift
+    done
+
+    if $with_lsp && $follow; then
+        echo "--lsp and --follow both hold the foreground" >&2
+        return 2
+    fi
+
+    if $debug; then
+        inspect=--inspect-brk-extensions=9229
+    else
+        inspect=--inspect-extensions=9229
+    fi
+
+    if $with_lsp; then
+        start_with_lsp "$inspect"
+        return
+    fi
+
+    if ! $follow; then
+        start_vscode "$inspect"
+        return
+    fi
+
+    # keep stdout free for the port protocol
+    start_vscode "$inspect" >&2
+    follow_inspector_port
+}
+
+cmd_ext_test() {
+    local debug=false
+
+    if [ "${1-}" = --debug ]; then
+        debug=true
+        shift
+    fi
+
+    run_tests "$debug" "$@" 2>&1 | filter_test_output
+}
+
+cmd_ext_port() {
+    case ${1-} in
+        "") print_inspector_port ;;
+        --follow) follow_inspector_port ;;
+        *) echo "unknown option: $1" >&2; return 2 ;;
+    esac
+}
+
+cmd_ext() {
+    case ${1-} in
+        watch) start_watchers ;;
+        problems) problems ;;
+        test) shift; cmd_ext_test "$@" ;;
+        port) shift; cmd_ext_port "$@" ;;
+        "") usage ;;
+        *) echo "unknown command: $1" >&2; usage ;;
+    esac
+}
+
+cmd_lsp() {
+    case ${1-} in
+        run) shift; cmd_lsp_run "$@" ;;
+        watch) start_gradle_watch ;;
+        "") usage ;;
+        *) echo "unknown lsp command: $1" >&2; usage ;;
+    esac
+}
+
+case ${1-} in
+    ext) shift; cmd_ext "$@" ;;
+    lsp) shift; cmd_lsp "$@" ;;
+    start) shift; cmd_start "$@" ;;
     stop) stop_watchers ;;
-    problems) problems ;;
     status) watcher_status ;;
-    attach) attach ;;
-    inspect) listen_port ;;
-    start) shift; vscode "$@" ;;
-    server) shift; lsp_server "$@" ;;
-    debug) vscode_debug ;;
-    debug-inspect) vscode_debug_inspect ;;
-    test) shift; run_tests "$@" 2>&1 | filter_test_output ;;
-    test-debug) shift; TEST_DEBUG=true; run_tests "$@" 2>&1 | filter_test_output ;;
+    "") usage ;;
+    # The extension is the common case, so `ext' may be left out.
+    *) cmd_ext "$@" ;;
 esac
