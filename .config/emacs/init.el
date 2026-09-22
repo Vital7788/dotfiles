@@ -10,12 +10,6 @@
 
 (setq package-install-upgrade-built-in t)
 
-;; Don't show byte compilation warnings after installing packages
-(add-to-list 'display-buffer-alist
-             '("\\`\\*\\(Warnings\\|Compile-Log\\)\\*\\'"
-               (display-buffer-no-window)
-               (allow-no-window . t)))
-
 ;; Local packages, not installed through `package'
 (add-to-list 'load-path (locate-user-emacs-file "lisp"))
 
@@ -129,6 +123,21 @@ instead."
           (save-excursion (outline-previous-heading)))
       (my/outline-cycle)
     (my/outline-cycle-buffer)))
+
+;;; Buffer Display
+(setq display-buffer-alist
+      '(("^\\*eldoc"
+         display-buffer-at-bottom
+         (window-height . 0.2))
+        ("^\\*Help\\*$"
+         nil
+         (window-height . 0.35)
+         (window-width . 80)
+         (preserve-size . (t nil)))
+        ;; Don't show byte compilation warnings after installing packages
+        ("\\`\\*\\(Warnings\\|Compile-Log\\)\\*\\'"
+         display-buffer-no-window
+         (allow-no-window . t))))
 
 ;;; Appearance
 
@@ -896,6 +905,11 @@ A no-op for magit's own hunk sections, whose bodies hold no \"@@\" line."
         org-appear-autosubmarkers t)) ; Show sub- and superscripts
 
 ;;; LSP
+;;;; Snippets
+(use-package yasnippet
+  :ensure t
+  :defer t)
+
 ;;;; Eglot
 (use-package eglot
   :ensure nil
@@ -912,6 +926,38 @@ A no-op for magit's own hunk sections, whose bodies hold no \"@@\" line."
     "rf" (my/evil-change-command #'eglot-format)
     "ro" (my/evil-change-command #'eglot-code-action-organize-imports))
   (set-face-attribute 'eglot-highlight-symbol-face nil :weight 'normal))
+
+;;;; Eldoc
+(use-package eldoc
+  :ensure nil
+  :config
+  (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly))
+
+(use-package eldoc-box
+  :ensure t
+  :config
+  (defun my/eldoc-box-signature (docs _interactive)
+    "Show the signature help while in insert mode."
+    (if-let* (((evil-insert-state-p))
+              (doc (seq-find (lambda (doc)
+                               (eq (plist-get (cdr doc) :origin)
+                                   'eglot-signature-eldoc-function))
+                             docs)))
+        (eldoc-box--display (car doc))
+      (eldoc-box-quit-frame)))
+
+  (defun my/eldoc-box-signature-setup ()
+    "Display signature help beside point for as long as eglot manages this buffer."
+    (cond
+     ((eglot-managed-p)
+      (setq-local eldoc-box-position-function eldoc-box-at-point-position-function)
+      (add-hook 'eldoc-display-functions #'my/eldoc-box-signature nil t)
+      (add-hook 'post-command-hook #'eldoc-box--follow-cursor nil t))
+     (t
+      (remove-hook 'eldoc-display-functions #'my/eldoc-box-signature t)
+      (remove-hook 'post-command-hook #'eldoc-box--follow-cursor t))))
+  (add-hook 'eglot-managed-mode-hook #'my/eldoc-box-signature-setup)
+  (add-hook 'evil-insert-state-exit-hook #'eldoc-box-quit-frame))
 
 ;;;; Flymake
 (use-package flymake
