@@ -65,6 +65,54 @@
 ;; Hide commands in M-x which do not apply to the current mode.
 (setq read-extended-command-predicate #'command-completion-default-include-p)
 
+;;;; Comments
+;; Handle comments like Vim when starting new lines or joining lines
+(with-eval-after-load 'evil
+  (evil-define-key 'insert prog-mode-map
+    [remap newline] #'default-indent-new-line))
+
+(defun my/comment-continuation-prefix (n)
+  "Comment leader of the line N lines below point, nil when it has none.
+Nil as well on the line that closes a block comment."
+  (save-excursion
+    (forward-line n)
+    (when (and (nth 4 (syntax-ppss (line-end-position)))
+               (or (nth 4 (syntax-ppss (line-beginning-position))) ; `*' continuation
+                   (save-excursion    ; a line that is itself a comment
+                     (back-to-indentation)
+                     (and comment-start-skip (looking-at-p comment-start-skip)))))
+      (fill-match-adaptive-prefix))))
+
+(defun my/delete-indentation-drop-comment (fn &optional arg beg end)
+  "Join a comment line onto the previous one without repeating its leader."
+  (let ((fill-prefix (or (and (not beg)  ; a single join, not a region
+                              (my/comment-continuation-prefix (if arg 1 0)))
+                         fill-prefix)))
+    (funcall fn arg beg end)))
+(advice-add 'delete-indentation :around #'my/delete-indentation-drop-comment)
+
+(defun my/evil-insert-newline-below-comment (fn)
+  "Open a line below, continuing the comment point is in."
+  (if (not (nth 4 (syntax-ppss (line-end-position)))) ; comment still open at eol
+      (funcall fn)
+    (evil-narrow-to-field
+      (evil-move-end-of-line)
+      (default-indent-new-line))))
+
+(defun my/evil-insert-newline-above-comment (fn)
+  "Open a line above, repeating the leader of the comment point is in."
+  (let ((prefix (or (my/comment-continuation-prefix 0)
+                    (and (nth 4 (syntax-ppss (line-beginning-position)))
+                         (my/comment-continuation-prefix -1)))))
+    (funcall fn)
+    (when prefix (insert prefix))))
+
+(with-eval-after-load 'evil
+  (advice-add 'evil-insert-newline-below :around
+              #'my/evil-insert-newline-below-comment)
+  (advice-add 'evil-insert-newline-above :around
+              #'my/evil-insert-newline-above-comment))
+
 ;;;; Outline folding
 (setq outline-minor-mode-cycle nil)
 
@@ -925,7 +973,38 @@ A no-op for magit's own hunk sections, whose bodies hold no \"@@\" line."
     "ra" (my/evil-change-command #'eglot-code-actions)
     "rf" (my/evil-change-command #'eglot-format)
     "ro" (my/evil-change-command #'eglot-code-action-organize-imports))
-  (set-face-attribute 'eglot-highlight-symbol-face nil :weight 'normal))
+  (set-face-attribute 'eglot-highlight-symbol-face nil :weight 'normal)
+
+  ;; IntelliJ server puts qualified package or enclosing type in
+  ;; `:labelDetails', while Eglot expects it to be in `:detail'.
+  (defun my/eglot-completion-annotation (proxy)
+    "Annotation for the completion candidate PROXY, saying where it comes from."
+    (let* ((item (get-text-property 0 'eglot--lsp-item proxy))
+           (label-details (plist-get item :labelDetails))
+           (parts (seq-remove
+                   #'string-empty-p
+                   (mapcar (lambda (s) (string-trim (or s "")))
+                           ;; Eglot expects the information in `detail'
+                           (list (plist-get label-details :detail)
+                                 (plist-get label-details :description)
+                                 (plist-get item :detail)))))
+           (annotation (if parts
+                           (string-join parts " ")
+                         (cdr (assoc (plist-get item :kind) eglot--kind-names)))))
+      (when annotation
+        (concat " " (propertize annotation 'face 'font-lock-function-name-face)))))
+
+  (defun my/eglot-capf-label-details (capf)
+    "Give CAPF's result our annotation function.
+The capf's tail is a plist and `plist-get' takes the first hit, so
+prepending ours to eglot's shadows it."
+    (when capf
+      (append (seq-take capf 3)
+              (list :annotation-function #'my/eglot-completion-annotation)
+              (nthcdr 3 capf))))
+
+  (advice-add 'eglot-completion-at-point :filter-return
+              #'my/eglot-capf-label-details))
 
 ;;;; Eldoc
 (use-package eldoc
@@ -1054,7 +1133,7 @@ so the two can coexist in that variable."
 ;; The server is an EAP preview and expires 30 days after its build date.
 (use-package intellij-eglot
   :ensure nil
-  :hook (java-mode . my/java-eglot-ensure)
+  :hook ((java-mode java-ts-mode) . my/java-eglot-ensure)
   :init
   (defun my/java-eglot-ensure ()
     "Register the IntelliJ server with eglot, then manage this buffer."
@@ -1392,6 +1471,12 @@ so the two can coexist in that variable."
 (dolist (lang treesit-language-source-alist)
   (unless (treesit-language-available-p (car lang))
     (treesit-install-language-grammar (car lang))))
+
+(use-package java-ts-mode
+  :ensure nil
+  :if (treesit-language-available-p 'java)
+  :init
+  (add-to-list 'major-mode-remap-alist '(java-mode . java-ts-mode)))
 
 (use-package typescript-ts-mode
   :ensure nil
