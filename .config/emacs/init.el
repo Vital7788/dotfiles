@@ -274,6 +274,58 @@ instead."
   :ensure t
   :hook (after-init . xclip-mode))
 
+;;; Dotfiles
+(defconst my/dotfiles-git-dir (expand-file-name "~/.cfg")
+  "Git directory of the bare dotfiles repository.")
+
+(defconst my/dotfiles-work-tree (file-name-as-directory (expand-file-name "~/"))
+  "Work tree of the bare dotfiles repository.")
+
+(defun my/dotfiles-ls-files (&rest args)
+  "Files `git ls-files ARGS' lists in the dotfiles repository, nil if it fails.
+The names are relative to the work tree."
+  ;; Pathspecs and the listed names are relative to `default-directory'
+  (let ((default-directory my/dotfiles-work-tree))
+    (ignore-errors
+      (apply #'process-lines "git"
+             (concat "--git-dir=" my/dotfiles-git-dir)
+             (concat "--work-tree=" my/dotfiles-work-tree)
+             "ls-files" args))))
+
+(defvar my/dotfiles-files nil
+  "Absolute names of the files checked out in the dotfiles repository.
+Names that do not resolve are left out; ripgrep errors out on them.")
+
+(defvar my/dotfiles-directories nil
+  "Directories holding files tracked in the dotfiles repository.")
+
+(defun my/dotfiles-rescan ()
+  "Rebuild `my/dotfiles-files' and `my/dotfiles-directories'."
+  (setq my/dotfiles-files
+        (seq-filter #'file-exists-p
+                    (mapcar (lambda (file) (concat my/dotfiles-work-tree file))
+                            (my/dotfiles-ls-files)))
+        my/dotfiles-directories
+        (delete-dups (cons my/dotfiles-work-tree
+                           (mapcar #'file-name-directory my/dotfiles-files)))))
+
+(my/dotfiles-rescan)
+
+(defun my/dotfiles-untracked-files ()
+  "Untracked files below the directories holding dotfiles, other than ~/."
+  (apply #'my/dotfiles-ls-files
+         "--others" "--exclude-standard" "--"
+         (mapcar (lambda (dir) (file-relative-name dir my/dotfiles-work-tree))
+                 (remove my/dotfiles-work-tree my/dotfiles-directories))))
+
+(defun my/dotfiles-buffer-p ()
+  "Whether the current buffer shows the dotfiles repository or a dotfile."
+  (or (and (derived-mode-p 'magit-mode)
+           (file-equal-p default-directory my/dotfiles-work-tree))
+      (and buffer-file-name
+           (member (expand-file-name buffer-file-name) my/dotfiles-files)
+           t)))
+
 ;;; Minibuffer and Completions
 ;; More advanced stuff here: https://protesilaos.com/codelog/2024-02-17-emacs-modern-minibuffer-packages/
 
@@ -324,10 +376,64 @@ instead."
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
   :config
+  (defun my/dotfiles-find-file ()
+    "Visit a file tracked in the dotfiles repository."
+    (interactive)
+    (let ((default-directory my/dotfiles-work-tree))
+      (find-file
+       (consult--read (mapcar #'file-relative-name my/dotfiles-files)
+                      :prompt "Dotfile: "
+                      :category 'file
+                      :state (consult--file-preview)
+                      :require-match t
+                      :sort nil
+                      :history 'file-name-history))))
+
+  (defun my/dotfiles-ripgrep ()
+    "Search the files tracked in the dotfiles repository."
+    (interactive)
+    (let ((default-directory my/dotfiles-work-tree))
+      (consult-ripgrep my/dotfiles-files)))
+
+  (defun my/dotfiles-add ()
+    "Stage an untracked file below a directory holding dotfiles."
+    (interactive)
+    (require 'magit)
+    (let* ((default-directory my/dotfiles-work-tree)
+           (file (consult--read
+                  (or (my/dotfiles-untracked-files)
+                      (user-error "No untracked files next to the dotfiles"))
+                  :prompt "Add dotfile: "
+                  :category 'file
+                  :state (consult--file-preview)
+                  :require-match t
+                  :sort nil)))
+      ;; Unlike plain git, this also refreshes the dotfiles status buffer
+      (magit-run-git "add" "--" file)
+      (my/dotfiles-rescan)))
+
+  (defun my/consult-fd-dwim (&optional arg)
+    "Run `consult-fd', or `my/dotfiles-find-file' in a dotfiles buffer.
+With ARG, always run `consult-fd', which then asks for the directories."
+    (interactive "P")
+    (if (and (not arg) (my/dotfiles-buffer-p))
+        (my/dotfiles-find-file)
+      (consult-fd arg)))
+
+  (defun my/consult-ripgrep-dwim (&optional arg)
+    "Run `consult-ripgrep', or `my/dotfiles-ripgrep' in a dotfiles buffer.
+With ARG, always run `consult-ripgrep', which then asks for the directories."
+    (interactive "P")
+    (if (and (not arg) (my/dotfiles-buffer-p))
+        (my/dotfiles-ripgrep)
+      (consult-ripgrep arg)))
+
   ;; A recursive grep
-  (define-key evil-normal-state-map (kbd ",s") 'consult-ripgrep)
+  (define-key evil-normal-state-map (kbd ",s") 'my/consult-ripgrep-dwim)
   ;; Search for files names recursively
-  (define-key evil-normal-state-map (kbd ",f") 'consult-fd)
+  (define-key evil-normal-state-map (kbd ",f") 'my/consult-fd-dwim)
+  ;; Add a new file to the dotfiles
+  (define-key evil-normal-state-map (kbd ",a") 'my/dotfiles-add)
   ;; Search through the outline (headings) of the file
   (define-key evil-normal-state-map (kbd ",o") 'consult-outline)
   ;; Search the current buffer
@@ -359,8 +465,7 @@ instead."
                (insert-file-contents dotgit)
                (when (looking-at "gitdir: \\(.*\\)")
                  (expand-file-name (match-string 1) dir))))
-            ;; The dotfiles work tree is ~/, its git dir is the bare ~/.cfg
-            ((file-equal-p dir "~/") (expand-file-name "~/.cfg")))))
+            ((file-equal-p dir my/dotfiles-work-tree) my/dotfiles-git-dir))))
 
   (defun my/git-reflog-activity (gitdir)
     "Recent activity of the repository at GITDIR.
@@ -403,8 +508,10 @@ within the last two weeks."
                                    (and (= (car a) (car b))
                                         (> (cdr a) (cdr b))))))))))
 
-  (defvar my/consult-git-repos-cache (my/consult-git-repos-scan)
+  (defvar my/consult-git-repos-cache nil
     "Alist of (BOOKMARK-NAME . DIR), most active repository first.")
+  ;; re-evaluate when reloading init.el
+  (setq my/consult-git-repos-cache (my/consult-git-repos-scan))
 
   (defun my/magit-status-reuse (dir)
     "Display magit status buffer if it exists. Call magit-status otherwise."
@@ -844,19 +951,11 @@ A no-op for magit's own hunk sections, whose bodies hold no \"@@\" line."
   :ensure nil
   :config
   (defun my/magit-process-environment (env)
-    "Detect and set git -bare repo env vars when in tracked dotfile directories."
-    (let* ((default (file-name-as-directory (expand-file-name default-directory)))
-           (git-dir (expand-file-name "~/.cfg"))
-           (work-tree (expand-file-name "~/"))
-           (dotfile-dirs
-            (-map (apply-partially 'concat work-tree)
-                  (-uniq (-keep #'file-name-directory (split-string (shell-command-to-string
-                                                                     (format "/usr/bin/git --git-dir=%s --work-tree=%s ls-tree --full-tree --name-only -r HEAD"
-                                                                             git-dir work-tree))))))))
-      (push work-tree dotfile-dirs)
-      (when (member default dotfile-dirs)
-        (push (format "GIT_WORK_TREE=%s" work-tree) env)
-        (push (format "GIT_DIR=%s" git-dir) env)))
+    "Point git at the dotfiles repository in ENV in directories holding dotfiles."
+    (let ((dir (file-name-as-directory (expand-file-name default-directory))))
+      (when (member dir my/dotfiles-directories)
+        (push (format "GIT_WORK_TREE=%s" my/dotfiles-work-tree) env)
+        (push (format "GIT_DIR=%s" my/dotfiles-git-dir) env)))
     env)
   (advice-add 'magit-process-environment
               :filter-return #'my/magit-process-environment))

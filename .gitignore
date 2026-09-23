@@ -2,8 +2,15 @@
 .config/emacs/elpa
 .config/emacs/eln-cache
 .config/emacs/auto-save-list
+.config/emacs/debug-adapters
 .config/i3/local
 .config/nvim/lazy-lock.json
 .config/river/local.sh
 .config/mango/local.conf
 .config/kitty/local.conf
+.ssh/id_*
+.config/Code*
+.config/VSCodium
+.config/Cursor
+.config/google-chrome*
+.config/Antigravity
