@@ -9,6 +9,7 @@ profile {
         position 0,0
         scale 1.5
     }
+    exec killall -SIGUSR2 waybar
 }
 
 profile {
@@ -17,6 +18,7 @@ profile {
         position 0,0
         scale 1.5
     }
+    exec killall -SIGUSR2 waybar
 }
 
 profile {
@@ -31,12 +33,15 @@ profile {
         scale 1.5
         transform 90
     }
+    exec killall -SIGUSR2 waybar
 }
 
 profile {
     output DP-1 enable
+    exec killall -SIGUSR2 waybar
 }
 
 profile {
     output HDMI-A-1 enable
+    exec killall -SIGUSR2 waybar
 }
