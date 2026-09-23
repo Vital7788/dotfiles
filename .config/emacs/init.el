@@ -1066,13 +1066,35 @@ A no-op for magit's own hunk sections, whose bodies hold no \"@@\" line."
     `(lambda ()
        (interactive)
        (when (eq evil-this-operator 'evil-change)
+         ;; Skip the change itself, which would enter insert state afterwards.
+         (setq evil-inhibit-operator t)
          (call-interactively ,func))))
   (evil-define-key 'operator 'evil-normal-state-map
     "rn" (my/evil-change-command #'eglot-rename)
     "ra" (my/evil-change-command #'eglot-code-actions)
     "rf" (my/evil-change-command #'eglot-format)
-    "ro" (my/evil-change-command #'eglot-code-action-organize-imports))
+    "ro" (my/evil-change-command #'my/organize-imports))
+
   (set-face-attribute 'eglot-highlight-symbol-face nil :weight 'normal)
+
+  (defun my/organize-imports ()
+    "Organize imports, if the server can."
+    (interactive)
+    (when-let* (((eglot-server-capable :codeActionProvider))
+                (action (car (eglot-code-actions (point-min) (point-max)
+                                                 "source.organizeImports"))))
+      (eglot-execute (eglot-current-server) action)
+      (when (derived-mode-p 'java-mode 'java-ts-mode)
+        (my/java-format-imports))))
+
+  (defun my/organize-imports-on-save ()
+    "Organize imports before saving, without blocking the save."
+    (when (eglot-managed-p)
+      (with-demoted-errors "Organize imports: %S"
+        (let ((eglot-confirm-server-edits nil))
+          (my/organize-imports)))))
+
+  (add-hook 'before-save-hook #'my/organize-imports-on-save)
 
   ;; IntelliJ server puts qualified package or enclosing type in
   ;; `:labelDetails', while Eglot expects it to be in `:detail'.
@@ -1141,6 +1163,16 @@ prepending ours to eglot's shadows it."
 (use-package flymake
   :ensure nil
   :config
+  ;; Flymake backends refuse to run in untrusted buffers; trust everything
+  ;; under a bookmarked location (directories keep their trailing slash).
+  (bookmark-maybe-load-default-file)
+  (setq trusted-content
+        (delete-dups
+         (append (mapcar (lambda (name)
+                           (abbreviate-file-name
+                            (expand-file-name (bookmark-get-filename name))))
+                         (bookmark-all-names))
+                 (and (listp trusted-content) trusted-content))))
   ;; Project-wide diagnostics
   (define-key evil-normal-state-map (kbd ",d") 'flymake-show-project-diagnostics)
   ;; Buffer diagnostics
@@ -1161,7 +1193,10 @@ because eglot replaces `flymake-diagnostic-functions' wholesale when it
 takes a buffer over, which drops any backend registered before it."
     (when (and (eglot-managed-p)
                (derived-mode-p 'typescript-ts-base-mode))
-      (when-let* ((root (locate-dominating-file default-directory "node_modules")))
+      ;; Not `default-directory': eglot binds it to the project root while
+      ;; activating the first buffer, which may sit above the package.
+      (when-let* ((root (locate-dominating-file
+                         (or buffer-file-name default-directory) "node_modules")))
         (setq-local flymake-eslint-executable-name
                     (expand-file-name "node_modules/.bin/eslint" root)))
       (flymake-eslint-enable)))
@@ -1225,7 +1260,67 @@ so the two can coexist in that variable."
   :config
   ;; match VS Code behavior
   (add-to-list 'apheleia-mode-alist
-               '("/package\\(-lock\\)?\\.json\\'" . prettier-json-stringify)))
+               '("/package\\(-lock\\)?\\.json\\'" . prettier-json-stringify))
+
+  ;; The Eclipse formatter with the Sigasi profile. Only the lines
+  ;; that differ from HEAD are formatted.
+  (add-to-list 'apheleia-formatters
+               '(sigasi-java-format . ((my/sigasi-java-format-program)
+                                       inplace
+                                       (my/sigasi-java-format-lines-args))))
+
+  (defun my/sigasi-java-format-script ()
+    "Return the repo's FormatJava.java above this buffer's file, or nil."
+    (when-let* ((file buffer-file-name)
+                (root (locate-dominating-file file "scripts/FormatJava.java")))
+      (expand-file-name "scripts/FormatJava.java" root)))
+
+  (defun my/git (&rest args)
+    "Run git with ARGS beside this buffer's file. Return stdout lines, or nil on failure."
+    (let ((default-directory (file-name-directory buffer-file-name)))
+      (with-temp-buffer
+        (when (eq 0 (apply #'call-process "git" nil '(t nil) nil args))
+          (split-string (buffer-string) "\n" t)))))
+
+  (defun my/sigasi-java-changed-lines ()
+    "Lines changed since HEAD as \"a-b,c-d\"; t if untracked, nil if none.
+Diffing the file on disk is safe: Apheleia runs after the save."
+    (let ((file (file-name-nondirectory buffer-file-name)))
+      (if (not (my/git "ls-files" "--" file))
+          t
+        (let (ranges)
+          (dolist (line (my/git "diff" "--no-ext-diff" "--no-color" "-U0" "HEAD" "--" file))
+            ;; A count of 0 is a pure deletion: nothing to format.
+            (when (string-match "\\`@@ -[0-9,]+ \\+\\([0-9]+\\)\\(?:,\\([0-9]+\\)\\)? @@"
+                                line)
+              (let ((first (string-to-number (match-string 1 line)))
+                    (count (if (match-string 2 line)
+                               (string-to-number (match-string 2 line))
+                             1)))
+                (when (> count 0)
+                  (push (format "%d-%d" first (+ first count -1)) ranges)))))
+          (when ranges
+            (string-join (nreverse ranges) ","))))))
+
+  (defun my/sigasi-java-format-program ()
+    "Command running FormatJava.java; \"true\" when no line changed."
+    (if (my/sigasi-java-changed-lines)
+        (list "java" (my/sigasi-java-format-script))
+      "true"))
+
+  (defun my/sigasi-java-format-lines-args ()
+    "`--lines' arguments for FormatJava.java; nil formats the whole file."
+    (let ((lines (my/sigasi-java-changed-lines)))
+      (when (stringp lines)
+        (list "--lines" lines))))
+
+  (defun my/sigasi-java-format-enable ()
+    "Format on save with FormatJava.java in the Sigasi repo."
+    (when (my/sigasi-java-format-script)
+      (setq-local apheleia-formatter 'sigasi-java-format)))
+
+  (add-hook 'java-mode-hook #'my/sigasi-java-format-enable)
+  (add-hook 'java-ts-mode-hook #'my/sigasi-java-format-enable))
 
 ;;;; IntelliJ LSP
 ;; Java/Kotlin via JetBrains' IntelliJ language server (see lisp/intellij-eglot.el).
@@ -1237,7 +1332,23 @@ so the two can coexist in that variable."
   (defun my/java-eglot-ensure ()
     "Register the IntelliJ server with eglot, then manage this buffer."
     (require 'intellij-eglot)
-    (intellij-server-ensure)))
+    (intellij-server-ensure))
+
+  ;; The server's organize imports skips the formatter, which is what puts the
+  ;; blank lines between the import groups that .editorconfig defines.
+  (defun my/java-format-imports ()
+    "Format the import block, which spaces the import groups."
+    (save-excursion
+      (goto-char (point-min))
+      (when (re-search-forward "^import " nil t)
+        (let ((start (line-beginning-position))
+              end)
+          (goto-char start)
+          (while (and (not (eobp)) (looking-at "^\\(import .*\\)?$"))
+            (when (match-beginning 1)
+              (setq end (line-end-position)))
+            (forward-line 1))
+          (eglot-format start end))))))
 
 (use-package jarchive
   :ensure t
