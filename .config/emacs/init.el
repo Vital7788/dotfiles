@@ -187,6 +187,9 @@ instead."
          display-buffer-no-window
          (allow-no-window . t))))
 
+(setq split-height-threshold 50)
+(setq split-width-threshold 125)
+
 ;;; Appearance
 
 ;; More theme customizations: https://www.gnu.org/software/emacs/manual/html_node/modus-themes/DIY-Stylistic-variants-using-palette-overrides.html
