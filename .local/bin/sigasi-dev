@@ -70,8 +70,10 @@ start_watchers() {
 
         yarn install
         yarn build:dep
-        setsid --fork yarn watch:packages &>/dev/null
-        setsid --fork yarn compile:watch 2>&1 \
+        # Without &>/dev/null the watcher writes to the terminal, or holds the caller's pipe open, after exit
+        # Without </dev/null the watchers keep reading the terminal after exit
+        setsid --fork yarn watch:packages </dev/null &>/dev/null
+        setsid --fork yarn compile:watch </dev/null 2>&1 \
             | publish_tsc_problems \
             | wait_until_watching "Watching for file changes"
     )
@@ -87,9 +89,10 @@ start_gradle_watch() {
     (
         cd "$SIGASI_REPO"
 
+        # See start_watchers for </dev/null.
         setsid --fork ./gradlew --continuous \
             assemble \
-            --offline 2>&1 \
+            --offline </dev/null 2>&1 \
             | wait_until_watching "Waiting for changes to input files"
     )
 }
