@@ -990,11 +990,6 @@ A no-op for magit's own hunk sections, whose bodies hold no \"@@\" line."
       (kbd "gf") 'my/magit-open-file-in-eclipse)
     (evil-define-key 'normal magit-process-mode-map (kbd "gx") 'browse-url-at-point)))
 
-;;;; Keychain
-(use-package keychain-environment
-  :ensure t
-  :hook (after-init . keychain-refresh-environment))
-
 ;;; Org
 (use-package org
   :ensure nil

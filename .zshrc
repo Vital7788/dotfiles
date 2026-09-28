@@ -22,7 +22,6 @@ source ~/.zsh/alias.zsh
 source ~/.zsh/command.zsh
 source ~/.zsh/fzf.zsh
 source ~/.zsh/kitty.zsh
-source ~/.zsh/keychain.zsh
 if [[ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
     source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 elif [[ -f /usr/share/zsh/site-functions/zsh-syntax-highlighting.zsh ]]; then

@@ -10,6 +10,16 @@ path=("${HOME}/.local/bin" "${XDG_DATA_HOME}/npm/bin" "${XDG_DATA_HOME}/nvim/mas
 
 export EDITOR="${EDITOR:-/usr/bin/nvim}"
 
+# ssh-agent user service
+if [[ -d /run/systemd/system ]]; then
+    # systemctl --user enable --now ssh-agent.socket
+    export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR}/ssh-agent.socket"
+else
+    # rc-update --user add ssh-agent default
+    # rc-service --user ssh-agent start
+    export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR}/ssh-agent.sock"
+fi
+
 # dotfiles
 export USERXSESSION="${XDG_CACHE_HOME}/X11/xsession"
 export USERXSESSIONRC="${XDG_CACHE_HOME}/X11/xsessionrc"
