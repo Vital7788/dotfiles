@@ -265,6 +265,10 @@ instead."
 (use-package evil-collection
   :after evil
   :ensure t
+  :init
+  (setq evil-collection-binding-overrides
+        '((repl-submit  :state insert)
+          (repl-newline :enabled nil)))
   :hook (after-init . evil-collection-init))
 
 (use-package evil-commentary
@@ -1355,7 +1359,22 @@ Diffing the file on disk is safe: Apheleia runs after the save."
 ;;; Debugger (DAP)
 (use-package dape
   :ensure t
+  :hook ((dape-info-parent-mode dape-repl-mode) . my/dape-no-wrap)
   :config
+  (defun my/dape-no-wrap ()
+    "Truncate lines instead of wrapping."
+    (visual-line-mode -1)
+    (setq truncate-lines t))
+  (setq dape-buffer-window-arrangement 'gud)
+  (setq dape-info-buffer-window-groups
+        '((dape-info-stack-mode
+           dape-info-threads-mode
+           dape-info-modules-mode
+           dape-info-sources-mode
+           dape-info-breakpoints-mode)
+          (dape-info-scope-mode
+           dape-info-watch-mode)))
+
   (set-face-attribute 'dape-source-line-face nil
                       :background (modus-themes-get-color-value 'bg-yellow-subtle)
                       :extend t)
@@ -1562,6 +1581,43 @@ Diffing the file on disk is safe: Apheleia runs after the save."
       path))
 
   (advice-add 'dape--file-name-local :filter-return #'my/dape-uri-to-file-name)
+
+  ;; The adapter renders values asynchronously and answers with
+  ;; IntelliJ's placeholder until they are ready.
+  (defvar my/dape-placeholder-retries 0
+    "Refetches spent on placeholders since the last stop.")
+
+  (defun my/dape-reset-placeholder-retries (&rest _)
+    (setq my/dape-placeholder-retries 0))
+
+  (defun my/dape-placeholder-shown-p ()
+    "Non-nil when a visible Scope or Watch buffer shows the placeholder."
+    (seq-some (lambda (buffer)
+                (with-current-buffer buffer
+                  (and (derived-mode-p 'dape-info-scope-mode 'dape-info-watch-mode)
+                       (get-buffer-window buffer)
+                       (save-excursion
+                         (goto-char (point-min))
+                         (search-forward "Collecting data…" nil t)))))
+              (buffer-list)))
+
+  (defun my/dape-refetch-placeholders ()
+    "Refetch variables if the placeholder is still shown, up to 5 times per stop."
+    (when-let* (((< my/dape-placeholder-retries 5))
+                ((my/dape-placeholder-shown-p))
+                (conn (dape--live-connection 'stopped t)))
+      (cl-incf my/dape-placeholder-retries)
+      (dape--update conn 'variables)))
+
+  (defun my/dape-schedule-placeholder-refetch (&rest _)
+    ;; The info buffers redraw asynchronously, so check after they have
+    (run-with-timer 0.5 nil #'my/dape-refetch-placeholders))
+
+  (add-hook 'dape-stopped-hook #'my/dape-reset-placeholder-retries)
+  (add-hook 'dape-update-ui-hook #'my/dape-schedule-placeholder-refetch t)
+  ;; Expanding a node fetches its children without running `dape-update-ui-hook'
+  (dolist (fn '(my/dape-reset-placeholder-retries my/dape-schedule-placeholder-refetch))
+    (advice-add 'dape-info-scope-toggle :after fn))
 
   ;; Merely evaluating dape's own `jdtls' config fires
   ;; `vscode.java.resolveMainClass' at whatever server is attached, malformed.
