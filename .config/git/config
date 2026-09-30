@@ -18,12 +18,16 @@
     ; Dayfox color scheme
     ; lua pal = require('nightfox.palette').load("dayfox"); spec = require('nightfox.spec').load("dayfox"); C = require('nightfox.lib.color')
     ; lua print(C(spec.bg1):blend(C(pal.green.base), 0.2):to_css())
-    old = "normal #e6c8c8"                 ; blend bg1 with red at 0.2
-    new = "normal #d0d6cd"                 ; blend bg1 with green at 0.2
-    oldMoved = "normal #e6cee3"            ; blend bg1 with pink at 0.2
-    newMoved = "normal #cddad8"            ; blend bg1 with cyan at 0.2
-    oldMovedAlternative = "normal #dbcce8" ; blend bg1 with magenta at 0.2
-    newMovedAlternative = "normal #cdd0e0" ; blend bg1 with blue at 0.2
+    old = "#a5222f #e6c8c8"                 ; blend bg1 with red at 0.2
+    new = "#396847 #d0d6cd"                 ; blend bg1 with green at 0.2
+    oldMoved = "#a440b5 #e6cee3"            ; blend bg1 with pink at 0.2
+    newMoved = "#287980 #cddad8"            ; blend bg1 with cyan at 0.2
+    oldMovedAlternative = "#6e33ce #dbcce8" ; blend bg1 with magenta at 0.2
+    newMovedAlternative = "#2848a9 #cdd0e0" ; blend bg1 with blue at 0.2
+    oldDimmed = "dim #a5222f #e6c8c8"
+    newDimmed = "dim #396847 #d0d6cd"
+    oldBold = "bold #a5222f #e6c8c8"
+    newBold = "bold #396847 #d0d6cd"
 
 [core]
     pager = "command -v delta >/dev/null 2>&1 && delta || less"

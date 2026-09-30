@@ -207,6 +207,12 @@ instead."
   (set-face-attribute 'variable-pitch nil :family proportionately-spaced-font :height 1.0 :weight 'normal)
   (set-fontset-font t 'unicode (font-spec :name "Symbols Nerd Font Mono") nil 'append))
 
+;; Faint text is light by default, which is already the default weight.
+;; Also tone down bold for more even spacing
+(with-eval-after-load 'ansi-color
+  (set-face-attribute 'ansi-color-faint nil :weight 'extra-light)
+  (set-face-attribute 'ansi-color-bold nil :weight 'medium))
+
 (blink-cursor-mode 0)
 
 (global-visual-line-mode 1) ; wrap lines
@@ -654,27 +660,41 @@ within the last two weeks."
 (use-package magit
   :ensure nil
   :config
+  (defun my/glab-json (&rest args)
+    "Output of glab called with ARGS, parsed as JSON."
+    (let ((stderr (make-temp-file "glab")))
+      (unwind-protect
+          (with-temp-buffer
+            (let ((status (apply #'process-file "glab" nil (list t stderr) nil
+                                 args)))
+              (unless (zerop status)
+                (user-error "glab %s failed: %s" (string-join args " ")
+                            (with-temp-buffer
+                              (insert-file-contents stderr)
+                              (string-trim (buffer-string)))))
+              (goto-char (point-min))
+              (json-parse-buffer :object-type 'alist :array-type 'list)))
+        (delete-file stderr))))
+
   (defun my/glab-mr-target-branch (branch)
     "Target branch of BRANCH's merge request, or nil when it has none."
-    (with-temp-buffer
-      (and (zerop (process-file "glab" nil t nil
-                                "mr" "view" branch "--output" "json"))
-           (progn
-             (goto-char (point-min))
-             (ignore-errors
-               (alist-get 'target_branch
-                          (json-parse-buffer :object-type 'alist)))))))
+    (ignore-errors
+      (alist-get 'target_branch
+                 (my/glab-json "mr" "view" branch "--output" "json"))))
+
+  (defun my/magit-diff-review-branch ()
+    "Branch being reviewed: the current one, or origin's at a detached HEAD."
+    (or (magit-get-current-branch)
+        (car (seq-remove
+              (lambda (ref) (equal ref "HEAD"))
+              (magit-git-lines "for-each-ref"
+                               "--format=%(refname:lstrip=3)"
+                               "--points-at=HEAD"
+                               "refs/remotes/origin")))))
 
   (defun my/magit-diff-base-branch ()
     "Branch the current one is meant to be merged into."
-    (let* ((branch (or (magit-get-current-branch)
-                       ;; Get branch name for detached HEAD
-                       (car (seq-remove
-                             (lambda (ref) (equal ref "HEAD"))
-                             (magit-git-lines "for-each-ref"
-                                              "--format=%(refname:lstrip=3)"
-                                              "--points-at=HEAD"
-                                              "refs/remotes/origin")))))
+    (let* ((branch (my/magit-diff-review-branch))
            (target (and branch
                         (executable-find "glab")
                         (my/glab-mr-target-branch branch))))
@@ -734,7 +754,38 @@ within the last two weeks."
   (defun my/magit-color-moved-extend (fn &rest args)
     (let ((ansi-color-apply-face-function #'my/magit-color-moved-apply-face))
       (apply fn args)))
-  (advice-add 'magit-diff-wash-diffs :around #'my/magit-color-moved-extend))
+  (advice-add 'magit-diff-wash-diffs :around #'my/magit-color-moved-extend)
+
+  (defun my/git-color-attribute-p (word)
+    "Whether WORD of a git color is an attribute, such as bold or nodim."
+    (member (string-remove-prefix "-" (string-remove-prefix "no" word))
+            '("bold" "dim" "italic" "ul" "blink" "reverse" "strike")))
+
+  (defun my/git-color-without-foreground (color)
+    "Git COLOR with its foreground replaced by the default one."
+    (let* ((words (split-string color))
+           ;; The first color is the foreground
+           (i (cl-position-if-not #'my/git-color-attribute-p words)))
+      (when i
+        (setf (nth i words) "normal"))
+      (string-join words " ")))
+
+  ;; Magit resets old and new to leave their faces to Emacs, but moved lines
+  ;; keep git's foreground.  Keep only their background, for consistency.
+  (defun my/magit-diff-reset-moved-foreground (fn &rest args)
+    (let ((magit-diff--reset-non-color-moved
+           (append magit-diff--reset-non-color-moved
+                   (mapcan (lambda (line)
+                             ;; KEY COLOR, where COLOR is several words
+                             (let ((space (string-search " " line)))
+                               (list "-c"
+                                     (concat (substring line 0 space) "="
+                                             (my/git-color-without-foreground
+                                              (substring line (1+ space)))))))
+                           (magit-git-lines "config" "--get-regexp"
+                                            "^color\\.diff\\..*moved")))))
+      (apply fn args)))
+  (advice-add 'magit--insert-diff :around #'my/magit-diff-reset-moved-foreground))
 
 ;;;;; Performance
 ;; Magit gives every hunk its own section and paints each one, so a
@@ -944,6 +995,117 @@ A no-op for magit's own hunk sections, whose bodies hold no \"@@\" line."
         (my/magit-diff--refine-line-pairs beg end)
       (funcall fn beg end)))
   (advice-add 'diff--refine-hunk :around #'my/magit-diff-refine-line-pairs))
+
+;;;;; Range diff
+;; File sections, colors and syntax highlighting for range diffs come from
+;; lisp/magit-range-diff.el.  After the Performance block, whose
+;; `my/magit-diff-detail-threshold' it uses.
+(use-package magit-tbdiff
+  :ensure t
+  :after magit
+  :config
+  ;; Detection looks for a git-range-diff binary, which builtin-only git lacks
+  (setq magit-tbdiff-subcommand "range-diff")
+  ;; The coloring is made for dual color, so make it the default
+  (unless (assq 'magit-tbdiff transient-values)
+    (push '(magit-tbdiff "--dual-color") transient-values)))
+
+(use-package magit-range-diff
+  :ensure nil
+  :after magit-tbdiff
+  :config
+  (setq magit-range-diff-fontify-max-hunks my/magit-diff-detail-threshold)
+  (magit-range-diff-mode 1))
+
+;;;;; Range diff: merge request versions
+(use-package magit-tbdiff
+  :ensure nil
+  :after magit
+  :config
+  ;; Each push to a merge request is a version on GitLab.  Compare the one
+  ;; that was reviewed with the current branch, to review only what changed
+  ;; since, even after a rebase.
+  (defun my/magit-tbdiff--read-mr-version (branch)
+    "Read a version of BRANCH's merge request, defaulting to the previous one.
+Return the merge request and the version."
+    (let* ((mr (my/glab-json "mr" "view" branch "--output" "json"))
+           (versions (my/glab-json
+                      "api" (format "projects/:fullpath/merge_requests/%s/versions"
+                                    (alist-get 'iid mr))))
+           (count (length versions))
+           (choices
+            ;; GitLab lists the newest version first
+            (seq-map-indexed
+             (lambda (version i)
+               (cons (format "v%d  %s  %s" (- count i)
+                             (format-time-string
+                              "%F %R" (date-to-time
+                                       (alist-get 'created_at version)))
+                             (substring (alist-get 'head_commit_sha version)
+                                        0 10))
+                     version))
+             versions)))
+      (when (< count 2)
+        (user-error "!%s has no earlier version to compare with"
+                    (alist-get 'iid mr)))
+      (list mr
+            (cdr (assoc (completing-read
+                         (format "Compare !%s with version: " (alist-get 'iid mr))
+                         (lambda (string pred action)
+                           (if (eq action 'metadata)
+                               '(metadata (display-sort-function . identity))
+                             (complete-with-action action choices string pred)))
+                         nil t nil nil (car (nth 1 choices)))
+                        choices)))))
+
+  (defun my/magit-tbdiff--ensure-commit (rev)
+    "Fetch REV from origin unless it is already here."
+    (unless (magit-commit-p rev)
+      ;; Force-pushed versions are only reachable on GitLab
+      (magit-call-git "fetch" "origin" rev)
+      (unless (magit-commit-p rev)
+        (user-error "Could not fetch %s from origin" rev))))
+
+  (defun my/magit-tbdiff-mr-version (&optional args squash)
+    "Range diff a version of the merge request against the current branch.
+With SQUASH, compare each version as a single commit: the merge
+request's whole diff then and now."
+    (interactive (list (transient-args 'magit-tbdiff)))
+    (pcase-let* ((branch (or (my/magit-diff-review-branch)
+                             (user-error "No branch at HEAD")))
+                 (`(,mr ,version) (my/magit-tbdiff--read-mr-version branch))
+                 (old (alist-get 'head_commit_sha version))
+                 ;; GitLab's merge base with the target at the time
+                 (old-base (alist-get 'base_commit_sha version))
+                 (new (magit-rev-parse "HEAD"))
+                 (new-base (magit-git-string
+                            "merge-base" new
+                            (concat "origin/" (alist-get 'target_branch mr)))))
+      (my/magit-tbdiff--ensure-commit old)
+      (my/magit-tbdiff--ensure-commit old-base)
+      (when squash
+        (cl-flet ((squash (rev base)
+                    (magit-git-string "commit-tree" "-p" base "-m" "squashed"
+                                      (concat rev "^{tree}"))))
+          (setq old (squash old old-base))
+          (setq new (squash new new-base)))
+        ;; Pair the squashed commits however much they differ
+        (unless (transient-arg-value "--creation-factor=" args)
+          (push "--creation-factor=100" args)))
+      (magit-tbdiff-ranges (concat old-base ".." old)
+                           (concat new-base ".." new)
+                           args)))
+
+  (defun my/magit-tbdiff-mr-version-squashed (&optional args)
+    "Like `my/magit-tbdiff-mr-version', comparing the whole diffs."
+    (interactive (list (transient-args 'magit-tbdiff)))
+    (my/magit-tbdiff-mr-version args t))
+
+  (transient-append-suffix 'magit-tbdiff "r"
+    '("s" "Compare with MR version, squashed"
+      my/magit-tbdiff-mr-version-squashed))
+  (transient-append-suffix 'magit-tbdiff "s"
+    '("c" "Compare with MR version, per commit" my/magit-tbdiff-mr-version)))
 
 ;;;;; Diffstat tree
 ;; Group the files in a diffstat under collapsible directory sections.
