@@ -342,6 +342,8 @@ Names that do not resolve are left out; ripgrep errors out on them.")
 ;;; Minibuffer and Completions
 ;; More advanced stuff here: https://protesilaos.com/codelog/2024-02-17-emacs-modern-minibuffer-packages/
 
+(setq minibuffer-follows-selected-frame nil)
+
 (use-package which-key
   :ensure nil
   :hook (after-init . which-key-mode))
@@ -1238,6 +1240,8 @@ request's whole diff then and now."
     "ra" (my/evil-change-command #'eglot-code-actions)
     "rf" (my/evil-change-command #'eglot-format)
     "ro" (my/evil-change-command #'my/organize-imports))
+  (keymap-set evil-normal-state-map "g D" #'eglot-find-declaration)
+  (keymap-set evil-normal-state-map "g I" #'eglot-find-implementation)
 
   (set-face-attribute 'eglot-highlight-symbol-face nil :weight 'normal)
 
