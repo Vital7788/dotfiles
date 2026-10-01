@@ -252,11 +252,11 @@ instead."
   :config
   (evil-mode 1)
   (evil-set-undo-system 'undo-redo)
-  (define-key evil-normal-state-map (kbd "U") 'evil-redo)
-  (define-key evil-insert-state-map (kbd "C-SPC") 'completion-at-point)
-  (define-key evil-motion-state-map (kbd "RET") nil)
-  (define-key evil-motion-state-map (kbd "SPC") nil)
-  (define-key evil-motion-state-map (kbd "DEL") nil)
+  (keymap-set evil-normal-state-map "U" #'evil-redo)
+  (keymap-set evil-insert-state-map "C-SPC" #'completion-at-point)
+  (keymap-unset evil-motion-state-map "RET")
+  (keymap-unset evil-motion-state-map "SPC")
+  (keymap-unset evil-motion-state-map "DEL")
   (evil-define-key 'normal outline-minor-mode-map
     (kbd "TAB") #'my/outline-cycle-dwim
     (kbd "<backtab>") #'my/outline-cycle-buffer)
@@ -442,17 +442,17 @@ With ARG, always run `consult-ripgrep', which then asks for the directories."
       (consult-ripgrep arg)))
 
   ;; A recursive grep
-  (define-key evil-normal-state-map (kbd ",s") 'my/consult-ripgrep-dwim)
+  (keymap-set evil-normal-state-map ", s" #'my/consult-ripgrep-dwim)
   ;; Search for files names recursively
-  (define-key evil-normal-state-map (kbd ",f") 'my/consult-fd-dwim)
+  (keymap-set evil-normal-state-map ", f" #'my/consult-fd-dwim)
   ;; Add a new file to the dotfiles
-  (define-key evil-normal-state-map (kbd ",a") 'my/dotfiles-add)
+  (keymap-set evil-normal-state-map ", a" #'my/dotfiles-add)
   ;; Search through the outline (headings) of the file
-  (define-key evil-normal-state-map (kbd ",o") 'consult-outline)
+  (keymap-set evil-normal-state-map ", o" #'consult-outline)
   ;; Search the current buffer
-  (define-key evil-normal-state-map (kbd ",l") 'consult-line)
+  (keymap-set evil-normal-state-map ", l" #'consult-line)
   ;; Switch to another buffer, or bookmarked file, or recently opened file.
-  (define-key evil-normal-state-map (kbd ",b") 'consult-buffer)
+  (keymap-set evil-normal-state-map ", b" #'consult-buffer)
 
   ;; add preview to consult-fd
   (consult-customize consult-fd :state (consult--file-preview))
@@ -561,7 +561,7 @@ within the last two weeks."
                   :sort nil
                   :require-match t)
                  my/consult-git-repos-cache))))
-  (define-key evil-normal-state-map (kbd ",g") #'my/consult-magit-repos))
+  (keymap-set evil-normal-state-map ", g" #'my/consult-magit-repos))
 
 (use-package embark
   :ensure t
@@ -1338,9 +1338,9 @@ prepending ours to eglot's shadows it."
                          (bookmark-all-names))
                  (and (listp trusted-content) trusted-content))))
   ;; Project-wide diagnostics
-  (define-key evil-normal-state-map (kbd ",d") 'flymake-show-project-diagnostics)
+  (keymap-set evil-normal-state-map ", d" #'flymake-show-project-diagnostics)
   ;; Buffer diagnostics
-  (define-key evil-normal-state-map (kbd ",D") 'flymake-show-buffer-diagnostics))
+  (keymap-set evil-normal-state-map ", D" #'flymake-show-buffer-diagnostics))
 
 ;;;;; ESLint
 (use-package flymake-eslint
@@ -1575,7 +1575,7 @@ Diffing the file on disk is safe: Apheleia runs after the save."
       ("<" "frame up"   dape-stack-select-up   :transient t)
       (">" "frame down" dape-stack-select-down :transient t)]])
 
-  (define-key evil-normal-state-map (kbd "SPC") #'my/dape-transient)
+  (keymap-set evil-normal-state-map "SPC" #'my/dape-transient)
 
   (defun my/dape-start-or-continue ()
     "Resume a stopped session, or start the one this buffer's mode calls for."
@@ -1590,11 +1590,11 @@ Diffing the file on disk is safe: Apheleia runs after the save."
            (dape (dape--config-eval 'sigasi-lsp-server nil)))
           (t (call-interactively #'dape))))
 
-  (keymap-global-set "<f5>"  #'my/dape-start-or-continue)
-  (keymap-global-set "<f9>"  #'dape-breakpoint-toggle)
-  (keymap-global-set "<f10>" #'dape-next)
-  (keymap-global-set "<f11>" #'dape-step-in)
-  (keymap-global-set "<f12>" #'dape-step-out))
+  (keymap-set evil-normal-state-map "<f5>"  #'my/dape-start-or-continue)
+  (keymap-set evil-normal-state-map "<f9>"  #'dape-breakpoint-toggle)
+  (keymap-set evil-normal-state-map "<f10>" #'dape-next)
+  (keymap-set evil-normal-state-map "<f11>" #'dape-step-in)
+  (keymap-set evil-normal-state-map "<f12>" #'dape-step-out))
 
 ;;;; Dape: VS Code extension host
 (use-package dape
@@ -1719,8 +1719,8 @@ Diffing the file on disk is safe: Apheleia runs after the save."
     ;; Without this the escapes show up as text.
     (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter nil t))
 
-  (define-key evil-normal-state-map (kbd ",t") #'my/vscode-test)
-  (define-key evil-normal-state-map (kbd ",T") #'my/vscode-test-debug))
+  (keymap-set evil-normal-state-map ", t" #'my/vscode-test)
+  (keymap-set evil-normal-state-map ", T" #'my/vscode-test-debug))
 
 ;;;; Dape: IntelliJ JVM attach
 ;; The server implements DAP but reaches it only over LSP: `start_debug_server'
