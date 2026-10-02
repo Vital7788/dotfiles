@@ -3,6 +3,7 @@
 set -euo pipefail
 
 PROBLEMS_FILE="${SIGASI_TSC_PROBLEMS_FILE:-${XDG_RUNTIME_DIR:-/tmp}/sigasi-tsc-problems}"
+JAVAC_PROBLEMS_FILE="${SIGASI_JAVAC_PROBLEMS_FILE:-${XDG_RUNTIME_DIR:-/tmp}/sigasi-javac-problems}"
 TEST_DEBUG_CONFIG="$VSCODE_EXTENSION_PATH/.vscode-test/debug-config.mjs"
 TEST_PRELOAD="$VSCODE_EXTENSION_PATH/.vscode-test/source-map-support.cjs"
 # `.vscode-test.mjs' puts the runner's VS Code state here.
@@ -16,7 +17,7 @@ yarn_watch_pids() {
 }
 
 gradle_watch_pids() {
-    pgrep -f 'gradle-wrapper\.jar --continuous assemble'
+    pgrep -f 'gradle-wrapper\.jar --continuous .*assemble'
 }
 
 wait_until_watching() {
@@ -59,6 +60,49 @@ publish_tsc_problems() {
     ' 2>&1
 }
 
+# Parse the javac diagnostics in `gradlew --continuous' output and publish them to
+# $JAVAC_PROBLEMS_FILE
+# One line per problem, TAB to separate the fields
+publish_javac_problems() {
+    setsid --fork awk -v dest="$JAVAC_PROBLEMS_FILE" '
+        function publish(   i, tmp) {
+            tmp = dest ".tmp"
+            printf "" > tmp
+            for (i = 1; i <= n; i++) print problems[i] > tmp
+            close(tmp)
+            system("mv -f " tmp " " dest)
+        }
+        function flush_pending() {
+            if (state) problems[++n] = sev "\t" file "\t" line "\t" (col ? col : 1) "\tjavac\t" msg
+            state = 0
+        }
+        { print; fflush() }
+        # Each build is one batch: the first one, then one per detected change.
+        NR == 1 || /^Change detected, executing build\.\.\./ { flush_pending(); n = 0; skip = 0 }
+        # Gradle repeats the compiler output under "What went wrong"
+        /^\* What went wrong:/ { flush_pending(); skip = 1 }
+        /^BUILD (SUCCESSFUL|FAILED)/ { flush_pending(); skip = 0; publish(); next }
+        skip { next }
+        match($0, /^(\/[^:]+\.java):([0-9]+): (error|warning): (.*)$/, m) {
+            flush_pending()
+            file = m[1]; line = m[2]; sev = m[3]; msg = m[4]; col = 0
+            gsub(/\t/, " ", msg)
+            state = 1                       # next: the source line
+            next
+        }
+        state == 1 { state = 2; next }      # the source line itself
+        state == 2 && /^[ \t]*\^$/ {        # the caret, indented like the source
+            col = index($0, "^"); state = 3; next
+        }
+        state == 3 && /^  [^ ]/ {           # required:, found:, reason:
+            detail = $0; sub(/^ +/, "", detail); gsub(/\t/, " ", detail)
+            msg = msg (msg ~ /;$/ ? " " : "; ") detail; next
+        }
+        { flush_pending() }
+        END { n = 0; publish() }
+    ' 2>&1
+}
+
 start_watchers() {
     if yarn_watch_pids >/dev/null; then
         echo "yarn watchers already running"
@@ -90,9 +134,9 @@ start_gradle_watch() {
         cd "$SIGASI_REPO"
 
         # See start_watchers for </dev/null.
-        setsid --fork ./gradlew --continuous \
-            assemble \
-            --offline </dev/null 2>&1 \
+        setsid --fork ./gradlew --continuous --continue --console=plain \
+            assemble </dev/null 2>&1 \
+            | publish_javac_problems \
             | wait_until_watching "Waiting for changes to input files"
     )
 }
@@ -115,8 +159,9 @@ stop_watchers() {
     echo "stopping watchers"
     kill_process_groups "gradle watch" $(gradle_watch_pids || true)
     kill_process_groups "yarn watchers" $(yarn_watch_pids || true)
-    # awk empties the file when the pipe closes; do it here too in case it died.
+    # awk empties the files when the pipe closes; do it here too in case it died.
     : >"$PROBLEMS_FILE" 2>/dev/null || true
+    : >"$JAVAC_PROBLEMS_FILE" 2>/dev/null || true
 }
 
 # Gradle-compiled classes go in front of the assembled SDK jars, so an edit is live as soon as
@@ -170,6 +215,10 @@ cmd_lsp_run() {
 
 problems() {
     cat "$PROBLEMS_FILE" 2>/dev/null || true
+}
+
+javac_problems() {
+    cat "$JAVAC_PROBLEMS_FILE" 2>/dev/null || true
 }
 
 watcher_status() {
@@ -473,6 +522,7 @@ usage: sigasi-dev COMMAND [ARGUMENT]...
 
   lsp run [ARGUMENT]...  build the language server and run it in the foreground
   lsp watch              rebuild the language server as its sources change
+  lsp problems           print the javac problems the gradle watch last reported
 
 `ext' may be left out: `watch' means `ext watch'.
 EOF
@@ -552,6 +602,7 @@ cmd_lsp() {
     case ${1-} in
         run) shift; cmd_lsp_run "$@" ;;
         watch) start_gradle_watch ;;
+        problems) javac_problems ;;
         "") usage ;;
         *) echo "unknown lsp command: $1" >&2; usage ;;
     esac

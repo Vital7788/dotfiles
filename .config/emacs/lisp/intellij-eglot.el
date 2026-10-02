@@ -1,4 +1,5 @@
 ;; -*- lexical-binding: t; -*-
+(require 'bookmark)
 (require 'eglot)
 (require 'project)
 (require 'xdg)
@@ -107,35 +108,30 @@
   (and buffer-file-name
        (string-match-p "\\`[a-z][a-z0-9+.-]+:" buffer-file-name)))
 
-;;; Gradle preflight
-;; The server imports by running Gradle itself and says nothing meanwhile, so
-;; a cold cache looks like a hang.  Run it here first, in a background buffer:
-;; a build slow enough to notice announces itself in the echo area, and only a
-;; failure takes a window.
-;;
-;; Simple Tycho writes `gradle/tycho/' during configuration, so `help' -- the
-;; cheapest task that configures -- suffices, and Gradle's own input tracking
-;; decides whether anything needs redoing.  Warm that is under a second.
+;;; Gradle watch
+;; Start `sigasi-dev lsp watch' in a background buffer.
+;; Report in the echo area for slow builds. Spawn a window on failure
 
-(defvar intellij-server-gradle-args '("--console=plain" "help")
-  "Arguments to the project's `gradlew' for the preflight build.")
+(defvar intellij-server-watch-command '("sigasi-dev" "lsp" "watch")
+  "Command that starts the Gradle watch, returning once it is watching.")
 
 (defvar intellij-server-gradle-notice-delay 2
-  "Seconds the preflight build may run before it is announced in the echo area.")
+  "Seconds the watch may take to start before it is announced in the echo area.")
 
 (defvar intellij-server--gradle-process nil)
 
 (defvar intellij-server--gradle-announced nil
-  "Non-nil once the running preflight build has been announced.")
-
-(defvar intellij-server--gradle-root nil
-  "Project root the running preflight build belongs to.")
+  "Non-nil once the starting watch has been announced.")
 
 (defvar intellij-server--gradle-pending nil
-  "Buffers to hand to eglot once the running preflight build succeeds.")
+  "Buffers to hand to eglot once the watch is running.")
 
-(defvar intellij-server--gradle-checked nil
-  "Project roots whose preflight build has already succeeded this session.")
+(defun intellij-server--sigasi-root ()
+  "The repository of the \"sigasi\" bookmark, or nil without that bookmark."
+  (bookmark-maybe-load-default-file)
+  (when-let* ((bookmark (bookmark-get-bookmark "sigasi" 'noerror))
+              (root (bookmark-get-filename bookmark)))
+    (file-name-as-directory (expand-file-name root))))
 
 (defun intellij-server--gradle-filter (proc string)
   "Append STRING to PROC's buffer, keeping point at the end when it was there."
@@ -150,7 +146,7 @@
         (when follow (goto-char (process-mark proc)))))))
 
 (defun intellij-server--gradle-finish (proc)
-  "Connect the buffers that waited for PROC, or show why its build failed."
+  "Connect the buffers that waited for PROC, or show why the watch did not start."
   (let ((buffers intellij-server--gradle-pending)
         (status (process-exit-status proc)))
     (setq intellij-server--gradle-pending nil)
@@ -158,19 +154,18 @@
         (progn
           ;; Gradle names the cause far better than the server would.
           (display-buffer (process-buffer proc))
-          (message "Gradle preflight failed (exit %s); IntelliJ server not started"
+          (message "Gradle watch failed to start (exit %s); IntelliJ server not started"
                    status))
-      (push intellij-server--gradle-root intellij-server--gradle-checked)
       ;; Close the "..." only if it was ever opened.
       (when intellij-server--gradle-announced
-        (message "Building the Gradle IDE model...done"))
+        (message "Starting the Gradle watch...done"))
       (dolist (buffer buffers)
         (when (buffer-live-p buffer)
           (with-current-buffer buffer (eglot-ensure)))))))
 
 (defun intellij-server--gradle-start (root buffer)
-  "Build the Gradle IDE model for ROOT, then manage BUFFER with eglot.
-Returns at once; buffers arriving mid-build join the one in flight."
+  "Make sure the Gradle watch of ROOT runs, then manage BUFFER with eglot.
+Returns at once; buffers arriving mid-start join the one in flight."
   (push buffer intellij-server--gradle-pending)
   (unless (process-live-p intellij-server--gradle-process)
     (let* ((default-directory root)
@@ -179,19 +174,17 @@ Returns at once; buffers arriving mid-build join the one in flight."
                     intellij-server-gradle-notice-delay nil
                     (lambda ()
                       (setq intellij-server--gradle-announced t)
-                      (message "Building the Gradle IDE model...")))))
+                      (message "Starting the Gradle watch...")))))
       (with-current-buffer out
         (special-mode)
         (let ((inhibit-read-only t)) (erase-buffer))
         (setq default-directory root))
       (setq intellij-server--gradle-announced nil)
-      (setq intellij-server--gradle-root root)
       (setq intellij-server--gradle-process
             (make-process
              :name "intellij-server-gradle"
              :buffer out
-             :command (cons (expand-file-name "gradlew" root)
-                            intellij-server-gradle-args)
+             :command intellij-server-watch-command
              :noquery t
              :filter #'intellij-server--gradle-filter
              :sentinel
@@ -246,18 +239,17 @@ To add one, read the id from the `[code]' eglot puts in the message.")
 
 ;;; Autoload
 (defun intellij-server-ensure ()
-  "Bring the Gradle IDE model up to date, then manage this buffer with eglot.
+  "Start the Gradle watch, then manage this buffer with eglot.
+Only in the repository `sigasi-dev' builds; elsewhere, do nothing.
 For a Java mode hook, in place of `eglot-ensure'."
   (unless (intellij-server--uri-buffer-p)
     (condition-case err
         (let* ((project (project-current))
-               (root (and project (project-root project))))
-          (intellij-server--preflight)
-          (if (and root
-                   (file-executable-p (expand-file-name "gradlew" root))
-                   (not (member root intellij-server--gradle-checked)))
-              (intellij-server--gradle-start root (current-buffer))
-            (eglot-ensure)))
+               (root (and project (project-root project)))
+               (sigasi (intellij-server--sigasi-root)))
+          (when (and root sigasi (file-equal-p root sigasi))
+            (intellij-server--preflight)
+            (intellij-server--gradle-start sigasi (current-buffer))))
       ;; A mode hook must not signal, or it interrupts visiting the file.
       (user-error
        (display-warning 'intellij-server (error-message-string err) :error)))))

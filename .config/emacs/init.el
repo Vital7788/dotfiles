@@ -1371,55 +1371,71 @@ takes a buffer over, which drops any backend registered before it."
 
   (add-hook 'eglot-managed-mode-hook #'my/flymake-eslint-enable))
 
-;;;;; Project-wide TypeScript diagnostics
+;;;;; Project-wide build diagnostics
 (use-package flymake
   :ensure nil
   :commands flymake-show-project-diagnostics
-  :config
-  (defvar my/tsc-problems--files nil
-    "Files the last refresh added to `flymake-list-only-diagnostics'.")
+  :preface
+  (defvar my/sigasi-problem-sources '(("ext" "problems") ("lsp" "problems"))
+    "`sigasi-dev' arguments that print each watcher's problems.")
 
-  (defun my/tsc-problems--parse ()
-    "Read problems into an alist of (FILE . DIAGNOSTICS)."
+  (defun my/sigasi-problems--read (args)
+    "Problems printed by `sigasi-dev' ARGS, as (SEVERITY FILE LINE COL CODE MESSAGE)."
     (with-temp-buffer
-      (apply #'process-file "sigasi-dev" nil t nil '("ext" "problems"))
+      (apply #'process-file "sigasi-dev" nil t nil args)
       (goto-char (point-min))
-      (let (by-file)
+      (let (problems)
         (while (not (eobp))
           (when (looking-at (concat "\\([^\t\n]+\\)\t\\([^\t\n]+\\)\t"
                                     "\\([0-9]+\\)\t\\([0-9]+\\)\t"
                                     "\\([^\t\n]+\\)\t\\(.*\\)"))
-            (let ((file (match-string 2)))
-              (push (flymake-make-diagnostic
-                     file
-                     (cons (string-to-number (match-string 3))
-                           (string-to-number (match-string 4)))
-                     nil
-                     (pcase (match-string 1)
-                       ("error" :error)
-                       ("warning" :warning)
-                       (_ :note))
-                     (format "%s: %s" (match-string 5) (match-string 6)))
-                    (alist-get file by-file nil nil #'equal))))
+            (push (list (match-string 1) (match-string 2)
+                        (string-to-number (match-string 3))
+                        (string-to-number (match-string 4))
+                        (match-string 5) (match-string 6))
+                  problems))
           (forward-line 1))
-        by-file)))
+        (nreverse problems))))
 
-  (defun my/tsc-problems-refresh (&rest _)
-    "Put the watcher's problems in `flymake-list-only-diagnostics'.
+  (defun my/sigasi-java-build-errors ()
+    "Number of errors in the gradle watch's last build."
+    (seq-count (lambda (problem) (equal (car problem) "error"))
+               (my/sigasi-problems--read '("lsp" "problems"))))
+  :config
+  (defvar my/sigasi-problems--files nil
+    "Files the last refresh added to `flymake-list-only-diagnostics'.")
+
+  (defun my/sigasi-problems--parse ()
+    "Read every watcher's problems into an alist of (FILE . DIAGNOSTICS)."
+    (let (by-file)
+      (dolist (args my/sigasi-problem-sources)
+        (pcase-dolist (`(,severity ,file ,line ,col ,code ,message)
+                       (my/sigasi-problems--read args))
+          (push (flymake-make-diagnostic
+                 file (cons line col) nil
+                 (pcase severity
+                   ("error" :error)
+                   ("warning" :warning)
+                   (_ :note))
+                 (format "%s: %s" code message))
+                (alist-get file by-file nil nil #'equal))))
+      by-file))
+
+  (defun my/sigasi-problems-refresh (&rest _)
+    "Put the watchers' problems in `flymake-list-only-diagnostics'.
 Replaces the batch of the previous refresh.  Entries are keyed by file,
-the same way eglot keys the ones it reports for files it has not opened,
 so the two can coexist in that variable."
-    (let ((by-file (my/tsc-problems--parse)))
-      (dolist (file (append my/tsc-problems--files (mapcar #'car by-file)))
+    (let ((by-file (my/sigasi-problems--parse)))
+      (dolist (file (append my/sigasi-problems--files (mapcar #'car by-file)))
         (setq flymake-list-only-diagnostics
               (assoc-delete-all file flymake-list-only-diagnostics)))
-      (setq my/tsc-problems--files (mapcar #'car by-file))
+      (setq my/sigasi-problems--files (mapcar #'car by-file))
       (pcase-dolist (`(,file . ,diags) by-file)
         (push (cons file (nreverse diags)) flymake-list-only-diagnostics))))
 
   ;; `flymake-show-project-diagnostics' goes through this function, so the list
   ;; is up to date whenever it is shown or reverted.
-  (advice-add 'flymake--project-diagnostics :before #'my/tsc-problems-refresh))
+  (advice-add 'flymake--project-diagnostics :before #'my/sigasi-problems-refresh))
 
 ;;;; Apheleia
 (use-package apheleia
@@ -1827,7 +1843,16 @@ Diffing the file on disk is safe: Apheleia runs after the save."
   (add-to-list 'dape-configs
                `(sigasi-lsp-server
                  modes (java-mode java-ts-mode)
-                 ensure ,(plist-get (alist-get 'sigasi-java dape-configs) 'ensure)
+                 ensure ,(let ((ensure (plist-get (alist-get 'sigasi-java dape-configs) 'ensure)))
+                           (lambda (config)
+                             (funcall ensure config)
+                             ;; A failed build leaves the previous classes in place.
+                             (let ((errors (my/sigasi-java-build-errors)))
+                               (when (and (> errors 0)
+                                          (not (y-or-n-p
+                                                (format "The last build has %d error%s; debug the previous classes? "
+                                                        errors (if (= errors 1) "" "s")))))
+                                 (user-error "Fix the build first, see `flymake-show-project-diagnostics'")))))
                  ;; The adapter infers nothing: it demands javaExec and paths.
                  fn ,(lambda (config)
                        (let* ((root (project-root
@@ -1856,7 +1881,7 @@ Diffing the file on disk is safe: Apheleia runs after the save."
                           "--enable-native-access=ALL-UNNAMED"
                           "--sun-misc-unsafe-memory-access=allow"
                           "-Xmx8g" "-Xss4m"
-                          "-XX:+UseCompressedOops" "-XX:+UseG1GC"
+                          "-XX:+UseG1GC" "-XX:+EnableDynamicAgentLoading"
                           "-XX:G1PeriodicGCInterval=60000"
                           "-XX:-G1PeriodicGCInvokesConcurrent"
                           "-XX:MinHeapFreeRatio=5" "-XX:MaxHeapFreeRatio=30"
