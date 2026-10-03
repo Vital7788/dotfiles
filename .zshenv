@@ -20,6 +20,12 @@ else
     export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR}/ssh-agent.sock"
 fi
 
+export QT_IM_MODULE="fcitx"
+export QT_IM_MODULES="wayland;fcitx;ibus"
+export SDL_IM_MODULE="fcitx"
+export XMODIFIERS="@im=fcitx"
+export GLFW_IM_MODULE="ibus"
+
 # dotfiles
 export USERXSESSION="${XDG_CACHE_HOME}/X11/xsession"
 export USERXSESSIONRC="${XDG_CACHE_HOME}/X11/xsessionrc"
