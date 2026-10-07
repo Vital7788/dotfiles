@@ -1446,12 +1446,12 @@ so the two can coexist in that variable."
   (add-to-list 'apheleia-mode-alist
                '("/package\\(-lock\\)?\\.json\\'" . prettier-json-stringify))
 
-  ;; The Eclipse formatter with the Sigasi profile. Only the lines
-  ;; that differ from HEAD are formatted.
   (add-to-list 'apheleia-formatters
                '(sigasi-java-format . ((my/sigasi-java-format-program)
                                        inplace
                                        (my/sigasi-java-format-lines-args))))
+  (add-to-list 'apheleia-mode-alist '(java-mode . sigasi-java-format))
+  (add-to-list 'apheleia-mode-alist '(java-ts-mode . sigasi-java-format))
 
   (defun my/sigasi-java-format-script ()
     "Return the repo's FormatJava.java above this buffer's file, or nil."
@@ -1487,24 +1487,19 @@ Diffing the file on disk is safe: Apheleia runs after the save."
             (string-join (nreverse ranges) ","))))))
 
   (defun my/sigasi-java-format-program ()
-    "Command running FormatJava.java; \"true\" when no line changed."
-    (if (my/sigasi-java-changed-lines)
-        (list "java" (my/sigasi-java-format-script))
+    "Command running FormatJava.java; \"true\" outside the Sigasi repo
+or when no line changed."
+    (if-let* ((script (my/sigasi-java-format-script))
+              ((my/sigasi-java-changed-lines)))
+        (list "java" script)
       "true"))
 
   (defun my/sigasi-java-format-lines-args ()
     "`--lines' arguments for FormatJava.java; nil formats the whole file."
-    (let ((lines (my/sigasi-java-changed-lines)))
-      (when (stringp lines)
-        (list "--lines" lines))))
-
-  (defun my/sigasi-java-format-enable ()
-    "Format on save with FormatJava.java in the Sigasi repo."
-    (when (my/sigasi-java-format-script)
-      (setq-local apheleia-formatter 'sigasi-java-format)))
-
-  (add-hook 'java-mode-hook #'my/sigasi-java-format-enable)
-  (add-hook 'java-ts-mode-hook #'my/sigasi-java-format-enable))
+    (when-let* (((my/sigasi-java-format-script))
+                (lines (my/sigasi-java-changed-lines))
+                ((stringp lines)))
+      (list "--lines" lines))))
 
 ;;;; IntelliJ LSP
 ;; Java/Kotlin via JetBrains' IntelliJ language server (see lisp/intellij-eglot.el).
