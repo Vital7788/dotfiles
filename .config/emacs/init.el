@@ -992,10 +992,10 @@ A no-op for magit's own hunk sections, whose bodies hold no \"@@\" line."
                                        nil #'diff-refine-preproc
                                        props-r props-a))))))))
 
-  (defun my/magit-diff-refine-line-pairs (fn beg end)
+  (defun my/magit-diff-refine-line-pairs (fn beg end &rest args)
     (if (derived-mode-p 'magit-mode)
         (my/magit-diff--refine-line-pairs beg end)
-      (funcall fn beg end)))
+      (apply fn beg end args)))
   (advice-add 'diff--refine-hunk :around #'my/magit-diff-refine-line-pairs))
 
 ;;;;; Range diff
