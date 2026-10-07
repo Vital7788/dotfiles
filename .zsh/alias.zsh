@@ -12,7 +12,6 @@ alias config="/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME"
 
 alias y='yazi_wrapper'
 
-alias wget="wget --hsts-file=$XDG_STATE_HOME/wget-hsts"
 alias adb="HOME=$XDG_DATA_HOME/android adb"
 
 # fractional scaling for VS Code

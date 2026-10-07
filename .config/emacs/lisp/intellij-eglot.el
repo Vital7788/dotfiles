@@ -251,7 +251,7 @@ For a Java mode hook, in place of `eglot-ensure'."
             (intellij-server--preflight)
             (intellij-server--gradle-start sigasi (current-buffer))))
       ;; A mode hook must not signal, or it interrupts visiting the file.
-      (user-error
+      ((user-error file-error)
        (display-warning 'intellij-server (error-message-string err) :error)))))
 
 ;;; Registration

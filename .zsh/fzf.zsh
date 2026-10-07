@@ -6,7 +6,7 @@ then
   source <(fzf --zsh)
 
   export FZF_DEFAULT_COMMAND='fd --hidden --follow --type f'
-  export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS'
+  export FZF_DEFAULT_OPTS='
     --color=fg:#3d2b5a,fg+:#3d2b5a,bg:#f6f2ee,bg+:#d3c7bb,gutter:#f6f2ee
     --color=hl:#a5222f,hl+:#a5222f,info:#955f61,marker:#396847
     --color=prompt:#287980,spinner:#6e33ce,pointer:#6e33ce,header:#2848a9
