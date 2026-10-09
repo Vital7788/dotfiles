@@ -265,6 +265,23 @@ instead."
   (setq evil-symbol-word-search t)
   (setq evil-move-beyond-eol t)
 
+  (defun my/evil-define-operator-key (operator keymap &rest bindings)
+    "Bind keys that run a command when typed after OPERATOR, like `crn'.
+KEYMAP is a keymap, or `global'.  BINDINGS alternates keys and commands.
+After any other operator a key keeps its usual meaning."
+    (declare (indent 2))
+    (pcase-dolist (`(,key ,command) (seq-split bindings 2))
+      (evil-define-key* 'operator keymap key
+        `(menu-item "" nil
+                    :filter ,(lambda (&optional _)
+                               (when (eq evil-this-operator operator)
+                                 ;; Skip the operator itself, and keep the
+                                 ;; command's messages, which evil would
+                                 ;; otherwise clear after reading a motion
+                                 (setq evil-inhibit-operator t
+                                       evil-write-echo-area t)
+                                 command))))))
+
   (add-hook 'evil-insert-state-entry-hook (lambda () (unless (display-graphic-p) (send-string-to-terminal "\033[6 q"))))
   (add-hook 'evil-insert-state-exit-hook  (lambda () (unless (display-graphic-p) (send-string-to-terminal "\033[2 q")))))
 
@@ -1227,21 +1244,21 @@ request's whole diff then and now."
 (use-package eglot
   :ensure nil
   :config
-  ;; use 'c' as a prefix key for keybinds staring with cr, while remaining an operator otherwise
-  (defmacro my/evil-change-command (func)
-    `(lambda ()
-       (interactive)
-       (when (eq evil-this-operator 'evil-change)
-         ;; Skip the change itself, which would enter insert state afterwards.
-         (setq evil-inhibit-operator t)
-         (call-interactively ,func))))
-  (evil-define-key 'operator 'evil-normal-state-map
-    "rn" (my/evil-change-command #'eglot-rename)
-    "ra" (my/evil-change-command #'eglot-code-actions)
-    "rf" (my/evil-change-command #'eglot-format)
-    "ro" (my/evil-change-command #'my/organize-imports))
-  (keymap-set evil-normal-state-map "g D" #'eglot-find-declaration)
+  ;; Refactorings as `cr' keys, while `c' remains an operator otherwise
+  (my/evil-define-operator-key 'evil-change eglot-mode-map
+    "rn" #'eglot-rename
+    "ra" #'eglot-code-actions
+    "rf" #'eglot-format
+    "ro" #'my/organize-imports)
   (keymap-set evil-normal-state-map "g I" #'eglot-find-implementation)
+
+  ;; evil-collection binds `gD' to `xref-find-definitions-other-window' in
+  ;; `eglot-mode-map', which would shadow a global binding
+  (defun my/eglot-bind-declaration (mode &rest _)
+    "Bind `gD' to find the declaration, once evil-collection has set up eglot."
+    (when (eq mode 'eglot)
+      (evil-define-key 'normal eglot-mode-map "gD" #'eglot-find-declaration)))
+  (add-hook 'evil-collection-setup-hook #'my/eglot-bind-declaration)
 
   (set-face-attribute 'eglot-highlight-symbol-face nil :weight 'normal)
 
@@ -1533,7 +1550,7 @@ or when no line changed."
   :ensure t
   :hook (after-init . jarchive-mode))
 
-;;; Debugger (DAP)
+;;; DAP
 (use-package dape
   :ensure t
   :hook ((dape-info-parent-mode dape-repl-mode) . my/dape-no-wrap)
@@ -1572,23 +1589,18 @@ or when no line changed."
       ("s" "step in"    dape-step-in           :transient t)
       ("o" "step out"   dape-step-out          :transient t)
       ("u" "until"      dape-until)
+      ("f" "restart frame" dape-restart-frame)
       ("p" "pause"      dape-pause)]
-     ["Breakpoints"
-      ("b" "toggle"     dape-breakpoint-toggle)
-      ("e" "expression" dape-breakpoint-expression)
-      ("l" "log"        dape-breakpoint-log)
-      ("h" "hits"       dape-breakpoint-hits)
-      ("F" "function"   dape-breakpoint-function)
-      ("B" "remove all" dape-breakpoint-remove-all)]
      ["Inspect"
       ("i" "info"       dape-info)
       ("R" "repl"       dape-repl)
-      ("x" "eval"       dape-evaluate-expression)
       ("w" "watch"      dape-watch-dwim)
+      ("m" "memory"     dape-memory)
+      ("M" "disassemble" dape-disassemble)]
+     ["Select"
       ("S" "stack"      dape-select-stack)
       ("t" "thread"     dape-select-thread)
-      ("<" "frame up"   dape-stack-select-up   :transient t)
-      (">" "frame down" dape-stack-select-down :transient t)]])
+      ("T" "session"    dape-select-session)]])
 
   (keymap-set evil-normal-state-map "SPC" #'my/dape-transient)
 
@@ -1606,10 +1618,67 @@ or when no line changed."
           (t (call-interactively #'dape))))
 
   (keymap-set evil-normal-state-map "<f5>"  #'my/dape-start-or-continue)
-  (keymap-set evil-normal-state-map "<f9>"  #'dape-breakpoint-toggle)
   (keymap-set evil-normal-state-map "<f10>" #'dape-next)
   (keymap-set evil-normal-state-map "<f11>" #'dape-step-in)
-  (keymap-set evil-normal-state-map "<f12>" #'dape-step-out))
+  (keymap-set evil-normal-state-map "<f12>" #'dape-step-out)
+
+  ;; Breakpoint commands as `dp' keys
+  (my/evil-define-operator-key 'evil-delete prog-mode-map
+    "pp" #'dape-breakpoint-toggle
+    "pe" #'dape-breakpoint-expression
+    "pl" #'dape-breakpoint-log
+    "ph" #'dape-breakpoint-hits
+    "pf" #'dape-breakpoint-function
+    "pt" #'my/dape-breakpoint-toggle-all
+    "pD" #'dape-breakpoint-remove-all)
+
+  (defun my/dape-breakpoint-toggle-all ()
+    "Disable all line breakpoints, or enable them when none is enabled.
+Function breakpoints are left alone; dape sends them even when disabled."
+    (interactive)
+    (let* ((breakpoints (cl-remove-if-not
+                         (lambda (breakpoint)
+                           (and (dape--source-breakpoint-p breakpoint)
+                                (not (eq (dape--source-breakpoint-type breakpoint) 'until))))
+                         dape--breakpoints))
+           (disable (cl-some (lambda (breakpoint) (not (dape--breakpoint-disabled breakpoint)))
+                             breakpoints)))
+      (unless breakpoints (user-error "No breakpoints"))
+      (dolist (breakpoint breakpoints)
+        (dape--breakpoint-disable breakpoint disable))
+      (dape--breakpoint-notify-all)
+      (message "%s %d breakpoint%s" (if disable "Disabled" "Enabled")
+               (length breakpoints) (if (cdr breakpoints) "s" ""))))
+
+  (defun my/dape-goto-execution-point ()
+    "Go to the source line of the selected stack frame."
+    (interactive)
+    (let* ((conn (dape--live-connection 'stopped))
+           (frame (dape--current-stack-frame conn))
+           (path (plist-get (plist-get frame :source) :path))
+           (file (and path (dape--file-name-local conn path))))
+      (unless (and file (file-exists-p file))
+        (user-error "The selected frame has no source file"))
+      (evil-set-jump)
+      (find-file file)
+      (goto-char (point-min))
+      (forward-line (1- (plist-get frame :line)))
+      (back-to-indentation)))
+
+  (evil-define-operator my/dape-evaluate-operator (beg end)
+    "Evaluate the text from BEG to END in the debuggee."
+    :move-point nil
+    (dape-evaluate-expression
+     (or (dape--live-connection 'stopped t) (dape--live-connection 'last))
+     (string-trim (buffer-substring-no-properties beg end))))
+
+  ;; Only while a session runs; `[f' and `]f' are `find-file-at-point' otherwise
+  (evil-define-minor-mode-key 'normal 'dape-active-mode
+    "[f" #'dape-stack-select-up
+    "]f" #'dape-stack-select-down
+    "g." #'my/dape-goto-execution-point)
+  (evil-define-minor-mode-key '(normal visual) 'dape-active-mode
+    "g=" #'my/dape-evaluate-operator))
 
 ;;;; Dape: VS Code extension host
 (use-package dape
