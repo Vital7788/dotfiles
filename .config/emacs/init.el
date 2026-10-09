@@ -1952,6 +1952,53 @@ Function breakpoints are left alone; dape sends them even when disabled."
                           "-XX:+UseStringDeduplication"
                           "-Dsigasi.dev.mode=true"])))
 
+;;; ACP
+(use-package agent-shell
+  :ensure t
+  :config
+  (setq agent-shell-preferred-agent-config 'claude-code)
+  (setq agent-shell-anthropic-default-session-mode-id "auto")
+
+  (defun my/agent-shell-file-line-context ()
+    "The current line as context, when the buffer visits a file."
+    (when buffer-file-name
+      (agent-shell--get-current-line-context :agent-cwd (agent-shell-cwd))))
+  (setq agent-shell-context-sources
+        '(files region error my/agent-shell-file-line-context))
+
+  (setq agent-shell-screenshot-command
+        '("sh" "-c" "geometry=$(slurp) && grim -g \"$geometry\" \"$1\"" "screenshot"))
+
+  (keymap-set evil-normal-state-map ", c" #'agent-shell)
+  (keymap-set evil-normal-state-map ", C" #'agent-shell-switch-buffer)
+
+  (defun my/agent-shell-send-dwim-to ()
+    "Send the region or error at point to a shell picked from a list."
+    (interactive)
+    (agent-shell-send-dwim '(16)))
+
+  (transient-define-prefix my/agent-shell-send-transient ()
+    "Send context to an agent shell."
+    [:hide always
+           ("q"        "close menu" transient-quit-one)
+           ("<escape>" "close menu" transient-quit-one)
+           (">"        "dwim"       agent-shell-send-dwim)]
+    [["Send"
+      ("d" "dwim (region or error)" agent-shell-send-dwim)
+      ("r" "region"                 agent-shell-send-region)
+      ("f" "file (or dired marks)"  agent-shell-send-file)
+      ("o" "other file"             agent-shell-send-other-file)
+      ("s" "screenshot"             agent-shell-send-screenshot)
+      ("i" "clipboard image"        agent-shell-send-clipboard-image)]
+     ["To a picked shell"
+      ("D" "dwim"                   my/agent-shell-send-dwim-to)
+      ("R" "region"                 agent-shell-send-region-to)
+      ("F" "file"                   agent-shell-send-file-to)
+      ("S" "screenshot"             agent-shell-send-screenshot-to)
+      ("I" "clipboard image"        agent-shell-send-clipboard-image-to)]])
+
+  (keymap-set evil-normal-state-map "g >" #'my/agent-shell-send-transient))
+
 ;;; Language specific
 (use-package sly
   :ensure nil
