@@ -1958,6 +1958,7 @@ Function breakpoints are left alone; dape sends them even when disabled."
   :config
   (setq agent-shell-preferred-agent-config 'claude-code)
   (setq agent-shell-anthropic-default-session-mode-id "auto")
+  (setq agent-shell-session-restore-verbosity 'full)
 
   (defun my/agent-shell-file-line-context ()
     "The current line as context, when the buffer visits a file."
