@@ -163,14 +163,13 @@ stop_watchers() {
     : >"$JAVAC_PROBLEMS_FILE" 2>/dev/null || true
 }
 
-# Gradle-compiled classes go in front of the assembled SDK jars, so an edit is live as soon as
-# the watch has compiled it.
+# Gradle-built module jars go in front of the assembled SDK jars, so an edit is live as soon as
+# the watch has assembled it.  Jars rather than class folders: ResourceFetcher looks up a
+# module's resource folder (wavedrom's lib/) on the classpath, and loose folders all share one
+# namespace, so another module's lib/ would win.
 lsp_classpath() {
     local cp
-    cp=$(ls -d "$SIGASI_REPO"/com.sigasi.*/target/gradle-out/classes/java/main | tr '\n' ':')
-    cp+=$(ls -d "$SIGASI_REPO"/com.sigasi.*/target/gradle-out/resources/main \
-                "$SIGASI_REPO"/com.sigasi.*/target/gradle-out/bin-includes-resources 2>/dev/null \
-          | grep -vE 'com\.sigasi\.hdt\.(core|logging)/target' | tr '\n' ':' || true)
+    cp=$(ls "$SIGASI_REPO"/com.sigasi.*/build/libs/*.jar | tr '\n' ':')
     cp+="$SERVER_DIR/com.sigasi.hdt.toolchains.stubs"
     cp+=":$SERVER_DIR/com.sigasi.hdt.verilog.verible.natives"
     cp+=":$SERVER_DIR/com.sigasi.yourkit"
@@ -198,10 +197,10 @@ start_lsp_server() {
     echo "language server started (pid $server_pid)"
 }
 
-cmd_lsp_run() {
+cmd_lsp_start() {
     (
         cd "$SIGASI_REPO"
-        ./gradlew com.sigasi.lsp.server:classes processResources syncBinIncludesResources --offline
+        ./gradlew assemble
     )
 
     start_lsp_server "$@"
@@ -519,7 +518,8 @@ usage: sigasi-dev COMMAND [ARGUMENT]...
   ext port [--follow]    print the inspector port of a running extension host,
                          with --follow again each time it restarts
 
-  lsp run [ARGUMENT]...  build the language server and run it in the foreground
+  lsp start [ARGUMENT]...
+                         build the language server and run it in the foreground
   lsp watch              rebuild the language server as its sources change
   lsp problems           print the javac problems the gradle watch last reported
 
@@ -599,7 +599,7 @@ cmd_ext() {
 
 cmd_lsp() {
     case ${1-} in
-        run) shift; cmd_lsp_run "$@" ;;
+        start) shift; cmd_lsp_start "$@" ;;
         watch) start_gradle_watch ;;
         problems) javac_problems ;;
         "") usage ;;
