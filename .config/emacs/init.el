@@ -182,6 +182,11 @@ instead."
          (window-height . 0.35)
          (window-width . 80)
          (preserve-size . (t nil)))
+        ((lambda (_buffer _action)
+           (memq this-command '(flymake-goto-diagnostic flymake-show-diagnostic)))
+         (display-buffer-reuse-window display-buffer-use-some-window)
+         (some-window . mru)
+         (inhibit-same-window . t))
         ;; Don't show byte compilation warnings after installing packages
         ("\\`\\*\\(Warnings\\|Compile-Log\\)\\*\\'"
          display-buffer-no-window
@@ -1218,8 +1223,9 @@ request's whole diff then and now."
       (set-face-attribute 'org-special-keyword nil  :inherit '(font-lock-comment-face fixed-pitch))
       (set-face-attribute 'org-meta-line nil        :inherit '(font-lock-comment-face fixed-pitch))))
 
-  (if (daemonp)
-      (add-hook 'server-after-make-frame-hook #'my/org-setup-faces)
+  (when (daemonp)
+    (add-hook 'server-after-make-frame-hook #'my/org-setup-faces))
+  (when (display-graphic-p)
     (my/org-setup-faces))
 
   (org-babel-do-load-languages
