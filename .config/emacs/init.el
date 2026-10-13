@@ -187,6 +187,10 @@ instead."
          (display-buffer-reuse-window display-buffer-use-some-window)
          (some-window . mru)
          (inhibit-same-window . t))
+        ((derived-mode . agent-shell-mode)
+         (display-buffer-reuse-mode-window display-buffer-in-direction)
+         (direction . leftmost)
+         (window-width . 0.4))
         ;; Don't show byte compilation warnings after installing packages
         ("\\`\\*\\(Warnings\\|Compile-Log\\)\\*\\'"
          display-buffer-no-window
