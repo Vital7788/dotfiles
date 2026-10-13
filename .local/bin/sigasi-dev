@@ -2,21 +2,26 @@
 
 set -euo pipefail
 
-PROBLEMS_FILE="${SIGASI_TSC_PROBLEMS_FILE:-${XDG_RUNTIME_DIR:-/tmp}/sigasi-tsc-problems}"
-JAVAC_PROBLEMS_FILE="${SIGASI_JAVAC_PROBLEMS_FILE:-${XDG_RUNTIME_DIR:-/tmp}/sigasi-javac-problems}"
-TEST_DEBUG_CONFIG="$VSCODE_EXTENSION_PATH/.vscode-test/debug-config.mjs"
-TEST_PRELOAD="$VSCODE_EXTENSION_PATH/.vscode-test/source-map-support.cjs"
+: "${SIGASI_REPO_ROOT:?set SIGASI_REPO_ROOT to the Sigasi checkout}"
+
+EXT_DIR="${SIGASI_EXTENSION_DIR:?set SIGASI_EXTENSION_DIR to the VS Code extension in the checkout}"
+EXT_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/sigasi-dev-host"
+EXT_LOG_FILE="${XDG_RUNTIME_DIR:-/tmp}/sigasi-dev-host.log"
+EXT_PROBLEMS_FILE="${XDG_RUNTIME_DIR:-/tmp}/sigasi-tsc-problems"
+EXT_TEST_DEBUG_CONFIG="$EXT_DIR/.vscode-test/debug-config.mjs"
+EXT_TEST_PRELOAD="$EXT_DIR/.vscode-test/source-map-support.cjs"
 # `.vscode-test.mjs' puts the runner's VS Code state here.
-TEST_USER_DATA_DIR="${TMPDIR:-/tmp}/svh-vscode-test"
+EXT_TEST_USER_DATA_DIR="${TMPDIR:-/tmp}/svh-vscode-test"
 
-SIGASI_REPO="$(dirname "$VSCODE_EXTENSION_PATH")"
-SERVER_DIR="$VSCODE_EXTENSION_PATH/packages/sdkLin/dist/server"
+LSP_PROBLEMS_FILE="${XDG_RUNTIME_DIR:-/tmp}/sigasi-javac-problems"
+LSP_SERVER_DIR="$EXT_DIR/packages/sdkLin/dist/server"
+LSP_TEST_INIT_SCRIPT="${XDG_RUNTIME_DIR:-/tmp}/sigasi-dev-test.gradle.kts"
 
-yarn_watch_pids() {
+ext_watch_pids() {
     pgrep -f 'bin/yarn (compile:watch|watch:all)$'
 }
 
-gradle_watch_pids() {
+lsp_watch_pids() {
     pgrep -f 'gradle-wrapper\.jar --continuous .*assemble'
 }
 
@@ -36,10 +41,10 @@ wait_until_watching() {
     return 1
 }
 
-# Parse `tsc --watch' output and publish problems to $PROBLEMS_FILE.
+# Parse `tsc --watch' output and publish problems to $EXT_PROBLEMS_FILE.
 # One line per problem, TAB to separate the fields
-publish_tsc_problems() {
-    setsid --fork awk -v root="$PWD" -v dest="$PROBLEMS_FILE" '
+ext_publish_problems() {
+    setsid --fork awk -v root="$PWD" -v dest="$EXT_PROBLEMS_FILE" '
         function publish(   i, tmp) {
             tmp = dest ".tmp"
             printf "" > tmp
@@ -61,10 +66,10 @@ publish_tsc_problems() {
 }
 
 # Parse the javac diagnostics in `gradlew --continuous' output and publish them to
-# $JAVAC_PROBLEMS_FILE
+# $LSP_PROBLEMS_FILE
 # One line per problem, TAB to separate the fields
-publish_javac_problems() {
-    setsid --fork awk -v dest="$JAVAC_PROBLEMS_FILE" '
+lsp_publish_problems() {
+    setsid --fork awk -v dest="$LSP_PROBLEMS_FILE" '
         function publish(   i, tmp) {
             tmp = dest ".tmp"
             printf "" > tmp
@@ -103,39 +108,39 @@ publish_javac_problems() {
     ' 2>&1
 }
 
-start_watchers() {
-    if yarn_watch_pids >/dev/null; then
+ext_start_watch() {
+    if ext_watch_pids >/dev/null; then
         echo "yarn watchers already running"
         return
     fi
 
     (
-        cd "$VSCODE_EXTENSION_PATH"
+        cd "$EXT_DIR"
 
         yarn install
         # Without &>/dev/null the watcher writes to the terminal, or holds the caller's pipe open, after exit
         # Without </dev/null the watchers keep reading the terminal after exit
         setsid --fork yarn watch:all </dev/null &>/dev/null
         setsid --fork yarn compile:watch </dev/null 2>&1 \
-            | publish_tsc_problems \
+            | ext_publish_problems \
             | wait_until_watching "Watching for file changes"
     )
 }
 
-start_gradle_watch() {
-    if gradle_watch_pids >/dev/null; then
+lsp_start_watch() {
+    if lsp_watch_pids >/dev/null; then
         echo "gradle watch already running"
         return
     fi
 
     echo "starting gradle watch"
     (
-        cd "$SIGASI_REPO"
+        cd "$SIGASI_REPO_ROOT"
 
-        # See start_watchers for </dev/null.
+        # See ext_start_watch for </dev/null.
         setsid --fork ./gradlew --continuous --continue --console=plain \
             assemble </dev/null 2>&1 \
-            | publish_javac_problems \
+            | lsp_publish_problems \
             | wait_until_watching "Waiting for changes to input files"
     )
 }
@@ -154,13 +159,13 @@ kill_process_groups() {
     done
 }
 
-stop_watchers() {
+stop_watches() {
     echo "stopping watchers"
-    kill_process_groups "gradle watch" $(gradle_watch_pids || true)
-    kill_process_groups "yarn watchers" $(yarn_watch_pids || true)
+    kill_process_groups "gradle watch" $(lsp_watch_pids || true)
+    kill_process_groups "yarn watchers" $(ext_watch_pids || true)
     # awk empties the files when the pipe closes; do it here too in case it died.
-    : >"$PROBLEMS_FILE" 2>/dev/null || true
-    : >"$JAVAC_PROBLEMS_FILE" 2>/dev/null || true
+    : >"$EXT_PROBLEMS_FILE" 2>/dev/null || true
+    : >"$LSP_PROBLEMS_FILE" 2>/dev/null || true
 }
 
 # Gradle-built module jars go in front of the assembled SDK jars, so an edit is live as soon as
@@ -169,18 +174,18 @@ stop_watchers() {
 # namespace, so another module's lib/ would win.
 lsp_classpath() {
     local cp
-    cp=$(ls "$SIGASI_REPO"/com.sigasi.*/build/libs/*.jar | tr '\n' ':')
-    cp+="$SERVER_DIR/com.sigasi.hdt.toolchains.stubs"
-    cp+=":$SERVER_DIR/com.sigasi.hdt.verilog.verible.natives"
-    cp+=":$SERVER_DIR/com.sigasi.yourkit"
-    cp+=":$SERVER_DIR/*"
-    cp+=":$SERVER_DIR/com.sigasi.yourkit/lib/yjp-controller-api-redist.jar"
+    cp=$(ls "$SIGASI_REPO_ROOT"/com.sigasi.*/build/libs/*.jar | tr '\n' ':')
+    cp+="$LSP_SERVER_DIR/com.sigasi.hdt.toolchains.stubs"
+    cp+=":$LSP_SERVER_DIR/com.sigasi.hdt.verilog.verible.natives"
+    cp+=":$LSP_SERVER_DIR/com.sigasi.yourkit"
+    cp+=":$LSP_SERVER_DIR/*"
+    cp+=":$LSP_SERVER_DIR/com.sigasi.yourkit/lib/yjp-controller-api-redist.jar"
     echo "$cp"
 }
 
-start_lsp_server() {
-    if [ ! -d "$SERVER_DIR" ]; then
-        echo "No assembled server at $SERVER_DIR; run a full build first." >&2
+lsp_start_server() {
+    if [ ! -d "$LSP_SERVER_DIR" ]; then
+        echo "No assembled server at $LSP_SERVER_DIR; run a full build first." >&2
         return 1
     fi
 
@@ -199,11 +204,11 @@ start_lsp_server() {
 
 cmd_lsp_start() {
     (
-        cd "$SIGASI_REPO"
+        cd "$SIGASI_REPO_ROOT"
         ./gradlew assemble
     )
 
-    start_lsp_server "$@"
+    lsp_start_server "$@"
 
     # headless Chromium sets SIGINT to SIG_IGN
     trap 'kill -TERM "$server_pid" 2>/dev/null || true' INT TERM
@@ -211,41 +216,41 @@ cmd_lsp_start() {
     wait "$server_pid"
 }
 
-problems() {
-    cat "$PROBLEMS_FILE" 2>/dev/null || true
+ext_print_problems() {
+    cat "$EXT_PROBLEMS_FILE" 2>/dev/null || true
 }
 
-javac_problems() {
-    cat "$JAVAC_PROBLEMS_FILE" 2>/dev/null || true
+lsp_print_problems() {
+    cat "$LSP_PROBLEMS_FILE" 2>/dev/null || true
 }
 
-watcher_status() {
-    if yarn_watch_pids >/dev/null; then
+print_watch_status() {
+    if ext_watch_pids >/dev/null; then
         echo "yarn watchers running"
     else
         echo "yarn watchers not running"
     fi
 
-    if gradle_watch_pids >/dev/null; then
+    if lsp_watch_pids >/dev/null; then
         echo "gradle watch running"
     else
         echo "gradle watch not running"
     fi
 }
 
-code_pids() {
-    local data_dir=${1:-$VSCODE_DATA_DIR/user-data}
+ext_inspected_pids() {
+    local data_dir=${1:-$EXT_DATA_DIR/user-data}
     pgrep -f "code .* --inspect(-brk|-port)?=.* --user-data-dir=$data_dir(\$| )"
 }
 
-vscode_dev_pids() {
-    pgrep -f -- "--extensionDevelopmentPath=$VSCODE_EXTENSION_PATH .*--user-data-dir=$VSCODE_DATA_DIR/user-data"
+ext_vscode_pids() {
+    pgrep -f -- "--extensionDevelopmentPath=$EXT_DIR .*--user-data-dir=$EXT_DATA_DIR/user-data"
 }
 
-get_pid() {
+ext_inspected_pid() {
     local pid
     for _ in $(seq 20); do
-        pid=$(code_pids "${1-}" | tail -1)
+        pid=$(ext_inspected_pids "${1-}" | tail -1)
         [ -n "$pid" ] && break
         sleep 0.1
     done
@@ -253,8 +258,8 @@ get_pid() {
     echo "$pid"
 }
 
-get_port() {
-    local pid=${1:-$(get_pid)} port
+ext_inspector_port() {
+    local pid=${1:-$(ext_inspected_pid)} port
     [ -n "$pid" ] || return 1
     port=$(tr '\0' ' ' < "/proc/$pid/cmdline" | grep -oP -- '--inspect(-brk)?=[^ ]*:\K[0-9]+' || true)
     if [ -z "$port" ]; then                    # --inspect-port=0 -> activate, then read the socket
@@ -269,24 +274,24 @@ get_port() {
     echo "$port"
 }
 
-print_inspector_port() {
-    get_port || { echo "no port" >&2; return 1; }
+ext_print_port() {
+    ext_inspector_port || { echo "no port" >&2; return 1; }
 }
 
-emit_port() {
-    get_port || echo "port none"
+ext_emit_port() {
+    ext_inspector_port || echo "port none"
 }
 
-follow_inspector_port() {
-    if [[ ! -f "$VSCODE_LOG_FILE" ]]; then
-        echo "VS Code log file '$VSCODE_LOG_FILE' does not exist" >&2
+ext_follow_port() {
+    if [[ ! -f "$EXT_LOG_FILE" ]]; then
+        echo "VS Code log file '$EXT_LOG_FILE' does not exist" >&2
         return 1
     fi
 
-    emit_port
+    ext_emit_port
 
     # bash sets $! from a process substitution since 5.1
-    exec 3< <(tail -n0 -f "$VSCODE_LOG_FILE" 2>/dev/null)
+    exec 3< <(tail -n0 -f "$EXT_LOG_FILE" 2>/dev/null)
     local tail_pid=$!
 
     trap 'kill "$tail_pid" 2>/dev/null || true' EXIT
@@ -295,45 +300,45 @@ follow_inspector_port() {
     while IFS= read -r line <&3; do
         case $line in
             *"Extension host with pid "*" exited"*)
-                emit_port
+                ext_emit_port
                 ;;
         esac
     done
 }
 
-launch_vscode() {
+ext_launch_vscode() {
     # SIGASI_DEBUG_MODE makes the extension attach to the server on 5007 rather than start one of
     # its own from the assembled jars.
     local debug_mode=${1:-false} inspect=${2:---inspect-extensions=9229}
 
     RELOAD_ON_WATCH=true SIGASI_DEBUG_MODE="$debug_mode" \
-        code --extensionDevelopmentPath="$VSCODE_EXTENSION_PATH" \
-             --user-data-dir="$VSCODE_DATA_DIR/user-data" \
-             --extensions-dir="$VSCODE_DATA_DIR/extensions" \
-             "$inspect" --verbose &>"$VSCODE_LOG_FILE" &
+        code --extensionDevelopmentPath="$EXT_DIR" \
+             --user-data-dir="$EXT_DATA_DIR/user-data" \
+             --extensions-dir="$EXT_DATA_DIR/extensions" \
+             "$inspect" --verbose &>"$EXT_LOG_FILE" &
     vscode_pid=$!
 }
 
-start_vscode() {
-    if vscode_dev_pids >/dev/null; then
+ext_start_vscode() {
+    if ext_vscode_pids >/dev/null; then
         echo "VS Code already running"
         return
     fi
 
-    start_watchers
-    launch_vscode false "$1"
+    ext_start_watch
+    ext_launch_vscode false "$1"
 }
 
-start_with_lsp() {
+start_vscode_with_lsp() {
     local inspect=$1 dead
 
-    if vscode_dev_pids >/dev/null; then
+    if ext_vscode_pids >/dev/null; then
         echo "VS Code is already running; stop it first" >&2
         return 1
     fi
 
-    start_watchers
-    start_gradle_watch
+    ext_start_watch
+    lsp_start_watch
 
     server_pid=""
     vscode_pid=""
@@ -341,8 +346,8 @@ start_with_lsp() {
     # Deliberately leaves VS Code running: Ctrl+C here should not close the editor.
     trap 'kill -TERM "$server_pid" 2>/dev/null || true; exit 0' INT TERM
 
-    start_lsp_server
-    launch_vscode true "$inspect"
+    lsp_start_server
+    ext_launch_vscode true "$inspect"
 
     while :; do
         dead=""
@@ -361,7 +366,7 @@ start_with_lsp() {
                     break
                 fi
                 echo "language server exited; restarting with the latest build"
-                start_lsp_server
+                lsp_start_server
                 ;;
         esac
     done
@@ -373,45 +378,45 @@ escape_regex() {
 }
 
 # The runner takes launch arguments from a configuration file only.
-write_test_debug_config() {
-    mkdir -p "${TEST_DEBUG_CONFIG%/*}"
-    cat >"$TEST_DEBUG_CONFIG" <<EOF
+ext_write_test_debug_config() {
+    mkdir -p "${EXT_TEST_DEBUG_CONFIG%/*}"
+    cat >"$EXT_TEST_DEBUG_CONFIG" <<EOF
 // Generated by sigasi-dev; changes are overwritten.
-import config from "file://$VSCODE_EXTENSION_PATH/.vscode-test.mjs"
+import config from "file://$EXT_DIR/.vscode-test.mjs"
 
 export default {
     ...config,
-    extensionDevelopmentPath: "$VSCODE_EXTENSION_PATH",
+    extensionDevelopmentPath: "$EXT_DIR",
     launchArgs: [...(config.launchArgs ?? []), "--inspect-brk-extensions=9230"]
 }
 EOF
 }
 
 # Map stack frames back to TypeScript.
-write_test_preload() {
-    mkdir -p "${TEST_PRELOAD%/*}"
-    cat >"$TEST_PRELOAD" <<'EOF'
+ext_write_test_preload() {
+    mkdir -p "${EXT_TEST_PRELOAD%/*}"
+    cat >"$EXT_TEST_PRELOAD" <<'EOF'
 // Generated by sigasi-dev; changes are overwritten.
 require("source-map-support").install({ handleUncaughtExceptions: false })
 EOF
 }
 
 # Test runs don't clean up their language server
-test_server_pids() {
-    pgrep -f -- "--data-location $TEST_USER_DATA_DIR/"
+ext_test_server_pids() {
+    pgrep -f -- "--data-location $EXT_TEST_USER_DATA_DIR/"
 }
 
 # Only the servers this run added, so a run in another terminal keeps its own.
-reap_test_servers() {
+ext_reap_test_servers() {
     local before=$1 pid
-    for pid in $(test_server_pids || true); do
+    for pid in $(ext_test_server_pids || true); do
         if ! grep -qxF "$pid" <<<"$before"; then
             kill "$pid" 2>/dev/null || true
         fi
     done
 }
 
-filter_test_output() {
+ext_filter_test_output() {
     awk '
         {
             # Colour has to survive, so match on a copy without it.
@@ -436,7 +441,7 @@ filter_test_output() {
 # Run test $3 of source file $2, or all of the file's tests when no title is
 # given.  $1 holds the extension host on its first line and announces the port
 # to attach a debugger to.
-run_tests() {
+ext_run_tests() {
     local debug=$1 file title rel js args=() before runner status=0
     shift
 
@@ -449,16 +454,16 @@ run_tests() {
     title=${2:-}
 
     case $file in
-        "$VSCODE_EXTENSION_PATH"/src/*) ;;
+        "$EXT_DIR"/src/*) ;;
         *)
-            echo "not a test source under $VSCODE_EXTENSION_PATH/src: $file" >&2
+            echo "not a test source under $EXT_DIR/src: $file" >&2
             return 1
             ;;
     esac
 
     # The runner executes compiled output, not typescript
-    rel=${file#"$VSCODE_EXTENSION_PATH"/src/}
-    js="$VSCODE_EXTENSION_PATH/app/${rel%.*}.js"
+    rel=${file#"$EXT_DIR"/src/}
+    js="$EXT_DIR/app/${rel%.*}.js"
 
     if [ -n "$title" ]; then
         # Mocha matches a test by its full title: the titles of the enclosing
@@ -466,22 +471,22 @@ run_tests() {
         args+=(--grep "/^$(escape_regex "$title")\$/")
     fi
 
-    start_watchers
+    ext_start_watch
 
-    write_test_preload
-    args+=(--file "$TEST_PRELOAD" --color)
+    ext_write_test_preload
+    args+=(--file "$EXT_TEST_PRELOAD" --color)
 
     if $debug; then
-        write_test_debug_config
-        args+=(--config "$TEST_DEBUG_CONFIG")
+        ext_write_test_debug_config
+        args+=(--config "$EXT_TEST_DEBUG_CONFIG")
     fi
 
-    before=$(test_server_pids || true)
+    before=$(ext_test_server_pids || true)
 
     # `--fail-zero': a title matching nothing is a failure rather than a green
     # run of no tests at all.
     (
-        cd "$VSCODE_EXTENSION_PATH" \
+        cd "$EXT_DIR" \
             && exec ./node_modules/.bin/vscode-test --run "$js" --fail-zero "${args[@]}"
     ) &
     runner=$!
@@ -489,14 +494,104 @@ run_tests() {
     if $debug; then
         local pid port=
         while [ -z "$port" ] && kill -0 "$runner" 2>/dev/null; do
-            pid=$(get_pid "$TEST_USER_DATA_DIR") && port=$(get_port "$pid") || true
+            pid=$(ext_inspected_pid "$EXT_TEST_USER_DATA_DIR") && port=$(ext_inspector_port "$pid") || true
         done
-        echo "inspect-port ${port:-none}"
+        echo "debug-port ${port:-none}"
     fi
 
     wait "$runner" || status=$?
-    reap_test_servers "$before"
+    ext_reap_test_servers "$before"
     return $status
+}
+
+# Gradle only reports failing tests.  Report every test and a summary, at quiet
+# level so that `-q' can keep the rest of the build out of the way.
+lsp_write_test_init_script() {
+    cat >"$LSP_TEST_INIT_SCRIPT" <<'EOF'
+// Generated by sigasi-dev; changes are overwritten.
+allprojects {
+    tasks.withType<Test>().configureEach {
+        testLogging {
+            quiet {
+                events("passed", "skipped", "failed")
+                exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+            }
+        }
+        val log = logger
+        afterSuite(KotlinClosure2<TestDescriptor, TestResult, Unit>({ suite, result ->
+            if (suite.parent == null) {
+                log.quiet("${result.successfulTestCount} passed, ${result.failedTestCount} failed, " +
+                    "${result.skippedTestCount} skipped")
+            }
+        }))
+    }
+}
+EOF
+}
+
+# Run test $3 of Java source file $2, a method or a nested class, or all of the
+# class's tests when no title is given.  $1 holds the test JVM until a debugger
+# attaches, and announces the port to attach to.
+lsp_run_tests() {
+    local debug=$1 file title rel module src class filter part args=()
+    shift
+
+    if [ $# -lt 1 ]; then
+        echo "usage: sigasi-dev lsp test [--debug] FILE [[NESTED.]METHOD]" >&2
+        return 1
+    fi
+
+    file=$(realpath -m "$1")
+    title=${2:-}
+
+    rel=${file#"$SIGASI_REPO_ROOT"/}
+    module=${rel%%/*}
+    src=${rel#"$module"/}
+
+    case $file:$src in
+        "$SIGASI_REPO_ROOT"/*.java:src/*) ;;
+        *)
+            echo "not a Java source under $SIGASI_REPO_ROOT/MODULE/src: $file" >&2
+            return 1
+            ;;
+    esac
+
+    if [ ! -f "$SIGASI_REPO_ROOT/$module/build.gradle.kts" ]; then
+        echo "not a Gradle module: $SIGASI_REPO_ROOT/$module" >&2
+        return 1
+    fi
+
+    # Test modules keep their sources in src/; annotations2.processor is the
+    # one with a conventional src/test/java/.
+    src=${src#src/test/java/}
+    src=${src#src/}
+    class=${src%.java}
+    class=${class//\//.}
+
+    # TITLE names nested classes the way Java does, Outer.Nested, but Gradle
+    # only matches their binary name, Outer$Nested.  Classes are capitalised,
+    # methods are not.
+    filter=$class
+    for part in ${title//./ }; do
+        case $part in
+            [[:upper:]]*) filter+="\$$part" ;;
+            *) filter+=".$part" ;;
+        esac
+    done
+
+    lsp_write_test_init_script
+    # `--rerun': an up-to-date test task runs nothing and reports nothing.
+    args+=(--tests "$filter" --rerun --init-script "$LSP_TEST_INIT_SCRIPT")
+
+    if $debug; then
+        args+=(--debug-jvm)
+    fi
+
+    # A filter matching nothing already fails the build, like `--fail-zero'.
+    (
+        cd "$SIGASI_REPO_ROOT" \
+            && exec ./gradlew -q --console=colored ":$module:test" "${args[@]}"
+    )
 }
 
 usage() {
@@ -522,6 +617,10 @@ usage: sigasi-dev COMMAND [ARGUMENT]...
                          build the language server and run it in the foreground
   lsp watch              rebuild the language server as its sources change
   lsp problems           print the javac problems the gradle watch last reported
+  lsp test [--debug] FILE [[NESTED.]METHOD]
+                         run a test class, or one of its nested classes or test
+                         methods.  --debug holds the test JVM until a debugger
+                         attaches to the port it reports
 
 `ext' may be left out: `watch' means `ext watch'.
 EOF
@@ -553,44 +652,55 @@ cmd_start() {
     fi
 
     if $with_lsp; then
-        start_with_lsp "$inspect"
+        start_vscode_with_lsp "$inspect"
         return
     fi
 
     if ! $follow; then
-        start_vscode "$inspect"
+        ext_start_vscode "$inspect"
         return
     fi
 
     # keep stdout free for the port protocol
-    start_vscode "$inspect" >&2
-    follow_inspector_port
+    ext_start_vscode "$inspect" >&2
+    ext_follow_port
 }
 
-cmd_ext_test() {
-    local debug=false
+# Gradle's own announcement, in the form `ext test' uses.
+lsp_announce_debug_port() {
+    sed -u 's/^Listening for transport dt_socket at address: \([0-9]*\)$/debug-port \1/'
+}
+
+# `ext test' and `lsp test'.  With --debug, both print `debug-port N' once the
+# code under test waits for a debugger on port N.
+cmd_test() {
+    local kind=$1 debug=false
+    shift
 
     if [ "${1-}" = --debug ]; then
         debug=true
         shift
     fi
 
-    run_tests "$debug" "$@" 2>&1 | filter_test_output
+    case $kind in
+        ext) ext_run_tests "$debug" "$@" 2>&1 | ext_filter_test_output ;;
+        lsp) lsp_run_tests "$debug" "$@" 2>&1 | lsp_announce_debug_port ;;
+    esac
 }
 
 cmd_ext_port() {
     case ${1-} in
-        "") print_inspector_port ;;
-        --follow) follow_inspector_port ;;
+        "") ext_print_port ;;
+        --follow) ext_follow_port ;;
         *) echo "unknown option: $1" >&2; return 2 ;;
     esac
 }
 
 cmd_ext() {
     case ${1-} in
-        watch) start_watchers ;;
-        problems) problems ;;
-        test) shift; cmd_ext_test "$@" ;;
+        watch) ext_start_watch ;;
+        problems) ext_print_problems ;;
+        test) shift; cmd_test ext "$@" ;;
         port) shift; cmd_ext_port "$@" ;;
         "") usage ;;
         *) echo "unknown command: $1" >&2; usage ;;
@@ -600,8 +710,9 @@ cmd_ext() {
 cmd_lsp() {
     case ${1-} in
         start) shift; cmd_lsp_start "$@" ;;
-        watch) start_gradle_watch ;;
-        problems) javac_problems ;;
+        watch) lsp_start_watch ;;
+        problems) lsp_print_problems ;;
+        test) shift; cmd_test lsp "$@" ;;
         "") usage ;;
         *) echo "unknown lsp command: $1" >&2; usage ;;
     esac
@@ -611,8 +722,8 @@ case ${1-} in
     ext) shift; cmd_ext "$@" ;;
     lsp) shift; cmd_lsp "$@" ;;
     start) shift; cmd_start "$@" ;;
-    stop) stop_watchers ;;
-    status) watcher_status ;;
+    stop) stop_watches ;;
+    status) print_watch_status ;;
     "") usage ;;
     # The extension is the common case, so `ext' may be left out.
     *) cmd_ext "$@" ;;

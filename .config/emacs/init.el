@@ -1690,11 +1690,15 @@ Function breakpoints are left alone; dape sends them even when disabled."
 (use-package dape
   :ensure nil
   :config
-  (defun my/vscode-extension-path ()
-    (bookmark-maybe-load-default-file)
+  (defun my/sigasi-repo-root ()
     (file-name-as-directory
-     (expand-file-name (or (bookmark-get-filename "vscode")
-                           (user-error "No \"vscode\" bookmark")))))
+     (or (getenv "SIGASI_REPO_ROOT")
+         (user-error "SIGASI_REPO_ROOT is not set"))))
+
+  (defun my/vscode-extension-path ()
+    (file-name-as-directory
+     (or (getenv "SIGASI_EXTENSION_DIR")
+         (user-error "SIGASI_EXTENSION_DIR is not set"))))
 
   (defvar my/vscode-inspect-port 9229)
 
@@ -1738,79 +1742,6 @@ Function breakpoints are left alone; dape sends them even when disabled."
                  :resolveSourceMapLocations ["${workspaceFolder}/**"
                                              "!**/node_modules/**"
                                              "!**/.vscode-test/**"])))
-
-;;;; Dape: VS Code extension tests
-(use-package dape
-  :ensure nil
-  :config
-  (defvar my/vscode-test-callers '("suite" "test" "describe" "it")
-    "Mocha functions whose first argument titles a suite or a test.")
-
-  (defun my/vscode-test-title ()
-    "Mocha's full title for the test around point."
-    (let ((node (treesit-node-at (point)))
-          titles innermost)
-      (while node
-        (when-let* (((equal (treesit-node-type node) "call_expression"))
-                    (caller (treesit-node-child-by-field-name node "function"))
-                    ((member (treesit-node-text caller) my/vscode-test-callers))
-                    (args (treesit-node-child-by-field-name node "arguments"))
-                    (string (treesit-node-child args 0 t))
-                    (title (treesit-node-child string 0 t)))
-          (push (treesit-node-text title) titles)
-          (unless innermost (setq innermost (treesit-node-text caller))))
-        (setq node (treesit-node-parent node)))
-      (if (member innermost '("test" "it"))
-          (string-join titles " ")
-        "")))
-
-  (defun my/vscode-test-compile (&rest options)
-    "Run the test around point in a compilation buffer, with OPTIONS."
-    (let ((default-directory (my/vscode-extension-path)))
-      (compilation-start (mapconcat #'shell-quote-argument
-                                    `("sigasi-dev" "ext" "test" ,@options
-                                      ,buffer-file-name ,(my/vscode-test-title))
-                                    " ")
-                         #'my/vscode-test-mode)))
-
-  (defun my/vscode-test ()
-    "Run the test around point."
-    (interactive)
-    (my/vscode-test-compile))
-
-  (defun my/vscode-test-debug ()
-    "Debug the test around point."
-    (interactive)
-    (my/vscode-test-compile "--debug"))
-
-  (defun my/vscode-test-attach ()
-    "Attach to a run once it announces the port its extension host opened."
-    (save-excursion
-      (goto-char compilation-filter-start)
-      (forward-line 0)
-      (when (re-search-forward "^inspect-port \\([0-9]+\\)$" nil t)
-        (setq my/vscode-inspect-port (string-to-number (match-string 1)))
-        (dape (dape--config-eval 'sigasi-extension nil)))))
-
-  ;; Mocha reports a stack frame as `at NAME (FILE:LINE:COLUMN)'.  The
-  ;; built-in `java' rule matches that shape too, but it has no column
-  ;; group, so it takes `:LINE' to be part of the file name and COLUMN
-  ;; to be the line.
-  (add-to-list 'compilation-error-regexp-alist-alist
-               '(my/node-frame
-                 "^[ \t]*at \\(?:.*(\\)?\\([^()]+\\):\\([0-9]+\\):\\([0-9]+\\))?$"
-                 1 2 3))
-
-  (define-derived-mode my/vscode-test-mode compilation-mode "Sigasi-Test"
-    "Compilation mode for a `sigasi-dev' test run."
-    (setq-local compilation-error-regexp-alist '(my/node-frame))
-    (setq-local compilation-transform-file-match-alist '(("node:" nil)))
-    (add-hook 'compilation-filter-hook #'my/vscode-test-attach nil t)
-    ;; Without this the escapes show up as text.
-    (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter nil t))
-
-  (keymap-set evil-normal-state-map ", t" #'my/vscode-test)
-  (keymap-set evil-normal-state-map ", T" #'my/vscode-test-debug))
 
 ;;;; Dape: IntelliJ JVM attach
 ;; The server implements DAP but reaches it only over LSP: `start_debug_server'
@@ -1957,6 +1888,194 @@ Function breakpoints are left alone; dape sends them even when disabled."
                           "-XX:MinHeapFreeRatio=5" "-XX:MaxHeapFreeRatio=30"
                           "-XX:+UseStringDeduplication"
                           "-Dsigasi.dev.mode=true"])))
+
+;;;; Dape: Tests
+;; `, t' runs the test around point through `sigasi-dev', `, T' debugs it:
+;; the run prints `debug-port N' once the code under test waits for a
+;; debugger, and dape attaches to it.
+
+;;;;; Mocha
+(use-package dape
+  :ensure nil
+  :config
+  (defvar my/vscode-test-callers '("suite" "test" "describe" "it")
+    "Mocha functions whose first argument titles a suite or a test.")
+
+  (defun my/vscode-test-title ()
+    "Mocha's full title for the test around point."
+    (let ((node (treesit-node-at (point)))
+          titles innermost)
+      (while node
+        (when-let* (((equal (treesit-node-type node) "call_expression"))
+                    (caller (treesit-node-child-by-field-name node "function"))
+                    ((member (treesit-node-text caller) my/vscode-test-callers))
+                    (args (treesit-node-child-by-field-name node "arguments"))
+                    (string (treesit-node-child args 0 t))
+                    (title (treesit-node-child string 0 t)))
+          (push (treesit-node-text title) titles)
+          (unless innermost (setq innermost (treesit-node-text caller))))
+        (setq node (treesit-node-parent node)))
+      (if (member innermost '("test" "it"))
+          (string-join titles " ")
+        "")))
+
+  ;; Mocha reports a stack frame as `at NAME (FILE:LINE:COLUMN)'.  The
+  ;; built-in `java' rule matches that shape too, but it has no column
+  ;; group, so it takes `:LINE' to be part of the file name and COLUMN
+  ;; to be the line.
+  (add-to-list 'compilation-error-regexp-alist-alist
+               '(my/node-frame
+                 "^[ \t]*at \\(?:.*(\\)?\\([^()]+\\):\\([0-9]+\\):\\([0-9]+\\))?$"
+                 1 2 3)))
+
+;;;;; JUnit
+(use-package dape
+  :ensure nil
+  :config
+  (defvar my/java-test-annotations
+    '("Test" "ParameterizedTest" "RepeatedTest" "TestFactory" "TestTemplate")
+    "JUnit annotations that make a method a test.")
+
+  (defun my/java-test-method-p (node)
+    "Whether NODE declares a test method."
+    (and (equal (treesit-node-type node) "method_declaration")
+         (seq-some (lambda (child)
+                     (and (equal (treesit-node-type child) "modifiers")
+                          (seq-some (lambda (annotation)
+                                      (when-let* ((name (treesit-node-child-by-field-name
+                                                         annotation "name")))
+                                        ;; Possibly qualified, `@org.junit.jupiter.api.Test'
+                                        (member (car (last (split-string
+                                                            (treesit-node-text name t) "\\.")))
+                                                my/java-test-annotations)))
+                                    (treesit-node-children child))))
+                   (treesit-node-children node))))
+
+  (defun my/java-test-title ()
+    "The test around point, as `sigasi-dev lsp test' takes it.
+The nested classes, then the test method, joined with dots.  Empty outside
+of both, which runs the whole file."
+    (let ((node (treesit-node-at (point)))
+          classes method)
+      (while node
+        (pcase (treesit-node-type node)
+          ("method_declaration"
+           (when (and (not classes) (not method) (my/java-test-method-p node))
+             (setq method (treesit-node-text
+                           (treesit-node-child-by-field-name node "name") t))))
+          ("class_declaration"
+           ;; The file's own class is in the command already
+           (unless (equal (treesit-node-type (treesit-node-parent node)) "program")
+             (push (treesit-node-text
+                    (treesit-node-child-by-field-name node "name") t)
+                   classes))))
+        (setq node (treesit-node-parent node)))
+      (string-join (append classes (and method (list method))) ".")))
+
+  (defun my/java-frame-file ()
+    "Source of the stack frame just matched, from its package and file name."
+    (let ((relative (concat (string-replace "." "/" (match-string-no-properties 1))
+                            (match-string-no-properties 2))))
+      (list (or (car (file-expand-wildcards (concat "*/src/" relative)))
+                (car (file-expand-wildcards (concat "*/src/test/java/" relative)))
+                relative))))
+
+  ;; A frame names only the class and the file, `at
+  ;; app//com.sigasi.Foo.bar(Foo.java:12)', so the source is found from the
+  ;; package.  Only our own frames: the others would be errors with no file.
+  (add-to-list 'compilation-error-regexp-alist-alist
+               '(my/java-frame
+                 "^[ \t]+at \\(?:[^ \t/]*/+\\)?\\(com\\.sigasi\\.\\(?:[a-z_][a-z0-9_]*\\.\\)*\\)[^ \t(]*(\\([^():]+\\.java\\):\\([0-9]+\\))$"
+                 my/java-frame-file 3))
+  (add-to-list 'compilation-error-regexp-alist-alist
+               '(my/javac
+                 "^\\(/[^:\n]+\\.java\\):\\([0-9]+\\): \\(?:error\\|\\(warning\\)\\): "
+                 1 2 nil (3))))
+
+;;;;; Running
+(use-package dape
+  :ensure nil
+  :config
+  (defvar my/test-runners
+    '((:modes (typescript-ts-base-mode)
+              :command ("sigasi-dev" "ext" "test")
+              :directory my/vscode-extension-path
+              :title my/vscode-test-title
+              :dape-config sigasi-extension)
+      (:modes (java-ts-mode)
+              :command ("sigasi-dev" "lsp" "test")
+              :directory my/sigasi-repo-root
+              :title my/java-test-title
+              :dape-config sigasi-java))
+    "How to run the tests of a major mode.
+:command runs the test file and title it is given, :directory is a function
+returning where, :title a function returning the title of the test around
+point, and :dape-config the entry of `dape-configs' that attaches.")
+
+  (defun my/test-runner ()
+    "The entry of `my/test-runners' for the current buffer."
+    (or (seq-find (lambda (runner)
+                    (apply #'derived-mode-p (plist-get runner :modes)))
+                  my/test-runners)
+        (user-error "No test runner for %s" major-mode)))
+
+  (defvar-local my/test-run nil
+    "The run's runner and the buffer it started from, (RUNNER . SOURCE).")
+  ;; `recompile' resets the buffer's local variables
+  (put 'my/test-run 'permanent-local t)
+
+  (defun my/test-compile (&rest options)
+    "Run the test around point in a compilation buffer, with OPTIONS."
+    (let* ((runner (my/test-runner))
+           (source (current-buffer))
+           (command (mapconcat #'shell-quote-argument
+                               `(,@(plist-get runner :command) ,@options
+                                 ,buffer-file-name
+                                 ,(funcall (plist-get runner :title)))
+                               " "))
+           (default-directory (funcall (plist-get runner :directory))))
+      (with-current-buffer (compilation-start command #'my/test-mode)
+        (setq my/test-run (cons runner source)))))
+
+  (defun my/test ()
+    "Run the test around point."
+    (interactive)
+    (my/test-compile))
+
+  (defun my/test-debug ()
+    "Debug the test around point."
+    (interactive)
+    (my/test-compile "--debug"))
+
+  (defun my/test-attach ()
+    "Attach dape once the run reports the port to attach to."
+    (save-excursion
+      (goto-char compilation-filter-start)
+      (forward-line 0)
+      (when (re-search-forward "^debug-port \\([0-9]+\\)$" nil t)
+        (pcase-let ((`(,runner . ,source) my/test-run)
+                    (port (string-to-number (match-string 1))))
+          (unless (buffer-live-p source)
+            (user-error "The buffer this test run started from is gone"))
+          ;; From the source buffer, whose eglot server `sigasi-java' starts
+          ;; its adapter through, and out of the process filter, as that
+          ;; waits on eglot.
+          (run-at-time 0 nil
+                       (lambda ()
+                         (with-current-buffer source
+                           (dape (dape--config-eval (plist-get runner :dape-config)
+                                                    (list :port port))))))))))
+
+  (define-derived-mode my/test-mode compilation-mode "Sigasi-Test"
+    "Compilation mode for a `sigasi-dev' test run."
+    (setq-local compilation-error-regexp-alist '(my/node-frame my/java-frame my/javac))
+    (setq-local compilation-transform-file-match-alist '(("node:" nil)))
+    (add-hook 'compilation-filter-hook #'my/test-attach nil t)
+    ;; Without this the escapes show up as text.
+    (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter nil t))
+
+  (keymap-set evil-normal-state-map ", t" #'my/test)
+  (keymap-set evil-normal-state-map ", T" #'my/test-debug))
 
 ;;; ACP
 (use-package agent-shell
