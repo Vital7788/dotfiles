@@ -643,24 +643,45 @@ within the last two weeks."
 (use-package dired
   :ensure nil
   :commands (dired)
-  :bind
-  ("C-x C-d" . dired-jump)
   :hook
-  ((dired-mode . dired-hide-details-mode)
-   (dired-mode . hl-line-mode))
+  ((dired-mode . hl-line-mode))
   :config
   (setq dired-recursive-copies 'always)
   (setq dired-recursive-deletes 'always)
+  (setq dired-listing-switches
+        "-l --almost-all --human-readable --group-directories-first")
   (evil-define-key 'normal dired-mode-map
     (kbd "h") #'dired-up-directory
     (kbd "l") #'dired-find-file))
 
-(use-package dired-preview
+(use-package dirvish
   :ensure t
-  :after dired
-  :hook (after-init . dired-preview-global-mode)
+  :bind
+  (("C-x d" . dirvish)
+   ("C-x C-d" . dirvish-dwim))
+  :init
+  (dirvish-override-dired-mode)
+  :custom
+  ;; Bookmarked entries are left out when the bookmark doesn't exist
+  (dirvish-quick-access-entries
+   (progn
+     (require 'bookmark)
+     (bookmark-maybe-load-default-file)
+     (cl-flet ((bookmark (name)
+                 (and (bookmark-get-bookmark name t)
+                      (bookmark-get-filename name))))
+       (seq-filter
+        #'cadr
+        `(("h" "~/"                          "Home")
+          ("d" "~/downloads/"                "Downloads")
+          ("s" ,(bookmark "sigasi")          "Sigasi")
+          ("v" ,(bookmark "vscode")          "VS Code"))))))
   :config
-  (setq dired-preview-delay 0))
+  (evil-define-key 'normal dirvish-mode-map
+    ;; evil-collection binds `q' to `quit-window' in `dired-mode-map', which
+    ;; `dirvish-mode-map' inherits
+    (kbd "q") #'dirvish-quit
+    (kbd "?") #'dirvish-dispatch))
 
 ;;; Magit
 (use-package magit
