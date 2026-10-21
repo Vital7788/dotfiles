@@ -618,7 +618,11 @@ within the last two weeks."
     "Expand the common prefix of the candidates, else go to the next one."
     (interactive)
     (or (corfu-expand) (corfu-next)))
-  (keymap-set corfu-map "TAB" #'my/corfu-tab)
+  (evil-define-key 'insert corfu-map
+    (kbd "TAB") #'my/corfu-tab
+    (kbd "<tab>") #'my/corfu-tab
+    (kbd "RET") #'corfu-insert
+    (kbd "<return>") #'corfu-insert)
   (setq corfu-popupinfo-delay '(1.25 . 0.5))
   (corfu-popupinfo-mode 1) ; shows documentation after `corfu-popupinfo-delay'
   ;; Sort by input history (no need to modify `corfu-sort-function').
@@ -2123,11 +2127,6 @@ point, and :dape-config the entry of `dape-configs' that attaches.")
   (keymap-set evil-normal-state-map ", c" #'agent-shell)
   (keymap-set evil-normal-state-map ", C" #'agent-shell-switch-buffer)
 
-  (defun my/agent-shell-send-dwim-to ()
-    "Send the region or error at point to a shell picked from a list."
-    (interactive)
-    (agent-shell-send-dwim '(16)))
-
   (transient-define-prefix my/agent-shell-send-transient ()
     "Send context to an agent shell."
     [:hide always
@@ -2142,7 +2141,6 @@ point, and :dape-config the entry of `dape-configs' that attaches.")
       ("s" "screenshot"             agent-shell-send-screenshot)
       ("i" "clipboard image"        agent-shell-send-clipboard-image)]
      ["To a picked shell"
-      ("D" "dwim"                   my/agent-shell-send-dwim-to)
       ("R" "region"                 agent-shell-send-region-to)
       ("F" "file"                   agent-shell-send-file-to)
       ("S" "screenshot"             agent-shell-send-screenshot-to)

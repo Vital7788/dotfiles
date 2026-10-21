@@ -32,8 +32,9 @@ wait_until_watching() {
         case $line in
             *"$marker"*)
                 # Hand the pipe to a background drain before returning, otherwise the
-                # watch dies of SIGPIPE on its next message.
-                cat &>/dev/null &
+                # watch dies of SIGPIPE on its next message.  In its own session, so it
+                # outlives the caller's terminal and process group.
+                setsid --fork cat >/dev/null 2>&1
                 return 0
                 ;;
         esac
@@ -175,8 +176,9 @@ stop_watches() {
 lsp_classpath() {
     local cp
     cp=$(ls "$SIGASI_REPO_ROOT"/com.sigasi.*/build/libs/*.jar | tr '\n' ':')
-    cp+="$LSP_SERVER_DIR/com.sigasi.hdt.toolchains.stubs"
-    cp+=":$LSP_SERVER_DIR/com.sigasi.hdt.verilog.verible.natives"
+    # `shipExploded' modules have no jar; assemble syncs them to build/exploded/ instead.
+    cp+="$SIGASI_REPO_ROOT/com.sigasi.hdt.toolchains.stubs/build/exploded/com.sigasi.hdt.toolchains.stubs"
+    cp+=":$SIGASI_REPO_ROOT/com.sigasi.hdt.verilog.verible.natives/build/exploded/com.sigasi.hdt.verilog.verible.natives"
     cp+=":$LSP_SERVER_DIR/com.sigasi.yourkit"
     cp+=":$LSP_SERVER_DIR/*"
     cp+=":$LSP_SERVER_DIR/com.sigasi.yourkit/lib/yjp-controller-api-redist.jar"
