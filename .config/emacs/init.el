@@ -1553,17 +1553,32 @@ or when no line changed."
                 ((stringp lines)))
       (list "--lines" lines))))
 
-;;;; IntelliJ LSP
-;; Java/Kotlin via JetBrains' IntelliJ language server (see lisp/intellij-eglot.el).
-;; The server is an EAP preview and expires 30 days after its build date.
+;;;; Java LSP
+;; Java via jls (see lisp/jls-eglot.el) or JetBrains' IntelliJ language server
+;; (see lisp/intellij-eglot.el), picked by `my/java-server'.
+;; The IntelliJ server is an EAP preview and expires 30 days after its build date.
 (use-package intellij-eglot
   :ensure nil
   :hook ((java-mode java-ts-mode) . my/java-eglot-ensure)
   :init
+  (defvar my/java-server 'jls
+    "Java language server for the Sigasi repo: `jls' or `intellij'.
+Applies to the next server eglot starts.")
+
+  (defun my/java-server-contact (&rest args)
+    "Contact of the server `my/java-server' names."
+    (apply (if (eq my/java-server 'intellij) #'intellij-server-contact #'jls-contact)
+           args))
+
   (defun my/java-eglot-ensure ()
-    "Register the IntelliJ server with eglot, then manage this buffer."
-    (require 'intellij-eglot)
-    (intellij-server-ensure))
+    "Register the chosen server with eglot, then manage this buffer."
+    (require 'jls-eglot)                ; Loads intellij-eglot as well
+    ;; Ahead of the entry intellij-eglot registers when it loads.
+    (add-to-list 'eglot-server-programs
+                 '((java-mode java-ts-mode) . my/java-server-contact))
+    (if (eq my/java-server 'intellij)
+        (intellij-server-ensure)
+      (jls-ensure)))
 
   ;; The server's organize imports skips the formatter, which is what puts the
   ;; blank lines between the import groups that .editorconfig defines.
@@ -1649,7 +1664,9 @@ or when no line changed."
           ((derived-mode-p 'typescript-ts-base-mode 'tsx-ts-mode 'js-ts-mode)
            (my/vscode-inspect))
           ((derived-mode-p 'java-mode 'java-ts-mode)
-           (dape (dape--config-eval 'sigasi-lsp-server nil)))
+           (if (eq my/java-server 'intellij)
+               (dape (dape--config-eval 'sigasi-lsp-server nil))
+             (my/jls-debug-lsp-server)))
           (t (call-interactively #'dape))))
 
   (keymap-set evil-normal-state-map "<f5>"  #'my/dape-start-or-continue)
@@ -1846,6 +1863,16 @@ Function breakpoints are left alone; dape sends them even when disabled."
                               :arguments [( :uri ,(eglot-path-to-uri file)
                                             :cwd ,(file-name-directory file))])))
 
+  (defun my/sigasi-confirm-build ()
+    "Ask before debugging the previous classes when the last build failed."
+    ;; A failed build leaves the previous classes in place.
+    (let ((errors (my/sigasi-java-build-errors)))
+      (when (and (> errors 0)
+                 (not (y-or-n-p
+                       (format "The last build has %d error%s; debug the previous classes? "
+                               errors (if (= errors 1) "" "s")))))
+        (user-error "Fix the build first, see `flymake-show-project-diagnostics'"))))
+
   (defun my/intellij-dap-port ()
     "Start the IntelliJ server's DAP adapter and return its port."
     (eglot-execute (eglot-current-server) '(:command "start_debug_server")))
@@ -1876,13 +1903,7 @@ Function breakpoints are left alone; dape sends them even when disabled."
                  ensure ,(let ((ensure (plist-get (alist-get 'sigasi-java dape-configs) 'ensure)))
                            (lambda (config)
                              (funcall ensure config)
-                             ;; A failed build leaves the previous classes in place.
-                             (let ((errors (my/sigasi-java-build-errors)))
-                               (when (and (> errors 0)
-                                          (not (y-or-n-p
-                                                (format "The last build has %d error%s; debug the previous classes? "
-                                                        errors (if (= errors 1) "" "s")))))
-                                 (user-error "Fix the build first, see `flymake-show-project-diagnostics'")))))
+                             (my/sigasi-confirm-build)))
                  ;; The adapter infers nothing: it demands javaExec and paths.
                  fn ,(lambda (config)
                        (let* ((root (project-root
@@ -1917,6 +1938,156 @@ Function breakpoints are left alone; dape sends them even when disabled."
                           "-XX:MinHeapFreeRatio=5" "-XX:MaxHeapFreeRatio=30"
                           "-XX:+UseStringDeduplication"
                           "-Dsigasi.dev.mode=true"])))
+
+;;;; Dape: jls JVM attach
+;; jls's own adapter (see lisp/jls-eglot.el), independent of the eglot
+;; server.  Attach only, line breakpoints only, values shown by their
+;; `toString()', and evaluate runs Groovy rather than Java.
+(use-package dape
+  :ensure nil
+  :config
+  (add-to-list 'dape-configs
+               `(sigasi-java-jls
+                 modes (java-mode java-ts-mode)
+                 ;; Lambdas, as dape evaluates a bare symbol before `ensure'
+                 ;; could load it.
+                 command ,(lambda ()
+                            (require 'jls-eglot)
+                            (jls-debug-adapter))
+                 ;; The adapter finds a frame's file in these and nowhere else.
+                 fn ,(lambda (config)
+                       (require 'jls-eglot)
+                       (plist-put config :sourceRoots
+                                  (vconcat (jls-source-roots
+                                            (project-root
+                                             (or (project-current)
+                                                 (user-error "Not inside a project")))))))
+                 :type "java"
+                 :request "attach"
+                 ;; JDWP, on localhost.
+                 :port my/jvm-debug-port))
+
+  ;; The adapter cannot launch, so `sigasi-dev lsp debug' starts the server
+  ;; held for a debugger and reports `debug-port N', which is attached to.
+  ;; Its output collects in a buffer that is never displayed, and whatever
+  ;; is added there is copied to the dape REPL once one exists.
+  (defvar my/jls-lsp-server nil
+    "The `sigasi-dev lsp debug' process F5 started, while it runs.")
+
+  (defvar-local my/jls-lsp-server-forwarded nil
+    "End of the server output already copied to the dape REPL.")
+
+  (defun my/jls-lsp-server-forward ()
+    "Copy the server output the dape REPL has not seen yet, if there is a REPL."
+    (when-let* ((buffer (get-buffer "*sigasi-lsp-server*"))
+                ((get-buffer "*dape-repl*")))
+      (with-current-buffer buffer
+        (let ((from (or my/jls-lsp-server-forwarded (point-min))))
+          (when (< from (point-max))
+            (dape--repl-insert (buffer-substring-no-properties from (point-max)))
+            ;; Insertion type nil: stays put as output is appended after it.
+            (setq my/jls-lsp-server-forwarded (copy-marker (point-max))))))))
+
+  ;; A REPL made by a new session gets what came before it, from the last one.
+  (add-hook 'dape-repl-mode-hook
+            (lambda () (run-at-time 0 nil #'my/jls-lsp-server-forward)))
+
+  (defun my/jls-attach-lsp-server (port)
+    "Attach jls's adapter to the language server's JDWP PORT."
+    (dape (dape--config-eval 'sigasi-java-jls (list :port port))))
+
+  (defun my/jls-lsp-server-filter (proc string)
+    "Append PROC's output to its buffer, attaching once it reports its port."
+    (when (buffer-live-p (process-buffer proc))
+      (with-current-buffer (process-buffer proc)
+        (let ((inhibit-read-only t)
+              (start (marker-position (process-mark proc))))
+          (save-excursion
+            (goto-char start)
+            (insert (ansi-color-apply string))
+            (set-marker (process-mark proc) (point))
+            ;; Whole lines, from the start of the one this chunk continues,
+            ;; as a port line may arrive split across chunks.  The JVM listens
+            ;; again on a new port whenever a debugger detaches: F5 attaches to
+            ;; the latest, but only the first is attached to unasked.
+            (goto-char start)
+            (forward-line 0)
+            (while (re-search-forward "^debug-port \\([0-9]+\\)\n" (process-mark proc) t)
+              (let ((port (string-to-number (match-string 1)))
+                    (source (process-get proc 'source)))
+                (process-put proc 'port port)
+                (unless (process-get proc 'attached)
+                  (process-put proc 'attached t)
+                  ;; Out of the process filter.
+                  (run-at-time 0 nil
+                               (lambda ()
+                                 (with-current-buffer (if (buffer-live-p source)
+                                                          source
+                                                        (current-buffer))
+                                   (my/jls-attach-lsp-server port))))))))))
+      (my/jls-lsp-server-forward)))
+
+  (defun my/jls-lsp-server-sentinel (proc event)
+    "Note in PROC's buffer, and so the REPL, that the server ended."
+    (unless (process-live-p proc)
+      (when (eq proc my/jls-lsp-server)
+        (setq my/jls-lsp-server nil))
+      (my/jls-lsp-server-filter proc (format "sigasi-dev lsp debug: %s" event))
+      ;; Failed before there was a session to show why in.
+      (unless (or (zerop (process-exit-status proc)) (process-get proc 'port))
+        (display-buffer (process-buffer proc)))))
+
+  (defun my/jls-debug-lsp-server ()
+    "Run the language server held for a debugger, and attach jls's adapter.
+The server runs the watch's last build.  If it is still running, after a
+detach, attach to it again instead."
+    (interactive)
+    (if (process-live-p my/jls-lsp-server)
+        (my/jls-attach-lsp-server (or (process-get my/jls-lsp-server 'port)
+                                      (user-error "The language server has not reported its port yet")))
+      (my/sigasi-confirm-build)
+      (let ((default-directory (my/sigasi-repo-root))
+            (buffer (get-buffer-create "*sigasi-lsp-server*")))
+        (with-current-buffer buffer
+          (special-mode)
+          (let ((inhibit-read-only t)) (erase-buffer))
+          (setq my/jls-lsp-server-forwarded nil))
+        (setq my/jls-lsp-server
+              (make-process :name "sigasi-lsp-server"
+                            :buffer buffer
+                            :command '("sigasi-dev" "lsp" "debug")
+                            :filter #'my/jls-lsp-server-filter
+                            :sentinel #'my/jls-lsp-server-sentinel))
+        (process-put my/jls-lsp-server 'source (current-buffer)))))
+
+  (defun my/jls-lsp-server-stop ()
+    "Stop the language server F5 started, as after a detach."
+    (interactive)
+    (unless (process-live-p my/jls-lsp-server)
+      (user-error "No language server started by F5 is running"))
+    ;; `sigasi-dev' stops the server on SIGINT.
+    (interrupt-process my/jls-lsp-server))
+
+  (defun my/dape-quit-debuggees (quit &rest args)
+    "Run QUIT with ARGS, then stop the processes F5 and `, T' started.
+Quitting terminates them through the adapter, but when that fails dape
+only detaches, which would leave them running.  Also when QUIT signals."
+    (unwind-protect (apply quit args)
+      (my/dape-stop-debuggees)))
+
+  (defun my/dape-stop-debuggees ()
+    "Stop the processes F5 and `, T' started for a debugger."
+    (when (process-live-p my/jls-lsp-server)
+      (interrupt-process my/jls-lsp-server))
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (when-let* (((derived-mode-p 'my/test-mode))
+                    ((bound-and-true-p my/test-attached))
+                    (process (get-buffer-process buffer))
+                    ((process-live-p process)))
+          (interrupt-process process)))))
+
+  (advice-add 'dape-quit :around #'my/dape-quit-debuggees))
 
 ;;;; Dape: Tests
 ;; `, t' runs the test around point through `sigasi-dev', `, T' debugs it:
@@ -2035,11 +2206,16 @@ of both, which runs the whole file."
               :command ("sigasi-dev" "lsp" "test")
               :directory my/sigasi-repo-root
               :title my/java-test-title
-              :dape-config sigasi-java))
+              :dape-config my/java-dape-config))
     "How to run the tests of a major mode.
 :command runs the test file and title it is given, :directory is a function
 returning where, :title a function returning the title of the test around
-point, and :dape-config the entry of `dape-configs' that attaches.")
+point, and :dape-config the entry of `dape-configs' that attaches, or a
+function returning it.")
+
+  (defun my/java-dape-config ()
+    "The attach config of the server `my/java-server' names."
+    (if (eq my/java-server 'intellij) 'sigasi-java 'sigasi-java-jls))
 
   (defun my/test-runner ()
     "The entry of `my/test-runners' for the current buffer."
@@ -2076,12 +2252,20 @@ point, and :dape-config the entry of `dape-configs' that attaches.")
     (interactive)
     (my/test-compile "--debug"))
 
+  (defvar-local my/test-attached nil
+    "Non-nil once this run has been attached to.
+Not permanent, so `recompile' resets it.")
+
   (defun my/test-attach ()
     "Attach dape once the run reports the port to attach to."
     (save-excursion
       (goto-char compilation-filter-start)
       (forward-line 0)
-      (when (re-search-forward "^debug-port \\([0-9]+\\)$" nil t)
+      ;; Only the first: a JVM announces its JDWP port again whenever a
+      ;; debugger detaches, which would attach a new session.
+      (when (and (not my/test-attached)
+                 (re-search-forward "^debug-port \\([0-9]+\\)$" nil t))
+        (setq my/test-attached t)
         (pcase-let ((`(,runner . ,source) my/test-run)
                     (port (string-to-number (match-string 1))))
           (unless (buffer-live-p source)
@@ -2092,8 +2276,11 @@ point, and :dape-config the entry of `dape-configs' that attaches.")
           (run-at-time 0 nil
                        (lambda ()
                          (with-current-buffer source
-                           (dape (dape--config-eval (plist-get runner :dape-config)
-                                                    (list :port port))))))))))
+                           (let ((config (plist-get runner :dape-config)))
+                             (dape (dape--config-eval (if (functionp config)
+                                                          (funcall config)
+                                                        config)
+                                                      (list :port port)))))))))))
 
   (define-derived-mode my/test-mode compilation-mode "Sigasi-Test"
     "Compilation mode for a `sigasi-dev' test run."

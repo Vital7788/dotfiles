@@ -185,12 +185,9 @@ lsp_classpath() {
     echo "$cp"
 }
 
-lsp_start_server() {
-    if [ ! -d "$LSP_SERVER_DIR" ]; then
-        echo "No assembled server at $LSP_SERVER_DIR; run a full build first." >&2
-        return 1
-    fi
+lsp_jvm_args=()
 
+lsp_start_server() {
     java \
         -Dguice_bytecode_gen_option=DISABLED \
         --enable-native-access=ALL-UNNAMED \
@@ -199,16 +196,14 @@ lsp_start_server() {
         -XX:G1PeriodicGCInterval=60000 -XX:-G1PeriodicGCInvokesConcurrent \
         -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=30 -XX:+UseStringDeduplication \
         -Dsigasi.dev.mode=true \
+        "${lsp_jvm_args[@]}" \
         -cp "$(lsp_classpath)" com.sigasi.lsp.server.LspServer "$@" &
     server_pid=$!
     echo "language server started (pid $server_pid)"
 }
 
-cmd_lsp_start() {
-    (
-        cd "$SIGASI_REPO_ROOT"
-        ./gradlew assemble
-    )
+lsp_run_server() {
+    lsp_start_watch
 
     lsp_start_server "$@"
 
@@ -216,6 +211,12 @@ cmd_lsp_start() {
     trap 'kill -TERM "$server_pid" 2>/dev/null || true' INT TERM
     wait "$server_pid" || true
     wait "$server_pid"
+}
+
+lsp_debug_server() {
+    # Port 0: the JVM picks a free one, so a test held for a debugger does not collide.
+    lsp_jvm_args=(-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=127.0.0.1:0)
+    lsp_run_server "$@" 2>&1 | lsp_announce_debug_port
 }
 
 ext_print_problems() {
@@ -617,6 +618,9 @@ usage: sigasi-dev COMMAND [ARGUMENT]...
 
   lsp start [ARGUMENT]...
                          build the language server and run it in the foreground
+  lsp debug [ARGUMENT]...
+                         run the last build of the language server, held until a
+                         debugger attaches to the port it reports
   lsp watch              rebuild the language server as its sources change
   lsp problems           print the javac problems the gradle watch last reported
   lsp test [--debug] FILE [[NESTED.]METHOD]
@@ -711,7 +715,8 @@ cmd_ext() {
 
 cmd_lsp() {
     case ${1-} in
-        start) shift; cmd_lsp_start "$@" ;;
+        start) shift; lsp_run_server "$@" ;;
+        debug) shift; lsp_debug_server "$@" ;;
         watch) lsp_start_watch ;;
         problems) lsp_print_problems ;;
         test) shift; cmd_test lsp "$@" ;;

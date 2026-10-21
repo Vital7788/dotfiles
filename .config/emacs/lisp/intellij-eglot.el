@@ -154,7 +154,7 @@
         (progn
           ;; Gradle names the cause far better than the server would.
           (display-buffer (process-buffer proc))
-          (message "Gradle watch failed to start (exit %s); IntelliJ server not started"
+          (message "Gradle watch failed to start (exit %s); Java language server not started"
                    status))
       ;; Close the "..." only if it was ever opened.
       (when intellij-server--gradle-announced
