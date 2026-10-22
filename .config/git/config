@@ -13,7 +13,7 @@
     conflictStyle = zdiff3
 [diff]
     colorMoved = zebra
-    colorMovedWS = allow-indentation-change
+    colorMovedWS = ignore-all-space
 [color "diff"]
     ; Dayfox color scheme
     ; lua pal = require('nightfox.palette').load("dayfox"); spec = require('nightfox.spec').load("dayfox"); C = require('nightfox.lib.color')

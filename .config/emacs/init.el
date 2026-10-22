@@ -777,6 +777,7 @@ within the last two weeks."
        '("--stat" "--no-ext-diff" "--color-moved=zebra"))
   (put 'magit-stash-mode 'magit-diff-default-arguments
        '("--no-ext-diff" "--color-moved=zebra"))
+  (transient-suffix-put 'magit-diff "-m" :level 4)
 
   (setq magit-diff-use-indicator-faces t)
   (custom-set-faces
