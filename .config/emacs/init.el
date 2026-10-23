@@ -183,7 +183,8 @@ instead."
          (window-width . 80)
          (preserve-size . (t nil)))
         ((lambda (_buffer _action)
-           (memq this-command '(flymake-goto-diagnostic flymake-show-diagnostic)))
+           (memq this-command '(flymake-goto-diagnostic flymake-show-diagnostic
+                                                        compile-goto-error)))
          (display-buffer-reuse-window display-buffer-use-some-window)
          (some-window . mru)
          (inhibit-same-window . t))
@@ -225,7 +226,12 @@ instead."
 (blink-cursor-mode 0)
 
 (global-visual-line-mode 1) ; wrap lines
-(global-visual-wrap-prefix-mode 1)
+(define-globalized-minor-mode my/global-visual-wrap-prefix-mode
+  visual-wrap-prefix-mode
+  (lambda ()
+    (unless (derived-mode-p 'magit-mode)
+      (visual-wrap-prefix-mode 1))))
+(my/global-visual-wrap-prefix-mode 1)
 (setq visual-line-fringe-indicators '(left-curly-arrow nil))
 
 (use-package nerd-icons
